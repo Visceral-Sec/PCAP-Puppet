@@ -23,11 +23,11 @@ int constructPacket(struct packet Packet)
     return 0;
 }
 
-int writeToFile(struct packet pingReq)
+int writeToFile(char packetOut[114])
 {
     FILE *fp;
-    fp = fopen("./pingReq.pcapng","wb");
-    fprintf(fp, "";
+    fp = fopen("pingReq.pcapng","wb");
+    fwrite(packetOut, 114, 1, fp);
     return 0;
 }
 
