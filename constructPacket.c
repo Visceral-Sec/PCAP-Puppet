@@ -3,10 +3,10 @@
 
 struct packet
 {
-    int sport;
-    int dport;
-    int smac[];
-    int dmac[];
+    int sPort;
+    int dPort;
+    int sMac[];
+    int dMac[];
     int target[];
     int source[];
     char data[];
