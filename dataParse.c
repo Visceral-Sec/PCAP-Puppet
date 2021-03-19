@@ -13,6 +13,7 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
 {   
     struct packet PingReq;
     
+    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
     for(int i = 0; i < sMac.length(); i += 3)
     {
         int digit1 = sMac[i] - 48;
