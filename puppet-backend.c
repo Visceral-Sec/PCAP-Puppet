@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+int sMAC;
+int dMAC;
 int sTarget;
 int dTarget;
 int sPort;
