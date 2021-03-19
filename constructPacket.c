@@ -10,6 +10,13 @@ struct packet
     int target[];
     int source[];
     char data[];
+};
+
+int constructPacket(char name[], int sPort, int dPort, int sMac, int dMac, int target[], int source[], char data[])
+{
+    struct packet PingReq;
+
+    return 0;
 }
 
 int main()
