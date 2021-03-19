@@ -11,15 +11,15 @@ char[] payload;
 
 
 
-int dataParse()
-{
+int dataParse(int sPort, int dPort, int sMac, int dMac, int target[], int source[], char data[])
+{   
+    struct packet PingReq;
+    PingReq.sPort
     return 0;
 }
 
-int constructPacket(char name[], int sPort, int dPort, int sMac, int dMac, int target[], int source[], char data[])
+int constructPacket(struct packet Packet)
 {
-    struct packet PingReq;
-
     return 0;
 }
 
