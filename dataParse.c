@@ -9,15 +9,12 @@ struct packet
     char data[];
 };
 
-int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
-{   
-    struct packet PingReq;
-    
-    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
-    for(int i = 0; i < sMac.length(); i += 3)
+int bleem(int[] currentParam)
+{
+    for(int i = 0; i < currentParam.length(); i += 3)
     {
-        int digit1 = sMac[i] - 48;
-        int digit2 = sMac[i + 1] - 48;
+        int digit1 = currentParam[i] - 48;
+        int digit2 = currentParam[i + 1] - 48;
         if(digit1 > 9)
         {
             digit1 -= 39;
@@ -27,10 +24,19 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
             digit2 -= 39;
         }
         
-        PingReq.sMac[i/3] = digit1*16 + digit2;
+        //Something to do with pointers and reference and bullshit
+        //PingReq.sMac[i/3] = digit1*16 + digit2;
     }
+}
+
+int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
+{   
+    struct packet PingReq;
     
-    PingReq.sMac = sMac;
+    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
+    
+    
+    PingReq.sMac = bleem(sMac);
     PingReq.dMac = dMac;
     PingReq.target = target;
     PingReq.source = source;
