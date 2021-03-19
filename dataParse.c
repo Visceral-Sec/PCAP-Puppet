@@ -26,7 +26,7 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
             digit2 -= 39;
         }
         
-        PingReq.sMac[i/3] = digit1*16 + digit2
+        PingReq.sMac[i/3] = digit1*16 + digit2;
     }
     
     PingReq.sMac = sMac;
