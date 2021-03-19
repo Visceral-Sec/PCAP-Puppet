@@ -1,16 +1,15 @@
 #include <stdio.h>
+#include <string.h>
 
-int sMac[];
-int dMac[];
-int sTarget[];
-int dTarget[];
-int sPort;
-int dPort;
-char[] payload;
+char sMac[6];
+char dMac[6];
+char sTarget[4];
+char dTarget[4];
+char sPort;
+char dPort;
+char payload[100];
 
-
-
-
+//parse data from python frontend
 int dataParse(int sPort, int dPort, int sMac, int dMac, int target[], int source[], char data[])
 {   
     struct packet PingReq;
@@ -18,11 +17,23 @@ int dataParse(int sPort, int dPort, int sMac, int dMac, int target[], int source
     return 0;
 }
 
+//constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
+int etherConstruct()
+{
+    strncat(packetOut, PingReq.dMac, 6);
+    strncat(packetOut, PingReq.sMac, 6);
+    packetOut[12] = 0x08; //ipv4?
+    packetOut[13] = 0x00;
+    return 0;
+}
+
+//construct all of the arrays into one frame array
 int constructPacket(struct packet Packet)
 {
     return 0;
 }
 
+//write the frame's array to the pcap file
 int writeToFile(char packetOut[114])
 {
     FILE *fp;
@@ -33,6 +44,5 @@ int writeToFile(char packetOut[114])
 
 int main()
 {
-    puts("Hello World");
     return 0;
 }

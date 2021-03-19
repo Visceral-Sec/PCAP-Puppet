@@ -37,7 +37,7 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
     
     
     PingReq.sMac = bleem(sMac);
-    PingReq.dMac = dMac;
+    PingReq.dMac = bleem(dMac);
     PingReq.target = target;
     PingReq.source = source;
     strcpy(PingReq.data, data);

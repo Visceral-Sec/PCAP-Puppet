@@ -1,11 +1,12 @@
 //#include <stdio.h> //for testing purposes as stated below
+//#include <string.h>
 
 //it simply takes in a char array representing the packet and writes it to a file called pingReq.pcapng
 int writeToFile(char packetOut[114])
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
-    fwrite(packetOut, 114, 1, fp);
+    fwrite(packetOut, packetOut.length() , 1, fp);
     return 0;
 }
 /*
