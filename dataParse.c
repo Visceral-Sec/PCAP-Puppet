@@ -9,7 +9,7 @@ struct packet
     char data[];
 };
 
-int bleem(int[] currentParam)
+int condenseChar(int[] currentParam)
 {
     for(int i = 0; i < currentParam.length(); i += 3)
     {
@@ -36,8 +36,8 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
     
     
-    PingReq.sMac = bleem(sMac);
-    PingReq.dMac = bleem(dMac);
+    PingReq.sMac = condenseChar(sMac);
+    PingReq.dMac = condenseChar(dMac);
     PingReq.target = target;
     PingReq.source = source;
     strcpy(PingReq.data, data);
