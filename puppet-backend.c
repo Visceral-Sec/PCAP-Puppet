@@ -27,9 +27,22 @@ int etherConstruct()
     return 0;
 }
 
+int ipConstruct()
+{
+    packetOut[14] = 0x45;
+    packetOut[15] = PingReq.data.length(); //i dont know if this works - someone else test is please. - fin
+    return 0;
+}
+
 //construct all of the arrays into one frame array
 int constructPacket(struct packet Packet)
 {
+    return 0;
+}
+
+int icmpConstruct())
+{
+    
     return 0;
 }
 
@@ -44,5 +57,7 @@ int writeToFile(char packetOut[114])
 
 int main()
 {
-    return 0;
+    dataParse();
+    etherConstruct():
+    ipConstruct();
 }
