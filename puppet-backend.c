@@ -22,8 +22,7 @@ int etherConstruct()
 {
     strncat(packetOut, PingReq.dMac, 6);
     strncat(packetOut, PingReq.sMac, 6);
-    packetOut[12] = 0x08; //ipv4?
-    packetOut[13] = 0x00;
+    strncat(packetOut, 0x0800 1); //ipv4? supposed to be ether version but 
     return 0;
 }
 
