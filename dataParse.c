@@ -9,8 +9,10 @@ struct packet
     char data[];
 };
 
-int condenseChar(int[] currentParam)
+int* condenseChar(int[] currentParam)//Turns a two digit string into a number
 {
+    int returnParam[currentParam.length()];
+    
     for(int i = 0; i < currentParam.length(); i += 3)
     {
         int digit1 = currentParam[i] - 48;
@@ -25,8 +27,10 @@ int condenseChar(int[] currentParam)
         }
         
         //Something to do with pointers and reference and bullshit
-        //PingReq.sMac[i/3] = digit1*16 + digit2;
+        returnParam.append(digit1*16 + digit2);
     }
+    
+    return returnParam;
 }
 
 int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
@@ -38,8 +42,8 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
     
     PingReq.sMac = condenseChar(sMac);
     PingReq.dMac = condenseChar(dMac);
-    PingReq.target = target;
-    PingReq.source = source;
+    PingReq.target = condenseChar(target);
+    PingReq.source = condenseChar(source);
     strcpy(PingReq.data, data);
     
     return 0;
