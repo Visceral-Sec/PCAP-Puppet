@@ -22,20 +22,29 @@ int etherConstruct()
 {
     strncat(packetOut, PingReq.dMac, 6);
     strncat(packetOut, PingReq.sMac, 6);
-    strncat(packetOut, 0x0800 1); //ipv4? supposed to be ether version but 
+    strncat(packetOut, 0x0800, 2);
     return 0;
 }
 
 int ipConstruct()
 {
-    packetOut[14] = 0x45;
-    packetOut[15] = PingReq.data.length(); //i dont know if this works - someone else test is please. - fin
+    strncat(packetOut, 0x45, 1); //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
+    strncat(packetOut, 0x00, 1); //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    strncat(packetOut, PingReq.length() + 20, 2); //Identification? will check
+    strncat(packetOut, 0x0000, 2); //flags and fragment offset
+    strncat(packetOut, 0x80, 1); //ttl of 128
+    strncat(packetOut, 0x01, 1); //icmp is 01
+    strncat(packetOut, 0x0000, 2); //header checksum, 0000 means no validation
+    strncat(packetOut, PingReq.source, 4);
+    strncat(packetOut, PingReq.target, 4);
     return 0;
 }
 
 //construct all of the arrays into one frame array
-int constructPacket(struct packet Packet)
+int constructPacket(struct packet PingReq)
 {
+    etherConstruct();
+    ipConstruct();
     return 0;
 }
 
@@ -57,6 +66,5 @@ int writeToFile(char packetOut[114])
 int main()
 {
     dataParse();
-    etherConstruct():
-    ipConstruct();
+    constructPacket();
 }
