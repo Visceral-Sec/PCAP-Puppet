@@ -26,7 +26,6 @@ int* condenseChar(int[] currentParam)//Turns a two digit string into a number
             digit2 -= 39;
         }
         
-        //Something to do with pointers and reference and bullshit
         returnParam.append(digit1*16 + digit2);
     }
     
@@ -38,8 +37,6 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
     struct packet PingReq;
     
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
-    
-    
     PingReq.sMac = condenseChar(sMac);
     PingReq.dMac = condenseChar(dMac);
     PingReq.target = condenseChar(target);
