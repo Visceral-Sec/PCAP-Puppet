@@ -5,6 +5,7 @@ int icmpConstruct())
     strncat(packetOut, 0x????, 2);//icmp check sum, I'll figure it out later
     strncat(packetOut, 0x0001, 2);//identifier
     strncat(packetOut, 0x0004, 2);//sequence number 
+    strncat(packetOut, PingReq.data, PingReq.data.length());
     
     return 0;
 }
