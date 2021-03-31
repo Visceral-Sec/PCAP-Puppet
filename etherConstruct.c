@@ -1,3 +1,4 @@
+//constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
 int etherConstruct()
 {
     strncat(packetOut, PingReq.dMac, 6);

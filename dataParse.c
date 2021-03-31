@@ -1,19 +1,24 @@
 struct packet
 {
-    //char sPort;
-    //char dPort;
     char sMac[6];
     char dMac[6];
-    char target[4];
     char source[4];
-    char data[];
+    char target[4];
+    char sPort;
+    char dPort;
+    char payload[100];
 };
 
-int* condenseChar(int[] currentParam)//Turns a two digit string into a number
+struct packet PingReq;
+char packetOut[200]; //placeholder length - will fix
+
+//parse data from python frontend
+int* condenseChar(int currentParam[])//Turns a two digit string into a number
 {
-    int returnParam[currentParam.length()];
-    
-    for(int i = 0; i < currentParam.length(); i += 3)
+    int emptyPointer = 0; //points to the empty space after the last filled entry
+    int returnParam[strlen(currentParam)];
+
+    for(int i = 0; i < strlen(currentParam); i += 3) //robert's magic to convert to suitable int arrays
     {
         int digit1 = currentParam[i] - 48;
         int digit2 = currentParam[i + 1] - 48;
@@ -26,16 +31,15 @@ int* condenseChar(int[] currentParam)//Turns a two digit string into a number
             digit2 -= 39;
         }
         
-        returnParam.append(digit1*16 + digit2);
+        returnParam[emptyPointer++] = digit1*16 + digit2); //incriment emptyPointer after assignment
     }
     
     return returnParam;
 }
 
+//converts the incoming data into the correct formats for writing
 int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
 {   
-    struct packet PingReq;
-    
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
     PingReq.sMac = condenseChar(sMac);
     PingReq.dMac = condenseChar(dMac);
