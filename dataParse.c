@@ -1,3 +1,4 @@
+/*TESTING*/
 struct packet
 {
     char sMac[6];
@@ -12,10 +13,12 @@ struct packet
 struct packet PingReq;
 char packetOut[200]; //placeholder length - will fix
 
+/*END OF TESTING*/
+
 //parse data from python frontend
 int* condenseChar(int currentParam[])//Turns a two digit string into a number
 {
-    int emptyPointer = 0; //points to the empty space after the last filled entry
+    int paramEndPointer = -1; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
     int returnParam[strlen(currentParam)];
 
     for(int i = 0; i < strlen(currentParam); i += 3) //robert's magic to convert to suitable int arrays
@@ -31,7 +34,7 @@ int* condenseChar(int currentParam[])//Turns a two digit string into a number
             digit2 -= 39;
         }
         
-        returnParam[emptyPointer++] = digit1*16 + digit2); //incriment emptyPointer after assignment
+        returnParam[++paramEndPointer] = digit1*16 + digit2; //incriment endPointer before assignment
     }
     
     return returnParam;

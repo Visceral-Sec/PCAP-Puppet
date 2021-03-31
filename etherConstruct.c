@@ -1,8 +1,34 @@
+/*TESTING*/
+#include <stdio.h>
+#include <string.h>
+
+char packetOut[200]; //placeholder length - will fix
+
+int emptyPointer = 0;//points to the first empty space in the array
+
+/*END OF TESTING*/
+
 //constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-int etherConstruct()
+int etherConstruct(char dMac[6], char sMac[6])
 {
-    strncat(packetOut, PingReq.dMac, 6);
-    strncat(packetOut, PingReq.sMac, 6);
-    strncat(packetOut, 0x0800, 2);
+    strncat(packetOut, dMac, 6); emptyPointer += 6;
+    strncat(packetOut, sMac, 6); emptyPointer += 6;
+    packetOut[emptyPointer++] = 0x08; packetOut[emptyPointer++] = 0x00; //etherversion?  (IPv4)
     return 0;
 }
+
+/*TESTING*/
+int main()
+{
+    char sMac[6] = {12,12,12,12,12,12};
+    char dMac[6] = {13,13,13,13,13,13};
+    etherConstruct(dMac, sMac);
+    for (int x = 0; x < 20; x++)
+    {
+        printf("%c", packetOut[x]);
+    }
+    puts("");
+    return 0;
+}
+
+/*END OF TESTING*/
