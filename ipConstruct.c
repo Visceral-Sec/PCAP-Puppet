@@ -1,3 +1,13 @@
+/*TESTING*/
+#include <stdio.h>
+#include <string.h>
+
+char packetOut[200]; //placeholder length - will fix
+
+int emptyPointer = 0;//points to the first empty space in the array
+
+/*END OF TESTING*/
+
 //slaps an IP header into the array
 int ipConstruct()
 {

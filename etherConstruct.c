@@ -13,7 +13,7 @@ int etherConstruct(char dMac[6], char sMac[6])
 {
     strncat(packetOut, dMac, 6); emptyPointer += 6;
     strncat(packetOut, sMac, 6); emptyPointer += 6;
-    packetOut[emptyPointer++] = 0x08; packetOut[emptyPointer++] = 0x00; //etherversion?  (IPv4)
+    packetOut[emptyPointer++] = 0x08; packetOut[emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
     return 0;
 }
 
