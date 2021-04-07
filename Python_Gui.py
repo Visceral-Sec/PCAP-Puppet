@@ -40,12 +40,72 @@ class icmpConfig:
     icmptext = ""
     ip = ""
     mac = ""
+    macerror = [0,0,0,0]
+    iperror = [0,0]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Layer 2 is fully commented, all other layer functions use the exact same formatting and configuration. Follow commenting and apply the good old common sense  to the rest
 # UPDATE ^ Layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
 # As layer 2 contains ICMP which is required for the first prototype. Most work has been done on that layer
+
+def ErrorReset():
+    icmpConfig.macerror[0] = 0
+    icmpConfig.macerror[1] = 0
+    icmpConfig.macerror[2] = 0
+    icmpConfig.macerror[3] = 0
+    icmpConfig.iperror[0] = 0
+    icmpConfig.iperror[1] = 0
+
+
+def IP_checker(IP): # Coded by Matt
+    IP_breakdown = [] #Storage for each part of the IP
+    points_count = 0 #Verifying given address has 3 points
+    IP_part = ''
+    icmpConfig.ip
+    for i in range(len(IP)):
+        if IP[i] == '.':
+            points_count += 1
+            IP_breakdown.append(IP_part) #After each point, the concatenated string collected is put into a list
+            IP_part = '' #IP_part cleared for new section
+        else:
+            IP_part += str(IP[i])
+    IP_breakdown.append(IP_part)
+    if points_count == 3:
+        IP_breakdown = [int(i) for i in IP_breakdown] #Converting elements from string to int
+        for i in range(len(IP_breakdown)):
+            if 0 <= IP_breakdown[i] <= 255: #Checking IP numbers are in valid range
+                pass
+            else:
+                icmpConfig.iperror[0] = 1 #Ips aren't valid
+                return 
+    else:
+        icmpConfig.iperror[1] = 1 #Ip doesn't have enough octects
+        return
+    print('Legit IP given')
+
+def MAC_checker(MAC): # Coded by Matt
+    acceptable_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+                        'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+                        's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ':']
+    acceptable_placesforcolon = [2, 5, 8, 11, 14]
+    MAC = MAC.lower()
+    if len(MAC) != 17: #Num of chars in MAC address is 17
+        print('Incorrect MAC length') 
+        icmpConfig.macerror[0] = 1 
+    if MAC[2] != ':' or MAC[5] != ':' or MAC[8] != ':' or MAC[11] != ':' or MAC[14] != ':': #If no colon at specific points
+        print('Not enough colons')
+        icmpConfig.macerror[1] = 2
+    for i in range(len(MAC)):
+        if MAC[i] == ':' and i not in acceptable_placesforcolon: #Colon not used to identify address, only chars and digits
+            print('Colon(s) not at an acceptable place(s)')
+            icmpConfig.macerror[2] = 3
+    for i in range(len(MAC)):
+        if MAC[i] not in acceptable_chars: #Only letters numbers and colons excepted
+            print('Mac address contains unacceptable characters')
+            icmpConfig.macerror[3] = 4
+    return(0) # Edited to allow for easier user parsing
 
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
     layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration") # This then prints the label heading as the name of the chosen protocol + the option
@@ -151,13 +211,13 @@ def layer3_Displayer(l):
         macd = mac4.get()
         mace = mac5.get()
         macf = mac6.get()
-
-        ip = ipa + ipb + ipc + ipd # concatating all of the octects
-        mac = maca + macb + macc + macd + mace + macf
+        colon = ":"
+        dot = "."
+        ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
+        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
         icmpConfig.ip = ip
         icmpConfig.mac = mac
-        print(mac)
-        print(ip)
+        
 
     b = Button(layer3_Frame, text = "completed", command=done, )
 
@@ -168,27 +228,7 @@ def layer3_Displayer(l):
         
     if l == layersArray[2][1]: #icmp
         icmp_ip = Entry(layer3_Frame)
-        #icmpwindow = Toplevel(master)
-        #icmpwindowbutton = Button(icmpwindow, text="Finished", command=icmptextcomplete())
-        #finishedbox = Label(icmpwindow, text="Text Saved. You can now close this interface")
-    
-        
-        #def icmptext():
-            #icmptxtwindow = Text(icmpwindow)
-            #icmptxtwindow.insert(INSERT, "Input ICMP Text Here")
-            #icmptxtwindow.pack()
-            #icmpwindow.title("ICMP Text input")
-            #icmpwindow.geometry("400x400")
-
-    
-           # icmpwindowbutton = Button(icmpwindow, text="Finished", command=icmptextcomplete())
-          #  icmpwindowbutton.place()
-         #   icmpwindowbutton.pack()
-        #def icmptextcomplete():
-         #   print(icmptxtwindow.get(1.0,END)) # 1.0 is needed cus this library is beyond awful this holds the inputted values 
-        #    finishedbox.pack()
-      #  icmpbutton = Button(layer3_Frame, text = "ICMP TEXT", command=icmptext)   
-       # icmpbutton.place(x=220, y=0)
+      
 
     if l == layersArray[2][2]: #rip
         rip_Ip = Entry(layer3_Frame)
@@ -291,8 +331,70 @@ def layer7_Displayer(l):
         dns_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
 
 def createPcap():
-    print(icmpConfig.ip)
-    print(icmpConfig.mac)
+    ErrorReset()   # clears all previous error checks from previous creations
+    IP_checker(icmpConfig.ip) #calls the ip parse function
+    MAC_checker(icmpConfig.mac) #calls the mac parse function
+    macerror1 = int(icmpConfig.macerror[0])
+    macerror2 = int(icmpConfig.macerror[1])
+    macerror3 = int(icmpConfig.macerror[2])
+    macerror4 = int(icmpConfig.macerror[3])
+    iperror1 = int(icmpConfig.iperror[0])
+    iperror2 = int(icmpConfig.iperror[1])
+
+    print(iperror1)
+    print(iperror2)
+    print(macerror1)
+    print(macerror2)
+    print(macerror3)
+    print(macerror4)
+
+    if (macerror1 > 0 or macerror2 > 0 or macerror3 > 0 or macerror4 > 0 or iperror1 > 0 or iperror2 > 0):
+        error_Popup = Toplevel()
+        error_Popup.title("Errors")
+        mac_Error1 = Label(error_Popup, text="Incorrect MAC Length")
+        mac_Error2 = Label(error_Popup, text="Not Enough Colons")
+        mac_Error3 = Label(error_Popup, text="Colons not at acceptable places")
+        mac_Error4 = Label(error_Popup, text="Mac address contains unacceptable characters")
+        ip_Error1 = Label(error_Popup, text='IP contains invalid numbers (0-255)')
+        ip_Error2 = Label(error_Popup, text='IP Does not have enough octects')
+
+        for i in range(len(icmpConfig.macerror)):
+            error = int(icmpConfig.macerror[i])
+            if error > 0:
+                if i == 1:
+                    mac_Error1.pack()
+                if i == 2:
+                    mac_Error2.pack()
+                if i == 3:
+                    mac_Error3.pack() 
+                if i == 4:
+                    mac_Error4.pack() 
+        for i in range(len(icmpConfig.iperror)):
+            error = int(icmpConfig.iperror[i])
+            if error > 0:
+                if i == 1:
+                    ip_Error1.pack()
+                if i == 2:
+                    ip_Error2.pack()
+
+
+
+
+    # previous tkinter loop that doesn't work :)
+   # for i in range(len(icmpConfig.macerror)):
+    #    print(icmpConfig.macerror[i])
+     #   print(icmpConfig.mac)
+      #  error = int(icmpConfig.macerror[i])
+       # if error > 0:
+        #    if i == 1:
+         #       mac_Error1.pack()
+          #  if i == 2:
+           #     mac_Error2.pack()
+            #if i == 3:
+             #   mac_Error3.pack() 
+           # if i == 4:
+            #    mac_Error4.pack()       
+            
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Menus ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
