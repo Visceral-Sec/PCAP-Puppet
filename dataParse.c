@@ -18,12 +18,12 @@ char packetOut[200]; //placeholder length - will fix
 /*END OF TESTING*/
 
 //parse data from python frontend
-int* condenseChar(int currentParam[])//Turns a two digit string into a number
+int* condenseChar(int currentParam[], int paramSize)//Turns a two digit string into a number
 {
-    int paramEndPointer = -1; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
-    int returnParam[strlen(currentParam)];
+    int paramPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
+    int returnParam[paramSize - 3 - (paramSize - 7)/2];
 
-    for(int i = 0; i < strlen(currentParam); i += 3) //robert's magic to convert to suitable int arrays
+    for(int i = 0; i < paramSize; i += 3) //robert's magic to convert to suitable int arrays
     {
         int digit1 = currentParam[i] - 48;
         int digit2 = currentParam[i + 1] - 48;
@@ -36,7 +36,8 @@ int* condenseChar(int currentParam[])//Turns a two digit string into a number
             digit2 -= 39;
         }
         
-        returnParam[++paramEndPointer] = digit1*16 + digit2; //incriment endPointer before assignment
+        returnParam[paramPointer] = digit1*16 + digit2; //incriment endPointer before assignment
+        paramPointer++;
     }
     
     return returnParam;
@@ -46,10 +47,10 @@ int* condenseChar(int currentParam[])//Turns a two digit string into a number
 int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
 {   
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
-    PingReq.sMac = condenseChar(sMac);
-    PingReq.dMac = condenseChar(dMac);
-    PingReq.target = condenseChar(target);
-    PingReq.source = condenseChar(source);
+    PingReq.sMac = condenseChar(sMac, 11);
+    PingReq.dMac = condenseChar(dMac, 11);
+    PingReq.target = condenseChar(target, 7);
+    PingReq.source = condenseChar(source, 7);
     strcpy(PingReq.payload, data);
     
     return 0;
