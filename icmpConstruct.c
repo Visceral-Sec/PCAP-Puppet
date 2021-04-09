@@ -1,12 +1,21 @@
+/*TESTING*/
+#include <stdio.h>
+#include <string.h>
+
+char packetOut[200]; //placeholder length - will fix
+
+int emptyPointer = 0;//points to the first empty space in the array
+
+/*END OF TESTING*/
+
 //slaps icmp ¿packet? into the frame
 int icmpConstruct()
 {
-    strncat(packetOut, 0x08, 1);//icmp ping request
-    strncat(packetOut, 0x00, 1);//code is 0
-    strncat(packetOut, 0x0000/*placeholder value*/, 2);//icmp check sum, I'll figure it out later
-    strncat(packetOut, 0x0001, 2);//identifier
-    strncat(packetOut, 0x0004, 2);//sequence number 
-    strncat(packetOut, PingReq.payload, strlen(PingReq.payload));
-    
+    packetOut[emptyPointer++] = 0x08;//icmp ping request
+    packetOut[emptyPointer++] = 0x00;//code is 0
+    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x00;/*placeholder valueicmp check sum, I'll figure it out later */
+    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x01;//identifier
+    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x04;//sequence number 
+    strncat(packetOut, PingReq.payload, strlen(PingReq.payload)); emptyPointer += strlen(PingReq.payload); 
     return 0;
 }

@@ -1,4 +1,6 @@
 /*TESTING*/
+#include <stdio.h>
+#include <string.h>
 struct packet
 {
     char sMac[6];
@@ -48,7 +50,7 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
     PingReq.dMac = condenseChar(dMac);
     PingReq.target = condenseChar(target);
     PingReq.source = condenseChar(source);
-    strcpy(PingReq.data, data);
+    strcpy(PingReq.payload, data);
     
     return 0;
 }
