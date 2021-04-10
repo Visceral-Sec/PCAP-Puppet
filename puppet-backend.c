@@ -132,8 +132,9 @@ int writeToFile(char packetOut[114])
     return 0;
 }
 
-int main(int sMac[], int dMac[], int target[], int source[], char data[])
+int main()
 {
+    int sMac[6]; int dMac[6]; int target[4]; int source[4]; char data[200];//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, data);
     constructPacket();
 }
