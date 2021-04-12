@@ -47,11 +47,42 @@ int* condenseChar(int currentParam[], int paramSize)//Turns a two digit string i
 int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], int source[], char data[])
 {   
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
+    
+    for(int i = 0; i < 6; i++)
+    {
+    	PingReq.sMac[i] = condenseChar(sMac, 11)[i];
+    }
+    
+    for(int i = 0; i < 6; i++)
+    {
+    	PingReq.dMac[i] = condenseChar(dMac, 11)[i];
+    }
+    
+    for(int i = 0; i < 4; i++)
+    {
+    	PingReq.target[i] = condenseChar(target, 7)[i];
+    }
+    
+    for(int i = 0; i < 4; i++)
+    {
+    	PingReq.source[i] = condenseChar(source, 7)[i];
+    }
+    
+    /*
     PingReq.sMac = condenseChar(sMac, 11);
     PingReq.dMac = condenseChar(dMac, 11);
     PingReq.target = condenseChar(target, 7);
     PingReq.source = condenseChar(source, 7);
+    */
     strcpy(PingReq.payload, data);
     
     return 0;
 }
+
+/*TESTING*/
+int main()
+{
+    return 0;
+}
+
+/*END OF TESTING*/
