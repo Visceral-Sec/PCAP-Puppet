@@ -77,10 +77,10 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
 }
 
 //constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-int etherConstruct(char dMac[6], char sMac[6])
+int etherConstruct()
 {
-    strncat(packetOut, dMac, 6); emptyPointer += 6;
-    strncat(packetOut, sMac, 6); emptyPointer += 6;
+    strncat(packetOut, PingReq.dMac, 6); emptyPointer += 6;
+    strncat(packetOut, PingReq.sMac, 6); emptyPointer += 6;
     packetOut[emptyPointer++] = 0x08; packetOut[emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
     return 0;
 }
