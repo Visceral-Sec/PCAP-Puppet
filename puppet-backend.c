@@ -11,8 +11,18 @@ struct packet
     char payload[100];
 };
 struct packet PingReq;
-char packetOut[200]; //placeholder length - will fix
-int emptyPointer = 0;
+char g_packetOut[200]; //placeholder length - will fix
+int g_emptyPointer = 0;
+
+//takes an array in and inserts it into the correct place, keeping emptyPointer safe
+int insertVariable(char arrIn[], int bytesToWrite)
+{
+    for (int x = 0; x < bytesToWrite; x++)
+    {
+        g_packetOut[g_emptyPointer++] = arrIn[x];
+    }
+    return 0;
+}
 
 //parse data from python frontend
 int* condenseChar(int currentParam[], int paramSize)//Turns a two digit string into a number
@@ -79,36 +89,36 @@ int dataParse(/*int sPort, int dPort, */int sMac[], int dMac[], int target[], in
 //constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
 int etherConstruct()
 {
-    strncat(packetOut, PingReq.dMac, 6); emptyPointer += 6;
-    strncat(packetOut, PingReq.sMac, 6); emptyPointer += 6;
-    packetOut[emptyPointer++] = 0x08; packetOut[emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
+    insertVariable(PingReq.dMac, 6);
+    insertVariable(PingReq.sMac, 6);
+    g_packetOut[g_emptyPointer++] = 0x08; g_packetOut[g_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
     return 0;
 }
 
 //slaps an IP header into the array
 int ipConstruct()
 {
-    packetOut[emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
-    packetOut[emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = strlen(PingReq.payload) + 28; //Identification? will check
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x00; //flags and fragment offset
-    packetOut[emptyPointer++] = 0x80; //ttl of 128
-    packetOut[emptyPointer++] = 0x01; //icmp is 01
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x00; //header checksum, 0000 means no validation
-    strncat(packetOut, PingReq.source, 4); emptyPointer += 4;
-    strncat(packetOut, PingReq.target, 4); emptyPointer += 4;
+    g_packetOut[g_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
+    g_packetOut[g_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = strlen(PingReq.payload) + 28; //Identification? will check
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00; //flags and fragment offset
+    g_packetOut[g_emptyPointer++] = 0x80; //ttl of 128
+    g_packetOut[g_emptyPointer++] = 0x01; //icmp is 01
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
+    insertVariable(PingReq.source, 4);
+    insertVariable(PingReq.target, 4);
     return 0;
 }
 
 //slaps icmp ¿packet? into the frame
 int icmpConstruct()
 {
-    packetOut[emptyPointer++] = 0x08;//icmp ping request
-    packetOut[emptyPointer++] = 0x00;//code is 0
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x00;/*placeholder value*///icmp check sum, I'll figure it out later
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x01;//identifier
-    packetOut[emptyPointer++] = 0x00; packetOut[emptyPointer++] = 0x04;//sequence number 
-    strncat(packetOut, PingReq.payload, strlen(PingReq.payload)); emptyPointer += strlen(PingReq.payload); 
+    g_packetOut[g_emptyPointer++] = 0x08;//icmp ping request
+    g_packetOut[g_emptyPointer++] = 0x00;//code is 0
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00;/*placeholder value*///icmp check sum, I'll figure it out later
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x01;//identifier
+    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x04;//sequence number 
+    insertVariable(PingReq.payload, strlen(PingReq.payload));
     return 0;
 }
 
@@ -124,11 +134,11 @@ int constructPacket()
 
 
 //write the frame's array to the pcap file
-int writeToFile(char packetOut[114])
+int writeToFile(char g_packetOut[114])
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
-    fwrite(packetOut, 114, 1, fp);
+    fwrite(g_packetOut, 114, 1, fp);
     return 0;
 }
 
