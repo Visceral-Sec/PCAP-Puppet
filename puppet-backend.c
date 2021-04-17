@@ -116,7 +116,7 @@ int icmpConstruct()
 //construct all of the arrays into one frame array
 int constructPacket()
 {
-    etherConstruct(PingReq.dMac, PingReq.sMac);
+    etherConstruct();
     ipConstruct();
     icmpConstruct();
     return 0;
