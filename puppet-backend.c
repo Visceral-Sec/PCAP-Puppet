@@ -118,7 +118,7 @@ int icmpConstruct()
 {
     g_packetOut[g_emptyPointer++] = 0x08;//icmp ping request
     g_packetOut[g_emptyPointer++] = 0x00;//code is 0
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00;/*placeholder value*///icmp check sum, I'll figure it out later
+    g_packetOut[g_emptyPointer++] = 0x4d; g_packetOut[g_emptyPointer++] = 0x57;/*placeholder value*///icmp check sum, I'll figure it out later
     g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x01;//identifier
     g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x04;//sequence number 
     insertVariable(PingReq.payload, strlen(PingReq.payload));
