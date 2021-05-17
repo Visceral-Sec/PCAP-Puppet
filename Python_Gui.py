@@ -10,6 +10,7 @@ from tkinter import * #Importing tkinter
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Frames/Master ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #https://www.youtube.com/watch?v=YXPyB4XeYLA
+
 #Tkinter works a bit like HTML, but instead of objects etc we have widgets
 
 master = Tk() #This is the root of the entire gui
@@ -35,6 +36,8 @@ pConfig_Frame.grid(row = (0), column = 1, sticky = W)
 pCreate_Frame = Frame(master)
 pCreate_Frame.place(x=515, y = 445)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Classes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# This all classes. Currently, Classes are used for holding user inputs as well as potential errors.
+# Classes are used because they have a wider scope than the function they are in, so they are used for returning values.
 
 class icmpConfig:
     icmptext = ""
@@ -44,12 +47,10 @@ class icmpConfig:
     iperror = [0,0]
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# This contains every function used in the program.
+# layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
 
-# Layer 2 is fully commented, all other layer functions use the exact same formatting and configuration. Follow commenting and apply the good old common sense  to the rest
-# UPDATE ^ Layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
-# As layer 2 contains ICMP which is required for the first prototype. Most work has been done on that layer
-
-def ErrorReset():
+def ErrorReset():   # This function resets errors, (This is used to prevent from previous errors displaying)
     icmpConfig.macerror[0] = 0
     icmpConfig.macerror[1] = 0
     icmpConfig.macerror[2] = 0
@@ -58,6 +59,7 @@ def ErrorReset():
     icmpConfig.iperror[1] = 0
 
 
+#Slight edited by Archer, but mainly coded by Matt. This function checks the validatility of the IP.
 def IP_checker(IP): # Coded by Matt
     IP_breakdown = [] #Storage for each part of the IP
     points_count = 0 #Verifying given address has 3 points
@@ -84,6 +86,7 @@ def IP_checker(IP): # Coded by Matt
         return
     print('Legit IP given')
 
+#Slight edited by Archer, but mainly coded by Matt. This function checks the validatility of the MAC.
 def MAC_checker(MAC): # Coded by Matt
     acceptable_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -107,6 +110,8 @@ def MAC_checker(MAC): # Coded by Matt
             icmpConfig.macerror[3] = 4
     return(0) # Edited to allow for easier user parsing
 
+
+# Layer 2 Display function. (Needs to be updated as of 15/05/2021)
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
     layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration") # This then prints the label heading as the name of the chosen protocol + the option
     layer2_Frame.grid(row = (2), column = 3, sticky = E) # Postioning
@@ -131,31 +136,22 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
         
     if l == layersArray[1][3]:
         arp_Ip.grid(row = (1), column = 3, sticky = E,pady=25, padx=82)
-       
-    # current issues:
-    # Currently each option doesn't actually remove the previous it jsut over-writes on top of it. It's impossbile for the user to notice but may be an issue in the future. (.forget() doesn't work for some reason I hate tkinter)
-    # Currently no testing has got into how this is going to withdraw data so that's an important thing to note
-    # Potentially not the best way of approaching this but this but that's why we have prototypes.
-
-    # to do
-    # add more options 
-    # flesh out a better way of appraoch
-    # get data out of these inputs
-    # think about how to connect to this to the actual python program
 
 def layer3_Displayer(l):
+    #Defining the tkinter type
     layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=294, height=90)    # Using .place geomotry manager under the label frame in order to position correctly
     layer3_Frame.grid(row = (3), column = 3,)
     
-    # defining entries
-    ip1 = Entry(layer3_Frame, width=2) 
-    ip2 = Entry(layer3_Frame, width=2)
-    ip3 = Entry(layer3_Frame, width=2)
-    ip4 = Entry(layer3_Frame, width=2)
-    dot1 = Label(layer3_Frame, text = ".")
+    # defining the ip octect entires
+    ip1 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
+    ip2 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
+    ip3 = Entry(layer3_Frame, width=2) #Octect 3 of the ip 
+    ip4 = Entry(layer3_Frame, width=2) #Octect 4 of the ip 
+    dot1 = Label(layer3_Frame, text = ".") # Three dots seperating the fields
     dot2 = Label(layer3_Frame, text = ".")
     dot3 = Label(layer3_Frame, text = ".")
 
+    # Defining the mac octect Entries
     mac1 = Entry(layer3_Frame, width=3)
     mac2 = Entry(layer3_Frame, width=3)
     mac3 = Entry(layer3_Frame, width=3) 
@@ -163,20 +159,24 @@ def layer3_Displayer(l):
     mac5 = Entry(layer3_Frame, width=3)
     mac6 = Entry(layer3_Frame, width=3)
 
-
+    # The colons seperate the label
     colon1 = Label(layer3_Frame, text = ":")
     colon2 = Label(layer3_Frame, text = ":")
     colon3 = Label(layer3_Frame, text = ":")    
     colon4 = Label(layer3_Frame, text = ":")
     colon5 = Label(layer3_Frame, text = ":")   
 
+    #Defining the text (like literally the words that say "IP:")
     iptext = Label(layer3_Frame, text = "IP:")
     mactext = Label(layer3_Frame, text = "MAC:")
 
-    iptext.place(x=2,y=4) #Ip text postioning
+    #Ip text postioning
+    iptext.place(x=2,y=4) 
+    #mac text postioning
     mactext.place(x=2,y=34) #mac text postioning
 
-    ip1.place(x=20,y=5)     #ip entry boxes
+    #Placing all of the previously defined labels. using .place for more accurate location (This does take a while to do tho)
+    ip1.place(x=20,y=5)     
     ip2.place(x=50,y=5)
     ip3.place(x=80,y=5)
     ip4.place(x=110,y=5)
@@ -185,7 +185,7 @@ def layer3_Displayer(l):
     dot2.place(x=70,y=5)
     dot3.place(x=100,y=5)
 
-    mac1.place(x=40,y=35)   # mac entry boxes
+    mac1.place(x=40,y=35)   
     mac2.place(x=70,y=35)
     mac3.place(x=100,y=35)
     mac4.place(x=130,y=35)
@@ -198,8 +198,8 @@ def layer3_Displayer(l):
     colon4.place(x=150,y=35)
     colon5.place(x=180,y=35)
     
-
-    def done():
+    # Done function. This concatenates all of the octects into 2 strings and then loads into the class mentioned earlier.
+    def icmpdone():
         ipa = ip1.get() #a = string 1 = entry
         ipb = ip2.get()
         ipc = ip3.get()
@@ -211,28 +211,28 @@ def layer3_Displayer(l):
         macd = mac4.get()
         mace = mac5.get()
         macf = mac6.get()
+
         colon = ":"
         dot = "."
         ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
-        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
+        mac = mac1.get + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
+
         icmpConfig.ip = ip
         icmpConfig.mac = mac
         
-
-    b = Button(layer3_Frame, text = "completed", command=done, )
-
-    b.place(x=220, y=30) # postioning on the button
+    #Button that links the previous function. 
+    icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
+    #Places that button
+    icmpb.place(x=220, y=30) # postioning on the button
     
     if l == layersArray[2][0]: #nat
         nat_ip = Entry(layer3_Frame)
         
     if l == layersArray[2][1]: #icmp
         icmp_ip = Entry(layer3_Frame)
-      
-
+        
     if l == layersArray[2][2]: #rip
         rip_Ip = Entry(layer3_Frame)
-
 
 
     if l == layersArray[2][3]: #ospf
@@ -334,25 +334,13 @@ def createPcap():
     ErrorReset()   # clears all previous error checks from previous creations
     IP_checker(icmpConfig.ip) #calls the ip parse function
     MAC_checker(icmpConfig.mac) #calls the mac parse function
-    macerror1 = int(icmpConfig.macerror[0])
-    macerror2 = int(icmpConfig.macerror[1])
-    macerror3 = int(icmpConfig.macerror[2])
-    macerror4 = int(icmpConfig.macerror[3])
-    iperror1 = int(icmpConfig.iperror[0])
-    iperror2 = int(icmpConfig.iperror[1])
+   
 
-    print(iperror1)
-    print(iperror2)
-    print(macerror1)
-    print(macerror2)
-    print(macerror3)
-    print(macerror4)
-
-    if (macerror1 > 0 or macerror2 > 0 or macerror3 > 0 or macerror4 > 0 or iperror1 > 0 or iperror2 > 0):
+    if (int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0):
         error_Popup = Toplevel()
         error_Popup.title("Errors")
         mac_Error1 = Label(error_Popup, text="Incorrect MAC Length")
-        mac_Error2 = Label(error_Popup, text="Not Enough Colons")
+        mac_Error2 = Label(error_Popup, text="")
         mac_Error3 = Label(error_Popup, text="Colons not at acceptable places")
         mac_Error4 = Label(error_Popup, text="Mac address contains unacceptable characters")
         ip_Error1 = Label(error_Popup, text='IP contains invalid numbers (0-255)')
@@ -439,6 +427,7 @@ layersArray = [
 ]
 
 
+
 # THIS IS ABOMINATION THAT HURTS ME TO EVEN WRITE BUT IT'S THE ONLY WAY I CURRENTLY KNOW OF HOW TO ENSURE THAT EACH DROP DOWN MENU CAN CAUSE OPTIONS
 
 
@@ -503,7 +492,7 @@ pcapCbutton.grid(row = (0), column = 0, sticky = W)
   #  layerTitle.set("Layer " + str(i + 1))
    # Layerdrop = OptionMenu(lconfig_Frame, layerTitle, *layersArray[i], command=mynameisjeff() # Sets it as a drop down
     #Layerdrop.config(width=5, padx=68, pady=5, height=4, font=("Arial", 12)) # configures the size of the drop box
-    #Layerdrop.grid(row = (i+1), column = 0, sticky = W)
+      #Layerdrop.grid(row = (i+1), column = 0, sticky = W)
 
 # ^ this code does that entire ugly block in one simple for statement but it's difficult to get it to work with the function commands
 
