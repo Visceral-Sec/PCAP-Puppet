@@ -7,8 +7,6 @@ struct packet
     char dMac[6];
     char source[4];
     char target[4];
-    char sPort;
-    char dPort;
     char payload[100];
 };
 struct packet PingReq;
