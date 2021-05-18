@@ -10,7 +10,7 @@ struct packet
     char payload[100];
 };
 struct packet PingReq;
-char g_packetOut[200]; //placeholder length - will fix
+char g_pcapOut[200]; //placeholder length - will fix
 int g_emptyPointer = 0;
 
 //takes an array in and inserts it into the correct place, keeping emptyPointer safe
@@ -18,7 +18,7 @@ int insertVariable(char arrIn[], int bytesToWrite)
 {
     for (int x = 0; x < bytesToWrite; x++)
     {
-        g_packetOut[g_emptyPointer++] = arrIn[x];
+        g_pcapOut[g_emptyPointer++] = arrIn[x];
     }
     return 0;
 }
@@ -84,21 +84,21 @@ int etherConstruct()
 {
     insertVariable(PingReq.dMac, 6);
     insertVariable(PingReq.sMac, 6);
-    g_packetOut[g_emptyPointer++] = 0x08; g_packetOut[g_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
+    g_pcapOu[g_emptyPointer++] = 0x08; g_pcapOu[g_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
     return 0;
 }
 
 //slaps an IP header into the array
 int ipConstruct()
 {
-    g_packetOut[g_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
-    g_packetOut[g_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = strlen(PingReq.payload) + 28; //frame length
-    g_packetOut[g_emptyPointer++] = 0x1d; g_packetOut[g_emptyPointer++] = 0x1d; //idenfitication???????????
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00; //flags and fragment offset
-    g_packetOut[g_emptyPointer++] = 0x80; //ttl of 128
-    g_packetOut[g_emptyPointer++] = 0x01; //icmp is 01
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
+    g_pcapOu[g_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
+    g_pcapOu[g_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    g_pcapOu[g_emptyPointer++] = 0x00; g_pcapOu[g_emptyPointer++] = strlen(PingReq.payload) + 28; //frame length
+    g_pcapOu[g_emptyPointer++] = 0x1d; g_pcapOu[g_emptyPointer++] = 0x1d; //idenfitication???????????
+    g_pcapOu[g_emptyPointer++] = 0x00; g_pcapOu[g_emptyPointer++] = 0x00; //flags and fragment offset
+    g_pcapOu[g_emptyPointer++] = 0x80; //ttl of 128
+    g_pcapOu[g_emptyPointer++] = 0x01; //icmp is 01
+    g_pcapOu[g_emptyPointer++] = 0x00; g_pcapOu[g_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
     insertVariable(PingReq.source, 4);
     insertVariable(PingReq.target, 4);
     return 0;
@@ -107,11 +107,11 @@ int ipConstruct()
 //slaps icmp ¿packet? into the frame
 int icmpConstruct()
 {
-    g_packetOut[g_emptyPointer++] = 0x08;//icmp ping request
-    g_packetOut[g_emptyPointer++] = 0x00;//code is 0
-    g_packetOut[g_emptyPointer++] = 0x4d; g_packetOut[g_emptyPointer++] = 0x57;/*placeholder value*///icmp check sum, I'll figure it out later
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x01;//identifier
-    g_packetOut[g_emptyPointer++] = 0x00; g_packetOut[g_emptyPointer++] = 0x04;//sequence number 
+    g_pcapOu[g_emptyPointer++] = 0x08;//icmp ping request
+    g_pcapOu[g_emptyPointer++] = 0x00;//code is 0
+    g_pcapOu[g_emptyPointer++] = 0x4d; g_pcapOu[g_emptyPointer++] = 0x57;/*placeholder value*///icmp check sum, I'll figure it out later
+    g_pcapOu[g_emptyPointer++] = 0x00; g_pcapOu[g_emptyPointer++] = 0x01;//identifier
+    g_pcapOu[g_emptyPointer++] = 0x00; g_pcapOu[g_emptyPointer++] = 0x04;//sequence number 
     insertVariable(PingReq.payload, strlen(PingReq.payload));
     return 0;
 }
@@ -132,10 +132,41 @@ int writeToFile()
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
-    fwrite(g_packetOut, 1, 0x63, fp);
+    fwrite(g_pcapOu, 1, 0x63, fp);
     fclose(fp);
     return 0;
 }
+
+// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html to create a C function to calc an rfc 1071 checksum
+// it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
+
+uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigned int
+{
+    char* data = (char*)vdata; //Cast the data pointer to one that can be indexed.
+    uint32_t acc = 0xffff; // Initialise the accumulator
+    for (size_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
+    {
+        uint16_t word; // a word being 16-bits
+        memcpy(&word, data + i, 2);
+        acc += ntohs(word);
+        if (acc > 0xffff)
+        {
+            acc -= 0xffff;
+        }
+    }
+    if (length&1) // Handle any partial block at the end of the data.
+    {
+        uint16_t word = 0;
+        memcpy(&word, data + length - 1, 1);
+        acc += ntohs(word);
+        if (acc > 0xffff)
+        {
+            acc -= 0xffff;
+        }
+    }
+    return htons(~acc); // Return the checksum in network byte order.
+}
+
 
 int main()
 {
