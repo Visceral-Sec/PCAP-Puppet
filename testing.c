@@ -13,8 +13,16 @@ struct packet
     char payload[100];
 };
 struct packet PingReq;
-char g_pcapOut[200]; //placeholder length - will fix
-int g_emptyPointer = 0;
+
+//REMOVE THIS IF FOUND IN BACKEND
+void read_pcap_out(char pcapOut[], int pcapLen)
+{
+    for (int x = 0; x < pcapLen; x++)
+    {
+        printf("%c", pcapOut[x]);
+    }
+    return;
+}
 
 // the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (18/05/2021 - we need to cite this) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
@@ -46,15 +54,7 @@ uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigne
     return htons(~acc); // Return the checksum in network byte order.
 }
 
-//takes an array in and inserts it into the correct place, keeping emptyPointer safe
-void insertVariable(char arrIn[], int bytesToWrite)
-{
-    for (int x = 0; x < bytesToWrite; x++)
-    {
-        g_pcapOut[g_emptyPointer++] = arrIn[x];
-    }
-    return;
-}
+//takes array and inserts it into the desired position in a chosen array
 void insertVarInto(char arrIn[], char arrOut[], int l_emptyPointer, int bytesToWrite)
 {
     for (int x = 0; x < bytesToWrite; x++)
@@ -113,37 +113,10 @@ void dataParse(/*int sPort, int dPort, */char sMac[17], char dMac[17], char targ
 }
 
 //jujhaar needs to do this one properly, this is a placeholder function to get proto 1 going
-void headerConstruct()
+void headerConstruct(char bigArr[])
 {
     char placeholderHeader[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00, 0x5D, 0x31, 0x25, 0x60, 0xE7, 0xC8, 0x07, 0x00, 0x4A, 0x00, 0x00, 0x00, 0x4A, 0x00, 0x00, 0x00};
-    insertVariable(placeholderHeader, 40);
-    return;
-}
-
-//constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-void etherConstruct(char etherFrame[])
-{
-    int l_emptyPointer = 0;
-    insertVarInto(PingReq.dMac, etherFrame, l_emptyPointer, 6);
-    insertVarInto(PingReq.sMac, etherFrame, l_emptyPointer, 6);
-    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
-    return;
-}
-
-//slaps an IP header into the array
-void ipConstruct(char ipPacket[])
-{
-    int l_emptyPointer = 0;
-    ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
-    ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = strlen(PingReq.payload) + 28; //frame length - also it doesnt work if > 255 length lmao
-    ipPacket[l_emptyPointer++] = 0x1d; ipPacket[l_emptyPointer++] = 0x1d; //idenfitication???????????
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
-    ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
-    ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[g_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
-    insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4);
-    insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4);
+    insertVarInto(placeholderHeader, bigArr, 0, 40);
     return;
 }
 
@@ -160,66 +133,96 @@ void icmpConstruct(char icmpSegment[])
     return;
 }
 
-//REMOVE THIS IF FOUND IN BACKEND
-void read_pcap_out()
+//slaps an IP header into the array
+void ipConstruct(char ipPacket[], char transportSegment[], int transportSegLen)
 {
-    for (int x = 0; x < 200; x++)
-    {
-        printf("%c", g_pcapOut[x]);
-    }
+    int l_emptyPointer = 0;
+    ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
+    ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = strlen(PingReq.payload) + 28; //frame length - also it doesnt work if > 255 length lmao
+    ipPacket[l_emptyPointer++] = 0x1d; ipPacket[l_emptyPointer++] = 0x1d; //idenfitication???????????
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
+    ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
+    ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
+    insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
+    insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
+    insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
+    return;
 }
 
-
-//construct all of the arrays into one frame array
-void constructPacket()
+//constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
+void etherConstruct(char etherFrame[], char networkPacket[], int netPacketLen)
 {
+    int l_emptyPointer = 0;
+    insertVarInto(PingReq.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    insertVarInto(PingReq.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
+    insertVarInto(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
+    return;
+}
 
-    char* icmpSegment; //create pointer to icmpsegment
+//construct all of the arrays into one frame array - needs more work
+int constructPacket(char bigArr[512])
+{
+    char *icmpSegment; //create pointer to icmpsegment
     int icmpSegLen = 8 + strlen(PingReq.payload);
     icmpSegment = (char *)malloc(sizeof(char) * icmpSegLen); //reserves (8 + length of payload) bytes on the heap
     icmpConstruct(icmpSegment);
+    //read_pcap_out(icmpSegment, icmpSegLen);
     
-    char* ipPacket;
-    int ipPacketLen = 20;
-    ipPacket = (char *)malloc(sizeof(char) * ipPacketLen); //reserves 20 bytes onthe heap
-    ipConstruct(ipPacket);
+    char *ipPacket;
+    int ipPacketLen = 20 + icmpSegLen;
+    ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 bytes onthe heap
+    ipConstruct(ipPacket, icmpSegment, icmpSegLen); //builds on top of the icmpseg
+    //read_pcap_out(ipPacket, ipPacketLen);
     
-    char* etherFrame;
-    int etherFrameLen = 14;
-    etherFrame = (char *)malloc(sizeof(char) * etherFrameLen); //reserves 14 bytes onthe heap
-    etherConstruct(etherFrame);
+    char *etherFrame;
+    int etherFrameLen = 14 + ipPacketLen;
+    etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
+    etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
     
-    insertVariable(etherFrame, etherFrameLen); //insert each of the parts of the frame into the pcapOut
-    insertVariable(ipPacket, ipPacketLen);
-    insertVariable(icmpSegment, icmpSegLen);
+    insertVarInto(etherFrame, bigArr, 0, etherFrameLen); //insert each of the parts of the frame into the bigArr
 
-    free(icmpSegment);
+    free(icmpSegment); //free up the reserved space on the heap
     free(ipPacket);
     free(etherFrame);
 
-    read_pcap_out();//REMOVE THIS IF FOUND IN BACKEND
-    return;
+    return etherFrameLen;
 }
 
 
 //write the frame's array to the pcap file
-void writeToFile()
+void writeToFile(char pcapOut[], int pcaplen)
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
-    fwrite(g_pcapOut, 1, 0x63, fp);
+    fwrite(pcapOut, 1, pcaplen, fp);
     fclose(fp);
     return;
 }
-
 
 int main()
 {
     char sMac[17] = "11:11:11:11:11:11"; char dMac[17] = "22:22:22:22:22:22"; char target[11] = "6f.6f.6f.6f"; char source[11] = "de.de.de.de"; char data[18] = "Yes, I do love C.";//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, data);
-    headerConstruct();
-    constructPacket();
-    writeToFile();
+
+    char packetOut[512];
+    int packetLen = constructPacket(packetOut);
+
+    char bigArr[512];
+    int bigArrLen = packetLen + 40;
+    headerConstruct(bigArr);
+    insertVarInto(packetOut, bigArr, 40, packetLen);
+
+    char *pcapOut;
+    pcapOut = (char *)malloc(sizeof(char) * bigArrLen);
+    insertVarInto(bigArr, pcapOut, 0, bigArrLen);
+
+    read_pcap_out(pcapOut, bigArrLen);
+
+    writeToFile(pcapOut, bigArrLen);
+    free(pcapOut);
+
     return 0;
 }
-
