@@ -1,5 +1,5 @@
-from tkinter import * #Importing tkinter
-
+import os
+from tkinter import *  # Importing tkinter
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -17,6 +17,9 @@ master = Tk() #This is the root of the entire gui
 master.geometry('779x580') # sets default size
 master.title("PCAP PUPPET")
 #master.resizable(width=False, height=False) # prevents the size from being adjusted
+
+#change this depending on path
+path = "Project"
 
 #Frame for layer configuraiton
 lconfig_Frame = Frame(master)
@@ -45,18 +48,138 @@ class icmpConfig:
     mac = ""
     macerror = [0,0,0,0]
     iperror = [0,0]
+    selected = [0]
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class arpConfig:
+    icmptext = ""
+    ip = ""
+    mac = ""
+    macerror = [0,0,0,0]
+    iperror = [0,0]
+    selected = [0]
+
+
+
+#These Classes exist for error checking purposes and checks if the protocol is being used
+class Config:
+    #Layer 2
+    Ethernet=[0,0]
+    TokenRing=[0,0]
+    Wifi=[0,0]
+    #Layer 3
+    NAT=[0,0]
+    ICMP=[0,0]
+    ARP=[0,0]
+    RIP=[0,0]
+    OSPF=[0,0]
+    IP=[0,0]
+    #Layer 4 
+    UDP=[0,0]
+    TCP=[0,0]
+    #Layer 5 
+    SOCKS=[0,0]
+    NetBIOS=[0,0]
+    SMB=[0,0]
+    #Layer 6
+    TLS=[0,0]
+    SSL=[0,0]
+    FTP=[0,0]
+    SSH=[0,0]
+    #Layer 7
+    SOAP=[0,0]
+    DHCP=[0,0]
+    TELNET=[0,0]
+    IRC=[0,0]
+    FTP=[0,0]
+    HTTP=[0,0]
+    HTTPS=[0,0]
+    DNS=[0,0]
+
+class IPErrors:
+    error = [0,0]
+class MACErrors:
+    error = [0,0,0,0]
+
+class PcapConfig:
+    wiresharkVER = "3.4.5"
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This contains every function used in the program.
 # layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
 
-def ErrorReset():   # This function resets errors, (This is used to prevent from previous errors displaying)
+#This function writes to a txt doc which the c function will use to create the pcap
+def pcapWrite():
+    #The library to write to files is very similar to that of C file.io library
+    pcap_path = os.path.join(path, "PlaceholderPcap.txt")
+    f = open(pcap_path, "w")
+
+    f.write("meta\n") 
+    f.write(PcapConfig.wiresharkVER + "\n")
+    #add more meta information here
+    f.write("end\n")
+
+    f.write("packet data\n")
+
+    #if ICMP is selected.
+    if Config.ICMP[1] == 1:
+        f.write("ICMP\n")
+        # add icmp data etc here
+        f.write(icmpConfig.ip + "\n")
+        f.write(icmpConfig.mac + "\n")
+        f.write("end\n")
+
+    if Config.ARP[1] == 1:
+        f.write("ARP\n")
+        # add icmp data etc here
+        f.write(arpConfig.ip + "\n")
+        f.write(arpConfig.mac + "\n")
+        f.write("end\n")
+
+    f.write("end\n")
+
+    
+
+def ErrorReset():   # This function resets every error, (This is used to prevent from previous errors displaying)  
+    IPErrors.error[0] = 0
+    IPErrors.error[1] = 0
+    MACErrors.error[0] = 0
+    MACErrors.error[1] = 0
+    MACErrors.error[2] = 0
+    MACErrors.error[3] = 0
+
+
+
+    #ICMP Errors
+    Config.ICMP[0] = 0
     icmpConfig.macerror[0] = 0
     icmpConfig.macerror[1] = 0
     icmpConfig.macerror[2] = 0
     icmpConfig.macerror[3] = 0
     icmpConfig.iperror[0] = 0
     icmpConfig.iperror[1] = 0
+    
+    #ARP Errors
+    #ICMP Errors
+    Config.ARP[0] = 0
+    arpConfig.macerror[0] = 0
+    arpConfig.macerror[1] = 0
+    arpConfig.macerror[2] = 0
+    icmpConfig.macerror[3] = 0
+    icmpConfig.iperror[0] = 0
+    icmpConfig.iperror[1] = 0
+
+
+
+
+
+def CMPErrorRest():     # This resets each compare error (This is to prevent previous protocol errors effecting other checks)
+    IPErrors.error[0] = 0
+    IPErrors.error[1] = 0
+    MACErrors.error[0] = 0
+    MACErrors.error[1] = 0
+    MACErrors.error[2] = 0
+    MACErrors.error[3] = 0
+
 
 
 #Slight edited by Archer, but mainly coded by Matt. This function checks the validatility of the IP.
@@ -64,7 +187,6 @@ def IP_checker(IP): # Coded by Matt
     IP_breakdown = [] #Storage for each part of the IP
     points_count = 0 #Verifying given address has 3 points
     IP_part = ''
-    icmpConfig.ip
     for i in range(len(IP)):
         if IP[i] == '.':
             points_count += 1
@@ -79,10 +201,10 @@ def IP_checker(IP): # Coded by Matt
             if 0 <= IP_breakdown[i] <= 255: #Checking IP numbers are in valid range
                 pass
             else:
-                icmpConfig.iperror[0] = 1 #Ips aren't valid
+                IPErrors.error[0] = 1 #Ips aren't valid
                 return 
     else:
-        icmpConfig.iperror[1] = 1 #Ip doesn't have enough octects
+        IPErrors.error[1] = 2 #Ip doesn't have enough octects
         return
     print('Legit IP given')
 
@@ -95,19 +217,19 @@ def MAC_checker(MAC): # Coded by Matt
     acceptable_placesforcolon = [2, 5, 8, 11, 14]
     MAC = MAC.lower()
     if len(MAC) != 17: #Num of chars in MAC address is 17
-        print('Incorrect MAC length') 
-        icmpConfig.macerror[0] = 1 
+        print('Incorrect MAC length')
+        MACErrors.error[0] = 1
     if MAC[2] != ':' or MAC[5] != ':' or MAC[8] != ':' or MAC[11] != ':' or MAC[14] != ':': #If no colon at specific points
         print('Not enough colons')
-        icmpConfig.macerror[1] = 2
+        MACErrors.error[1] = 2
     for i in range(len(MAC)):
         if MAC[i] == ':' and i not in acceptable_placesforcolon: #Colon not used to identify address, only chars and digits
             print('Colon(s) not at an acceptable place(s)')
-            icmpConfig.macerror[2] = 3
+            MACErrors.error[2] = 3
     for i in range(len(MAC)):
         if MAC[i] not in acceptable_chars: #Only letters numbers and colons excepted
             print('Mac address contains unacceptable characters')
-            icmpConfig.macerror[3] = 4
+            MACErrors.error[3] = 4
     return(0) # Edited to allow for easier user parsing
 
 
@@ -141,7 +263,6 @@ def layer3_Displayer(l):
     #Defining the tkinter type
     layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=294, height=90)    # Using .place geomotry manager under the label frame in order to position correctly
     layer3_Frame.grid(row = (3), column = 3,)
-    
     # defining the ip octect entires
     ip1 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
     ip2 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
@@ -197,9 +318,10 @@ def layer3_Displayer(l):
     colon3.place(x=120,y=35)
     colon4.place(x=150,y=35)
     colon5.place(x=180,y=35)
-    
     # Done function. This concatenates all of the octects into 2 strings and then loads into the class mentioned earlier.
     def icmpdone():
+        icmpConfig.ip = ""
+        icmpConfig.mac = ""
         ipa = ip1.get() #a = string 1 = entry
         ipb = ip2.get()
         ipc = ip3.get()
@@ -215,16 +337,44 @@ def layer3_Displayer(l):
         colon = ":"
         dot = "."
         ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
-        mac = mac1.get + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
-
+        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
         icmpConfig.ip = ip
         icmpConfig.mac = mac
+        Config.ICMP[1] = 1
+        
         
     #Button that links the previous function. 
-    icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
-    #Places that button
-    icmpb.place(x=220, y=30) # postioning on the button
-    
+    if l == "ICMP":
+        icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
+        icmpb.place(x=220, y=30) # postioning on the button
+
+    def arpdone():
+        arpConfig.ip = ""
+        arpConfig.mac = ""
+        ipa = ip1.get() #a = string 1 = entry
+        ipb = ip2.get()
+        ipc = ip3.get()
+        ipd = ip4.get()
+
+        maca = mac1.get()
+        macb = mac2.get()
+        macc = mac3.get()
+        macd = mac4.get()
+        mace = mac5.get()
+        macf = mac6.get()
+        colon = ":"
+        dot = "."
+        ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
+        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
+        arpConfig.ip = ip
+        arpConfig.mac = mac
+        Config.ARP[1] = 1
+     
+    if l == "ARP":
+        arpb = Button(layer3_Frame, text = "✓", command=arpdone,)
+        arpb.place(x=220, y=30) # postioning on the button
+
+
     if l == layersArray[2][0]: #nat
         nat_ip = Entry(layer3_Frame)
         
@@ -332,39 +482,99 @@ def layer7_Displayer(l):
 
 def createPcap():
     ErrorReset()   # clears all previous error checks from previous creations
-    IP_checker(icmpConfig.ip) #calls the ip parse function
-    MAC_checker(icmpConfig.mac) #calls the mac parse function
-   
+    #Checker functions (This will be ran on pretty much every protocol, (Don't know how to make this more effective))
+    # As tkinter doesn't like values being returned we have to use a place holder class to hold errors. This gets reset after each compare. (This allows for multiple protocols to use the error checking functions)
+    print(icmpConfig.ip)
+    print(icmpConfig.mac)
+    print(arpConfig.ip)
+    print(arpConfig.mac)
 
+
+    if Config.ICMP[1] == 1:
+        IP_checker(icmpConfig.ip) #calls the ip parse function
+        icmpConfig.iperror[0] = IPErrors.error[0]
+        icmpConfig.iperror[1] = IPErrors.error[1]
+        MAC_checker(icmpConfig.mac) #calls the mac parse function
+        icmpConfig.macerror[0] = MACErrors.error[0]
+        icmpConfig.macerror[1] = MACErrors.error[1]
+        icmpConfig.macerror[2] = MACErrors.error[2]
+        icmpConfig.macerror[3] = MACErrors.error[3]
+        CMPErrorRest()
+
+    if Config.ARP[1] == 1:
+        IP_checker(arpConfig.ip) #calls the ip parse function
+        arpConfig.iperror[0] = IPErrors.error[0]
+        arpConfig.iperror[1] = IPErrors.error[1]
+        MAC_checker(arpConfig.mac) #calls the mac parse function
+        arpConfig.macerror[0] = MACErrors.error[0]
+        arpConfig.macerror[1] = MACErrors.error[1]
+        arpConfig.macerror[2] = MACErrors.error[2]
+        arpConfig.macerror[3] = MACErrors.error[3]
+        CMPErrorRest()
+
+
+    error_Popup = Toplevel()
+    error_Popup.title("Packet Status")
+    #If statement checking if there any issues for the different protocols.
+    #I'll add more of these once Matthew as finished adding some of the different protocols.
     if (int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0):
-        error_Popup = Toplevel()
-        error_Popup.title("Errors")
-        mac_Error1 = Label(error_Popup, text="Incorrect MAC Length")
-        mac_Error2 = Label(error_Popup, text="")
-        mac_Error3 = Label(error_Popup, text="Colons not at acceptable places")
-        mac_Error4 = Label(error_Popup, text="Mac address contains unacceptable characters")
-        ip_Error1 = Label(error_Popup, text='IP contains invalid numbers (0-255)')
-        ip_Error2 = Label(error_Popup, text='IP Does not have enough octects')
+        Config.ICMP[0] = 1 #This sets the error 
+    #Place holder error follow the same syntax
+    
+    if (int(arpConfig.macerror[0]) > 0 or int(arpConfig.macerror[1]) > 0 or  int(arpConfig.macerror[2]) > 0 or int(arpConfig.macerror[3]) > 0 or int(arpConfig.iperror[0]) > 0 or int(arpConfig.iperror[1]) > 0):
+        Config.ARP[0] = 1 #This sets the error 
 
-        for i in range(len(icmpConfig.macerror)):
-            error = int(icmpConfig.macerror[i])
-            if error > 0:
-                if i == 1:
-                    mac_Error1.pack()
-                if i == 2:
-                    mac_Error2.pack()
-                if i == 3:
-                    mac_Error3.pack() 
-                if i == 4:
-                    mac_Error4.pack() 
-        for i in range(len(icmpConfig.iperror)):
-            error = int(icmpConfig.iperror[i])
-            if error > 0:
-                if i == 1:
-                    ip_Error1.pack()
-                if i == 2:
-                    ip_Error2.pack()
 
+    if Config.ICMP[0] != 0:
+        IcmpErrorLabel = Label(error_Popup, text="ICMP ERROR: There was an error in your ICMP Configuration.")
+        IcmpErrorLabel.pack()
+
+    if Config.ARP[0] != 0:
+        arpErrorLabel = Label(error_Popup, text="ARP ERROR: There was an error in your ARP Configuration.")
+        arpErrorLabel.pack()
+
+
+    else:
+        PcapStatusLabel = Label(error_Popup, text="The Pcap Creation was successful, find your generated pcap at /placeholder ")
+        PcapStatusLabel.pack()
+        pcapWrite()
+
+    #End of the Error checkign
+
+
+    # New plan for Error checking
+    # Make a new class called errors, this will contain errors for all different classes.
+    # Make a forloop to check errors on each protocol, then enter that into the class
+    # Finally check if the class has errors.
+        
+        #error_Popup = Toplevel()
+        #error_Popup.title("Errors")
+        #mac_Error1 = Label(error_Popup, text="Incorrect MAC Length")
+        #mac_Error2 = Label(error_Popup, text="")
+       # mac_Error3 = Label(error_Popup, text="Colons not at acceptable places")
+        #mac_Error4 = Label(error_Popup, text="Mac address contains unacceptable characters")
+      ##  ip_Error1 = Label(error_Popup, text='IP contains invalid numbers (0-255)')
+      #  ip_Error2 = Label(error_Popup, text='IP Does not have enough octects')
+
+      #  for i in range(len(icmpConfig.macerror)):
+         #   error = int(icmpConfig.macerror[i])
+          #  if error > 0:
+              #  if i == 1:
+               #     mac_Error1.pack()
+               # if i == 2:
+               #     mac_Error2.pack()
+               # if i == 3:
+              #      mac_Error3.pack() 
+             #   if i == 4:
+      #              mac_Error4.pack() 
+      #  for i in range(len(icmpConfig.iperror)):
+      #      error = int(icmpConfig.iperror[i])
+        #    if error > 0:
+               # if i == 1:
+               #     ip_Error1.pack()
+               # if i == 2:
+                    #ip_Error2.pack()
+    
 
 
 
