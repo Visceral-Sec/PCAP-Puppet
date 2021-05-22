@@ -1,4 +1,4 @@
-void tcpConstruct(char icmpSegment[])
+void tcpConstruct(char tcpSegment[])
 {
     int l_emptyPointer = 0;
     insertVarInto(PingReq.sPort, tcpSegment, l_emptyPointer, 2);
