@@ -1,5 +1,5 @@
 
-void udpConstruct(char icmpSegment[])
+void udpConstruct(char udpSegment[])
 {
     int l_emptyPointer = 0;
     insertVarInto(PingReq.sPort, udpSegment, l_emptyPointer, 2);
