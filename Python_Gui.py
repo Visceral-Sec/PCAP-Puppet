@@ -33,11 +33,11 @@ cConfig_Frame.place(x=510, y = 250)
 
 #Frame for layer configuraiton
 lconfig_Frame = Frame(master)
-lconfig_Frame.grid(row = (1), column = 0, sticky = W)
+lconfig_Frame.place(x=0,y=50, width=500)
 
 #Frame for Titles "Protocols"/"Configuration"/"PCAP Settings"
-tConfig_Frame = Frame(master)
-tConfig_Frame.grid(row = (0), column = 0, sticky = N)
+tConfig_Frame = LabelFrame(master)
+tConfig_Frame.place(x=0,y=0, width=780)
 
 #Frame for Protocol Configuraiton Settings
 
@@ -127,6 +127,7 @@ class TrafficSize:
 #These Classes exist for error checking purposes and checks if the protocol is being used
 class Config:
     #Layer 2
+    #1 Array = Ethernent[1] == 1
     Ethernet=[0,0]
     TokenRing=[0,0]
     Wifi=[0,0]
@@ -295,7 +296,7 @@ def MAC_checker(MAC): # Coded by Matt
 # Layer 2 Display function. (Needs to be updated as of 15/05/2021)
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
     layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration") # This then prints the label heading as the name of the chosen protocol + the option
-    layer2_Frame.grid(row = (2), column = 3, sticky = E) # Postioning
+    layer2_Frame.place(x=50, y=50)# Postioning
 
     # currently the only options we have is the ip entry setting. (That is why they are all protcol + labled_IP)
     eth_Ip = Entry(layer2_Frame) 
@@ -303,25 +304,10 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
     wifi_Ip = Entry(layer2_Frame, text="IP") 
     arp_Ip = Entry(layer2_Frame, text="IP")
 
-    # massive yandere dev if statement. (As far as I know switch statements are cringe in python and an If ladder works fine)
-    # A benefit of using this method is that adding extra protocols is really easy
-
-    if l == layersArray[1][0]: 
-        eth_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)  # Just adds the grid. It's done this way so that differnet options can show up for different protocols
-        
-    if l == layersArray[1][1]:
-        token_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
-
-    if l == layersArray[1][2]:
-        wifi_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
-        
-    if l == layersArray[1][3]:
-        arp_Ip.grid(row = (1), column = 3, sticky = E,pady=25, padx=82)
-
 def layer3_Displayer(l):
     #Defining the tkinter type
-    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=294, height=90)    # Using .place geomotry manager under the label frame in order to position correctly
-    layer3_Frame.grid(row = (3), column = 3,)
+    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)    # Using .place geomotry manager under the label frame in order to position correctly
+    layer3_Frame.place(x=217, y=0)
     # defining the ip octect entires
     ip1 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
     ip2 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
@@ -347,8 +333,8 @@ def layer3_Displayer(l):
     colon5 = Label(layer3_Frame, text = ":")   
 
     #Defining the text (like literally the words that say "IP:")
-    iptext = Label(layer3_Frame, text = "IP:")
-    mactext = Label(layer3_Frame, text = "MAC:")
+    iptext = Label(layer3_Frame, text = "Source IP:")
+    mactext = Label(layer3_Frame, text = "Source MAC:")
 
     #Ip text postioning
     iptext.place(x=2,y=4) 
@@ -405,7 +391,7 @@ def layer3_Displayer(l):
     #Button that links the previous function. 
     if l == "ICMP":
         icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
-        icmpb.place(x=220, y=30) # postioning on the button
+        icmpb.place(x=220, y=30,width=20) # postioning on the button
 
 
     def arpdone():
@@ -454,7 +440,7 @@ def layer3_Displayer(l):
 
 def layer4_Displayer(l):
     layer4_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer4_Frame.grid(row = (4), column = 3, sticky = E)
+    layer4_Frame.place(x=100, y=50)
     udp_Ip = Entry(layer4_Frame)
     tcp_Ip = Entry(layer4_Frame)
 
@@ -466,8 +452,7 @@ def layer4_Displayer(l):
 
 def layer5_Displayer(l):
     layer5_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer5_Frame.grid(row = (5), column = 3, sticky = E)
-
+    layer5_Frame.place(x=100, y=50)
     socks_Ip = Entry(layer5_Frame)
     netBIOS_Ip = Entry(layer5_Frame)
     smb_Ip = Entry(layer5_Frame)
@@ -483,7 +468,7 @@ def layer5_Displayer(l):
 
 def layer6_Displayer(l):    
     layer6_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer6_Frame.grid(row = (6), column = 3, sticky = E)
+    layer6_Frame.place(x=100, y=50)
 
     tls_Ip = Entry(layer6_Frame)
     ssl_Ip = Entry(layer6_Frame)
@@ -509,8 +494,7 @@ def SizeLoader():
 
 def layer7_Displayer(l):
     layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer7_Frame.grid(row = (7), column = 3, sticky = E)
-
+    layer7_Frame.place(x=100, y=50)
     soap_Ip = Entry(layer7_Frame)
     dhcp_Ip = Entry(layer7_Frame)
     telnet_Ip = Entry(layer7_Frame)
@@ -597,6 +581,9 @@ def createPcap():
         icmpConfig.macerror[3] = MACErrors.error[3]
         CMPErrorRest()
 
+
+
+
     if Config.ARP[1] == 1:
         IP_checker(arpConfig.ip) #calls the ip parse function
         arpConfig.iperror[0] = IPErrors.error[0]
@@ -619,6 +606,10 @@ def createPcap():
     
     if (int(arpConfig.macerror[0]) > 0 or int(arpConfig.macerror[1]) > 0 or  int(arpConfig.macerror[2]) > 0 or int(arpConfig.macerror[3]) > 0 or int(arpConfig.iperror[0]) > 0 or int(arpConfig.iperror[1]) > 0):
         Config.ARP[0] = 1 #This sets the error 
+
+
+
+
 
 
     if Config.ICMP[0] != 0:
