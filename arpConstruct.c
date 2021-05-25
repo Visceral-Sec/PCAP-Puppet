@@ -1,4 +1,5 @@
-void tcpConstruct(char icmpSegment[])
+//creates arp ¿query? part packet
+void arpConstruct(char icmpSegment[])
 {
     int l_emptyPointer = 0;
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type

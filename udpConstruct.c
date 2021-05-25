@@ -1,4 +1,4 @@
-
+//creates udp layer of packet
 void udpConstruct(char udpSegment[])
 {
     int l_emptyPointer = 0;

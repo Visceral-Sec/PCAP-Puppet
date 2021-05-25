@@ -1,3 +1,4 @@
+//creates dns ¿query? section
 void dnsConstruct(char dnsSegment[])
 {
     int l_emptyPointer = 0;
