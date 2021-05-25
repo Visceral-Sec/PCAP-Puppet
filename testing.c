@@ -133,13 +133,54 @@ void icmpConstruct(char icmpSegment[])
     return;
 }
 
+//creates arp section of packet
+void arpConstruct(char icmpSegment[])
+{
+    int l_emptyPointer = 0;
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
+    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
+    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
+    arpSegment[l_emptyPointer++] = 0x04;//Protocal size
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
+    insertVarInto(PingReq.sMac, arpSegment, l_emptyPointer, 6);
+    insertVarInto(PingReq.source, arpSegment, l_emptyPointer, 4);
+    insertVarInto(0x000000000000, arpSegment, l_emptyPointer, 6); //this might break - havent tested it yet
+    insertVarInto(PingReq.target, arpSegment, l_emptyPointer, 4);
+    return;
+}
+
+//creates udp layer of packet
+void udpConstruct(char udpSegment[])
+{
+    int l_emptyPointer = 0;
+    insertVarInto(PingReq.sPort, udpSegment, l_emptyPointer, 2);
+    insertVarInto(PingReq.dPort, udpSegment, l_emptyPointer, 2);
+    insertVarInto(8 + strlen(PingReq.payload), udpSegment, l_emptyPointer, 2);
+    insertVarInto(checkSum, udpSegment, l_emptyPointer, 2);
+    insertVarInto(PingReq.payload, udpSegment, l_emptyPointer, strlen(PingReq.payload));
+    return;
+}
+
+//created dns ¿query? section
+void dnsConstruct(char dnsSegment[])
+{
+    int l_emptyPointer = 0;
+    insertVarInto(TransactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
+    insertVarInto(flags, dnsSegment, l_emptyPointer, 2);//0100 for standard query, 8580 for standard query response
+    insertVarInto(0x0001, dnsSegment, l_emptyPointer, 2);//questions
+    insertVarInto(0x0000, dnsSegment, l_emptyPointer, 2);//answers, would be 0x0001 for a response
+    insertVarInto(0x00000000, dnsSegment, l_emptyPointer, 2);//RRses and stuff
+    insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query));//the query response repeats the query's data in its own data section
+    return;
+}
+
 //slaps an IP header into the array
-void ipConstruct(char ipPacket[], char transportSegment[], int transportSegLen)
+void ipConstruct(char ipPacket[], char transportSegment[], int transportSegLen, int ipPacketLen)
 {
     int l_emptyPointer = 0;
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
     ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = strlen(PingReq.payload) + 28; //frame length - also it doesnt work if > 255 length lmao
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = ipPacketLen; //frame length - also it doesnt work if > 255 length lmao
     ipPacket[l_emptyPointer++] = 0x1d; ipPacket[l_emptyPointer++] = 0x1d; //idenfitication???????????
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
@@ -162,8 +203,24 @@ void etherConstruct(char etherFrame[], char networkPacket[], int netPacketLen)
     return;
 }
 
+//creates a transport layer tcp header
+void tcpConstruct(char tcpSegment[])
+{
+    int l_emptyPointer = 0;
+    insertVarInto(PingReq.sPort, tcpSegment, l_emptyPointer, 2);
+    insertVarInto(PingReq.dPort, tcpSegment, l_emptyPointer, 2);
+    insertVarInto(seqNum, tcpSegment, l_emptyPointer, 4); //seq num
+    insertVarInto(AckNum, tcpSegment, l_emptyPointer, 4); //ack num
+    tcpSegment[l_emptyPointer++] = flags; //tcp flags - probably easier to impliment once parsing is done
+    insertVarInto(windowSize, tcpSegment, l_emptyPointer, 2);
+    insertVarInto(checkSum, tcpSegment, l_emptyPointer, 2);
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
+    //then a bunch of options that are scary
+    return;
+}
+
 //construct all of the arrays into one frame array - needs more work
-int constructPacket(char bigArr[512])
+int constructCapturedIcmp(char bigArr[512])
 {
     char *icmpSegment; //create pointer to icmpsegment
     int icmpSegLen = 8 + strlen(PingReq.payload);
@@ -174,7 +231,7 @@ int constructPacket(char bigArr[512])
     char *ipPacket;
     int ipPacketLen = 20 + icmpSegLen;
     ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 bytes onthe heap
-    ipConstruct(ipPacket, icmpSegment, icmpSegLen); //builds on top of the icmpseg
+    ipConstruct(ipPacket, icmpSegment, icmpSegLen, ipPacketLen); //builds on top of the icmpseg
     //read_pcap_out(ipPacket, ipPacketLen);
     
     char *etherFrame;
@@ -193,10 +250,10 @@ int constructPacket(char bigArr[512])
 
 
 //write the frame's array to the pcap file
-void writeToFile(char pcapOut[], int pcaplen)
+void writeToFile(char pcapName[20], char pcapOut[], int pcaplen)
 {
     FILE *fp;
-    fp = fopen("pingReq.pcapng","wb");
+    fp = fopen(pcapName,"wb");
     fwrite(pcapOut, 1, pcaplen, fp);
     fclose(fp);
     return;
@@ -208,7 +265,7 @@ int main()
     dataParse(sMac, dMac, target, source, data);
 
     char packetOut[512];
-    int packetLen = constructPacket(packetOut);
+    int packetLen = constructCapturedIcmp(packetOut);
 
     char bigArr[512];
     int bigArrLen = packetLen + 40;
@@ -221,7 +278,24 @@ int main()
 
     read_pcap_out(pcapOut, bigArrLen);
 
-    writeToFile(pcapOut, bigArrLen);
+    writeToFile("icmpReq.pcapng", pcapOut, bigArrLen); //read out icmp
+    free(pcapOut);
+
+    char packetOut[512];
+    int packetLen = constructCapturedIcmp(packetOut);
+
+    char bigArr[512];
+    int bigArrLen = packetLen + 40;
+    headerConstruct(bigArr);
+    insertVarInto(packetOut, bigArr, 40, packetLen);
+
+    char *pcapOut;
+    pcapOut = (char *)malloc(sizeof(char) * bigArrLen);
+    insertVarInto(bigArr, pcapOut, 0, bigArrLen);
+
+    read_pcap_out(pcapOut, bigArrLen);
+
+    writeToFile("icmpReq", pcapOut, bigArrLen);
     free(pcapOut);
 
     return 0;
