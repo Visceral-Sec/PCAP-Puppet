@@ -246,6 +246,7 @@ int constructPacket(char bigArr[512], char protocal)
     int protocalSegLen;
     char *protocalSegment;
     
+    //finds the given protocal segment
     switch(protocal)
     {
 	case 'i':
@@ -342,6 +343,7 @@ int main()
     char sMac[17] = "11:11:11:11:11:11"; char dMac[17] = "22:22:22:22:22:22"; char target[11] = "6f.6f.6f.6f"; char source[11] = "de.de.de.de"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[18] = "Yes, I do love C."; int icmpSize = 0; int tcpSize = 0; int udpSize = 1; int arpSize = 0; int dnsSize = 0;//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
+    //for each protocal it will loop for however many its size is
     for(int i = 0; i < icmpSize; i++)
     {
     	assemblePacket('i', fp);
