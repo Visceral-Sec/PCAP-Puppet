@@ -9,25 +9,35 @@ from tkinter import *  # Importing tkinter
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Frames/Master ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
 #https://www.youtube.com/watch?v=YXPyB4XeYLA
 
 #Tkinter works a bit like HTML, but instead of objects etc we have widgets
 
 master = Tk() #This is the root of the entire gui
-master.geometry('779x580') # sets default size
+master.geometry('779x582') # sets default size
 master.title("PCAP PUPPET")
 #master.resizable(width=False, height=False) # prevents the size from being adjusted
 
 #change this depending on path
 path = "Project"
 
+#Frame for Pcap Settings
+sConfig_Frame= Frame(master)
+sConfig_Frame.place(x=510, y = 40)
+
+#Frame for Pcap History
+cConfig_Frame= Frame(master)
+cConfig_Frame.place(x=510, y = 250)
+
+
 #Frame for layer configuraiton
 lconfig_Frame = Frame(master)
-lconfig_Frame.grid(row = (1), column = 0, sticky = W)
+lconfig_Frame.place(x=0,y=50, width=500)
 
 #Frame for Titles "Protocols"/"Configuration"/"PCAP Settings"
-tConfig_Frame = Frame(master)
-tConfig_Frame.grid(row = (0), column = 0, sticky = N)
+tConfig_Frame = LabelFrame(master)
+tConfig_Frame.place(x=0,y=0, width=780)
 
 #Frame for Protocol Configuraiton Settings
 
@@ -38,6 +48,59 @@ pConfig_Frame.grid(row = (0), column = 1, sticky = W)
 
 pCreate_Frame = Frame(master)
 pCreate_Frame.place(x=515, y = 445)
+
+#
+
+
+#Frame for Pcap History/Current Traffic Configuraiton
+cConfigLabel = LabelFrame(master, text = "", width=268, height=195)
+cConfigLabel.place(x=510, y= 268)
+
+#Frame for Traffic Configuration
+TrafficConfigFrame = LabelFrame(master, text = "", width=160, height=174)
+TrafficConfigFrame.place(x = 618, y = 66)
+
+#Traffic Size Frame
+
+TrafficSizeFrame = LabelFrame(master, text = "", width=108, height=174)
+TrafficSizeFrame.place(x = 511, y = 66)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Labels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#This is the label widget + postioning for the top left "Protocol"
+tProtocol = Label(tConfig_Frame, text = "PROTOCOLS", font=("Arial", 25), borderwidth=1,  relief="solid",)
+tProtocol.grid(row = 0, column = 0, sticky = W)
+
+#This is the label widget + postioning for the middle "Configuration"
+tConfiguration = Label(tConfig_Frame, text = " CONFIGURATION", font=("Arial", 25), borderwidth=1,  relief="solid",)
+tConfiguration.grid(row = 0, column = 1, sticky = W)
+
+#This is the label widget + postioning for the top left "Protocol"
+tPcapConfig = Label(tConfig_Frame, text = "PCAP SETTINGS", font=("Arial", 25), borderwidth=1,  relief="solid",)
+tPcapConfig.grid(row = 0, column = 2, sticky = W)
+
+#History
+CurrentTraffic = Label(master, text = "Current Traffic", font=("Arial", 16), borderwidth=1,  relief="solid", width=22)
+CurrentTraffic.place(x = 510, y = 240)
+
+
+TrafficConfiguration = Label(master, text = "Traffic  Configuration", font=("Arial", 13), borderwidth=1,  relief="solid",)
+TrafficConfiguration.place(x = 617, y = 43)
+
+
+#Pcap Specific Settings
+
+TrafficConfiguration = Label(master, text = " Traffic Size   ", font=("Arial", 13), borderwidth=1,  relief="solid",)
+TrafficConfiguration.place(x = 510, y = 43)
+
+SizeEntry = Entry(TrafficSizeFrame, width=4)
+SizeEntry.place(x=70, y=5)
+
+SizeEntryLabel = Label(TrafficSizeFrame,text="Traffic Size:")
+SizeEntryLabel.place(x=1, y=5)
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Classes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This all classes. Currently, Classes are used for holding user inputs as well as potential errors.
 # Classes are used because they have a wider scope than the function they are in, so they are used for returning values.
@@ -48,7 +111,7 @@ class icmpConfig:
     mac = ""
     macerror = [0,0,0,0]
     iperror = [0,0]
-    selected = [0]
+    size = [0]
 
 class arpConfig:
     icmptext = ""
@@ -56,13 +119,15 @@ class arpConfig:
     mac = ""
     macerror = [0,0,0,0]
     iperror = [0,0]
-    selected = [0]
+    size = [0]
 
-
+class TrafficSize:
+    size = ""
 
 #These Classes exist for error checking purposes and checks if the protocol is being used
 class Config:
     #Layer 2
+    #1 Array = Ethernent[1] == 1
     Ethernet=[0,0]
     TokenRing=[0,0]
     Wifi=[0,0]
@@ -106,7 +171,6 @@ class PcapConfig:
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This contains every function used in the program.
 # layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
-
 #This function writes to a txt doc which the c function will use to create the pcap
 def pcapWrite():
     #The library to write to files is very similar to that of C file.io library
@@ -167,10 +231,6 @@ def ErrorReset():   # This function resets every error, (This is used to prevent
     icmpConfig.macerror[3] = 0
     icmpConfig.iperror[0] = 0
     icmpConfig.iperror[1] = 0
-
-
-
-
 
 def CMPErrorRest():     # This resets each compare error (This is to prevent previous protocol errors effecting other checks)
     IPErrors.error[0] = 0
@@ -236,7 +296,7 @@ def MAC_checker(MAC): # Coded by Matt
 # Layer 2 Display function. (Needs to be updated as of 15/05/2021)
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
     layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration") # This then prints the label heading as the name of the chosen protocol + the option
-    layer2_Frame.grid(row = (2), column = 3, sticky = E) # Postioning
+    layer2_Frame.place(x=50, y=50)# Postioning
 
     # currently the only options we have is the ip entry setting. (That is why they are all protcol + labled_IP)
     eth_Ip = Entry(layer2_Frame) 
@@ -244,25 +304,10 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
     wifi_Ip = Entry(layer2_Frame, text="IP") 
     arp_Ip = Entry(layer2_Frame, text="IP")
 
-    # massive yandere dev if statement. (As far as I know switch statements are cringe in python and an If ladder works fine)
-    # A benefit of using this method is that adding extra protocols is really easy
-
-    if l == layersArray[1][0]: 
-        eth_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)  # Just adds the grid. It's done this way so that differnet options can show up for different protocols
-        
-    if l == layersArray[1][1]:
-        token_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
-
-    if l == layersArray[1][2]:
-        wifi_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
-        
-    if l == layersArray[1][3]:
-        arp_Ip.grid(row = (1), column = 3, sticky = E,pady=25, padx=82)
-
 def layer3_Displayer(l):
     #Defining the tkinter type
-    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=294, height=90)    # Using .place geomotry manager under the label frame in order to position correctly
-    layer3_Frame.grid(row = (3), column = 3,)
+    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)    # Using .place geomotry manager under the label frame in order to position correctly
+    layer3_Frame.place(x=217, y=0)
     # defining the ip octect entires
     ip1 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
     ip2 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
@@ -288,8 +333,8 @@ def layer3_Displayer(l):
     colon5 = Label(layer3_Frame, text = ":")   
 
     #Defining the text (like literally the words that say "IP:")
-    iptext = Label(layer3_Frame, text = "IP:")
-    mactext = Label(layer3_Frame, text = "MAC:")
+    iptext = Label(layer3_Frame, text = "Source IP:")
+    mactext = Label(layer3_Frame, text = "Source MAC:")
 
     #Ip text postioning
     iptext.place(x=2,y=4) 
@@ -333,7 +378,6 @@ def layer3_Displayer(l):
         macd = mac4.get()
         mace = mac5.get()
         macf = mac6.get()
-
         colon = ":"
         dot = "."
         ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
@@ -341,12 +385,14 @@ def layer3_Displayer(l):
         icmpConfig.ip = ip
         icmpConfig.mac = mac
         Config.ICMP[1] = 1
+        History_Displayer()
         
         
     #Button that links the previous function. 
     if l == "ICMP":
         icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
-        icmpb.place(x=220, y=30) # postioning on the button
+        icmpb.place(x=220, y=30,width=20) # postioning on the button
+
 
     def arpdone():
         arpConfig.ip = ""
@@ -394,7 +440,7 @@ def layer3_Displayer(l):
 
 def layer4_Displayer(l):
     layer4_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer4_Frame.grid(row = (4), column = 3, sticky = E)
+    layer4_Frame.place(x=100, y=50)
     udp_Ip = Entry(layer4_Frame)
     tcp_Ip = Entry(layer4_Frame)
 
@@ -406,8 +452,7 @@ def layer4_Displayer(l):
 
 def layer5_Displayer(l):
     layer5_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer5_Frame.grid(row = (5), column = 3, sticky = E)
-
+    layer5_Frame.place(x=100, y=50)
     socks_Ip = Entry(layer5_Frame)
     netBIOS_Ip = Entry(layer5_Frame)
     smb_Ip = Entry(layer5_Frame)
@@ -423,7 +468,7 @@ def layer5_Displayer(l):
 
 def layer6_Displayer(l):    
     layer6_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer6_Frame.grid(row = (6), column = 3, sticky = E)
+    layer6_Frame.place(x=100, y=50)
 
     tls_Ip = Entry(layer6_Frame)
     ssl_Ip = Entry(layer6_Frame)
@@ -443,10 +488,13 @@ def layer6_Displayer(l):
     if l == layersArray[5][3]:
         ssh_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
 
+#Loads the overall size of the traffic (The entry box)
+def SizeLoader():
+    TrafficSize.size = SizeEntry.get()
+
 def layer7_Displayer(l):
     layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer7_Frame.grid(row = (7), column = 3, sticky = E)
-
+    layer7_Frame.place(x=100, y=50)
     soap_Ip = Entry(layer7_Frame)
     dhcp_Ip = Entry(layer7_Frame)
     telnet_Ip = Entry(layer7_Frame)
@@ -480,6 +528,38 @@ def layer7_Displayer(l):
     if l == layersArray[6][7]:
         dns_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
 
+# Sets the History and the Size Configuration
+def History_Displayer():
+    icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+
+    #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
+    def TrafficSize_Loader():
+        if Config.ICMP[1] == 1:
+            icmpConfig.size = icmpSpinbox.get()
+           
+
+    TrafficSizeButton = Button(TrafficConfigFrame, text = "✓", command=TrafficSize_Loader)
+    TrafficSizeButton.place(x=127,y=140)
+
+    #Displays ICMP configuration
+    if Config.ICMP[1] == 1:
+        icmpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        icmpHistory.place(x=0, y=0)
+
+        icmpHistoryLabel = Label(icmpHistory, text = "ICMP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        icmpHistoryLabel.place(x=0, y=0)
+
+        icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0)
+        icmpHistoryButton.place(x=227, y=1)
+
+    
+        icmpSpinbox.place(x=40, y=3) #Code needs to be added to make this modular in the future (atm the location is static, I can change this around with some class stuff tho)
+
+        icmpSpinboxLabel = Label(TrafficConfigFrame, text="ICMP:")
+        icmpSpinboxLabel.place(x=0, y=3)
+        
+
+#Function on the "create Pcap button", checks for errors, then calls the main writing function (PcapWrite())
 def createPcap():
     ErrorReset()   # clears all previous error checks from previous creations
     #Checker functions (This will be ran on pretty much every protocol, (Don't know how to make this more effective))
@@ -500,6 +580,9 @@ def createPcap():
         icmpConfig.macerror[2] = MACErrors.error[2]
         icmpConfig.macerror[3] = MACErrors.error[3]
         CMPErrorRest()
+
+
+
 
     if Config.ARP[1] == 1:
         IP_checker(arpConfig.ip) #calls the ip parse function
@@ -525,6 +608,10 @@ def createPcap():
         Config.ARP[0] = 1 #This sets the error 
 
 
+
+
+
+
     if Config.ICMP[0] != 0:
         IcmpErrorLabel = Label(error_Popup, text="ICMP ERROR: There was an error in your ICMP Configuration.")
         IcmpErrorLabel.pack()
@@ -539,60 +626,6 @@ def createPcap():
         PcapStatusLabel.pack()
         pcapWrite()
 
-    #End of the Error checkign
-
-
-    # New plan for Error checking
-    # Make a new class called errors, this will contain errors for all different classes.
-    # Make a forloop to check errors on each protocol, then enter that into the class
-    # Finally check if the class has errors.
-        
-        #error_Popup = Toplevel()
-        #error_Popup.title("Errors")
-        #mac_Error1 = Label(error_Popup, text="Incorrect MAC Length")
-        #mac_Error2 = Label(error_Popup, text="")
-       # mac_Error3 = Label(error_Popup, text="Colons not at acceptable places")
-        #mac_Error4 = Label(error_Popup, text="Mac address contains unacceptable characters")
-      ##  ip_Error1 = Label(error_Popup, text='IP contains invalid numbers (0-255)')
-      #  ip_Error2 = Label(error_Popup, text='IP Does not have enough octects')
-
-      #  for i in range(len(icmpConfig.macerror)):
-         #   error = int(icmpConfig.macerror[i])
-          #  if error > 0:
-              #  if i == 1:
-               #     mac_Error1.pack()
-               # if i == 2:
-               #     mac_Error2.pack()
-               # if i == 3:
-              #      mac_Error3.pack() 
-             #   if i == 4:
-      #              mac_Error4.pack() 
-      #  for i in range(len(icmpConfig.iperror)):
-      #      error = int(icmpConfig.iperror[i])
-        #    if error > 0:
-               # if i == 1:
-               #     ip_Error1.pack()
-               # if i == 2:
-                    #ip_Error2.pack()
-    
-
-
-
-    # previous tkinter loop that doesn't work :)
-   # for i in range(len(icmpConfig.macerror)):
-    #    print(icmpConfig.macerror[i])
-     #   print(icmpConfig.mac)
-      #  error = int(icmpConfig.macerror[i])
-       # if error > 0:
-        #    if i == 1:
-         #       mac_Error1.pack()
-          #  if i == 2:
-           #     mac_Error2.pack()
-            #if i == 3:
-             #   mac_Error3.pack() 
-           # if i == 4:
-            #    mac_Error4.pack()       
-            
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Menus ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -637,6 +670,12 @@ layersArray = [
 ]
 
 
+    
+
+TrafficSizeDone = Button(TrafficSizeFrame, text="✓", command=SizeLoader)
+TrafficSizeDone.place(x=75, y=140)
+
+
 
 # THIS IS ABOMINATION THAT HURTS ME TO EVEN WRITE BUT IT'S THE ONLY WAY I CURRENTLY KNOW OF HOW TO ENSURE THAT EACH DROP DOWN MENU CAN CAUSE OPTIONS
 
@@ -661,8 +700,10 @@ layerTitle7.set("Layer 7")
 
 # setting the buttons
 
-pcapCbutton = Button(pCreate_Frame, text = "Create Pcap", command=createPcap, height=8, width=36)
-pcapCbutton.grid
+pcapCbutton = Button(master, text = "Create Pcap", command=createPcap, height=7, width=37, borderwidth=1, relief=SOLID)
+pcapCbutton.place(x=510,y=463)
+
+
  #setting the option menus
 Layerdrop2 = OptionMenu(lconfig_Frame, layerTitle2, *layersArray[1], command=layer2_Displayer)
 Layerdrop3 = OptionMenu(lconfig_Frame, layerTitle3, *layersArray[2], command=layer3_Displayer)
@@ -689,39 +730,11 @@ Layerdrop7.grid(row = (7), column = 0, sticky = W)
 
 # setting the button postioning
 
-pcapCbutton.grid(row = (0), column = 0, sticky = W)
-
-
-
 
 # agony this was coded nicely with modular programming but unfornutely you can't do anything with the .get function if it's in a localised for statemnent therefore I need to hard code it all
 # Adding variables with common protocols at each level
 
-#for i in range(1,7):
- #   layerTitle = StringVar()  # sets the dropbox as a string variable 
-  #  layerTitle.set("Layer " + str(i + 1))
-   # Layerdrop = OptionMenu(lconfig_Frame, layerTitle, *layersArray[i], command=mynameisjeff() # Sets it as a drop down
-    #Layerdrop.config(width=5, padx=68, pady=5, height=4, font=("Arial", 12)) # configures the size of the drop box
-      #Layerdrop.grid(row = (i+1), column = 0, sticky = W)
 
-# ^ this code does that entire ugly block in one simple for statement but it's difficult to get it to work with the function commands
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Labels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#This is the label widget + postioning for the top left "Protocol"
-tProtocol = Label(tConfig_Frame, text = "PROTOCOLS", font=("Arial", 25), borderwidth=1,  relief="solid",)
-tProtocol.grid(row = 0, column = 0, sticky = W)
-
-#This is the label widget + postioning for the middle "Configuration"
-tConfiguration = Label(tConfig_Frame, text = " CONFIGURATION", font=("Arial", 25), borderwidth=1,  relief="solid",)
-tConfiguration.grid(row = 0, column = 1, sticky = W)
-
-#This is the label widget + postioning for the top left "Protocol"
-tPcapConfig = Label(tConfig_Frame, text = "PCAP SETTINGS", font=("Arial", 25), borderwidth=1,  relief="solid",)
-tPcapConfig.grid(row = 0, column = 2, sticky = W)
-
-
-# end of program so far
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
