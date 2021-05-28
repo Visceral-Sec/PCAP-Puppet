@@ -125,6 +125,8 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
     return;
 }
 
+
+//returns num^pow as a long int
 long power(int num, int pow)
 {
 	long result = 1;
@@ -136,6 +138,8 @@ long power(int num, int pow)
 	return(result);
 }
 
+
+//adds on to headerSegment epoch in hex and little endian
 void epoch(char headerSegment[], int l_emptyPointer)
 {
     long seconds;
@@ -165,16 +169,19 @@ void epoch(char headerSegment[], int l_emptyPointer)
     return;
 }
 
-//jujhaar needs to do this one properly, this is a placeholder function to get proto 1 going
+//is functional and dynamic for a single packet but needs some work for multiple
 void headerConstruct(char headerSegment[], char etherFrame[], int etherFrameLen)
 {
+    //is only written at the start of a pcap
     int l_emptyPointer = 0;
     char headerStart[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
     insertVarInto(headerStart, headerSegment, 0, 40); l_emptyPointer += 24;
+	
+    //is after every packet 
     epoch(headerSegment, l_emptyPointer); l_emptyPointer += 4;
-    headerSegment[l_emptyPointer++] = 0x81; headerSegment[l_emptyPointer++] = 0x08; headerSegment[l_emptyPointer++] = 0x03; headerSegment[l_emptyPointer++] = 0x00;
-    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;
-    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;
+    headerSegment[l_emptyPointer++] = 0x81; headerSegment[l_emptyPointer++] = 0x08; headerSegment[l_emptyPointer++] = 0x03; headerSegment[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
+    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;//length of packet excluding header
+    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
     insertVarInto(etherFrame, headerSegment, 40, etherFrameLen);
     return;
 }
