@@ -100,25 +100,44 @@ SizeEntry.place(x=70, y=5)
 SizeEntryLabel = Label(TrafficSizeFrame,text="Traffic Size:")
 SizeEntryLabel.place(x=1, y=5)
 
+#### Code to be organised once Matthew is finished so I can combine it (cba to do pull requests)
 
+class LocationConfiguration:
+        size = 1
+    
+
+
+
+####
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Classes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This all classes. Currently, Classes are used for holding user inputs as well as potential errors.
 # Classes are used because they have a wider scope than the function they are in, so they are used for returning values.
+
+
 
 class icmpConfig:
     icmptext = ""
     ip = ""
     mac = ""
+    dip = ""
+    dmac = ""
     macerror = [0,0,0,0]
+    dmacerror = [0,0,0,0]
     iperror = [0,0]
+    diperror = [0,0]
     size = [0]
+    Text = ""
 
 class arpConfig:
     icmptext = ""
     ip = ""
     mac = ""
+    dip = ""
+    dmac = ""
     macerror = [0,0,0,0]
+    dmacerror = [0,0,0,0]
     iperror = [0,0]
+    diperror = [0,0]
     size = [0]
 
 class TrafficSize:
@@ -127,38 +146,40 @@ class TrafficSize:
 #These Classes exist for error checking purposes and checks if the protocol is being used
 class Config:
     #Layer 2
-    #1 Array = Ethernent[1] == 1
-    Ethernet=[0,0]
-    TokenRing=[0,0]
-    Wifi=[0,0]
+    #First Array indicates their is an error
+    # Second array indicates if it's been chosen
+    # third array value indicates if it's been displayed (to prevent from it display again)
+    Ethernet=[0,0,0]
+    TokenRing=[0,0,0]
+    Wifi=[0,0,0]
     #Layer 3
-    NAT=[0,0]
-    ICMP=[0,0]
-    ARP=[0,0]
-    RIP=[0,0]
-    OSPF=[0,0]
-    IP=[0,0]
+    NAT=[0,0,0]
+    ICMP=[0,0,0]
+    ARP=[0,0,0]
+    RIP=[0,0,0]
+    OSPF=[0,0,0]
+    IP=[0,0,0]
     #Layer 4 
-    UDP=[0,0]
-    TCP=[0,0]
+    UDP=[0,0,0]
+    TCP=[0,0,0]
     #Layer 5 
-    SOCKS=[0,0]
-    NetBIOS=[0,0]
-    SMB=[0,0]
+    SOCKS=[0,0,0]
+    NetBIOS=[0,0,0]
+    SMB=[0,0,0]
     #Layer 6
-    TLS=[0,0]
-    SSL=[0,0]
-    FTP=[0,0]
-    SSH=[0,0]
+    TLS=[0,0,0]
+    SSL=[0,0,0]
+    FTP=[0,0,0]
+    SSH=[0,0,0]
     #Layer 7
-    SOAP=[0,0]
-    DHCP=[0,0]
-    TELNET=[0,0]
-    IRC=[0,0]
-    FTP=[0,0]
-    HTTP=[0,0]
-    HTTPS=[0,0]
-    DNS=[0,0]
+    SOAP=[0,0,0]
+    DHCP=[0,0,0]
+    TELNET=[0,0,0]
+    IRC=[0,0,0]
+    FTP=[0,0,0]
+    HTTP=[0,0,0]
+    HTTPS=[0,0,0]
+    DNS=[0,0,0]
 
 class IPErrors:
     error = [0,0]
@@ -190,6 +211,9 @@ def pcapWrite():
         # add icmp data etc here
         f.write(icmpConfig.ip + "\n")
         f.write(icmpConfig.mac + "\n")
+        f.write(icmpConfig.dip + "\n")
+        f.write(icmpConfig.dmac + "\n")
+        f.write(icmpConfig.Text +"\n")
         f.write("end\n")
 
     if Config.ARP[1] == 1:
@@ -197,6 +221,8 @@ def pcapWrite():
         # add icmp data etc here
         f.write(arpConfig.ip + "\n")
         f.write(arpConfig.mac + "\n")
+        f.write(arpConfig.dip + "\n")
+        f.write(arpConfig.dmac + "\n")
         f.write("end\n")
 
     f.write("end\n")
@@ -220,7 +246,7 @@ def ErrorReset():   # This function resets every error, (This is used to prevent
     icmpConfig.macerror[2] = 0
     icmpConfig.macerror[3] = 0
     icmpConfig.iperror[0] = 0
-    icmpConfig.iperror[1] = 0
+    icmpConfig.iperror[1] = 0 
     
     #ARP Errors
     #ICMP Errors
@@ -317,6 +343,7 @@ def layer3_Displayer(l):
     dot2 = Label(layer3_Frame, text = ".")
     dot3 = Label(layer3_Frame, text = ".")
 
+    #Destination Ip
     ip5 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
     ip6 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
     ip7 = Entry(layer3_Frame, width=2) #Octect 3 of the ip 
@@ -326,12 +353,15 @@ def layer3_Displayer(l):
     dot6 = Label(layer3_Frame, text = ".")
 
     # Defining the mac octect Entries
+    #Source mac
     mac1 = Entry(layer3_Frame, width=3)
     mac2 = Entry(layer3_Frame, width=3)
     mac3 = Entry(layer3_Frame, width=3) 
     mac4 = Entry(layer3_Frame, width=3)
     mac5 = Entry(layer3_Frame, width=3)
     mac6 = Entry(layer3_Frame, width=3)
+
+    #Destination Mac
     mac7 = Entry(layer3_Frame, width=3)
     mac8 = Entry(layer3_Frame, width=3)
     mac9 = Entry(layer3_Frame, width=3) 
@@ -415,57 +445,49 @@ def layer3_Displayer(l):
     def icmpdone():
         icmpConfig.ip = ""
         icmpConfig.mac = ""
-        ipa = ip1.get() #a = string 1 = entry
-        ipb = ip2.get()
-        ipc = ip3.get()
-        ipd = ip4.get()
-
-        maca = mac1.get()
-        macb = mac2.get()
-        macc = mac3.get()
-        macd = mac4.get()
-        mace = mac5.get()
-        macf = mac6.get()
         colon = ":"
         dot = "."
-        ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
-        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
+        ip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get() # concatating all of the octects
+        mac = mac1.get() + colon + mac2.get() + colon + mac3.get() + colon + mac4.get() + colon + mac5.get() + colon + mac6.get()
+        dip = ip5.get() + dot + ip6.get() + dot + ip7.get() + dot + ip8.get()
+        dmac = mac7.get() + colon + mac8.get() + colon + mac9.get() + colon + mac10.get() + colon + mac11.get() + colon + mac12.get()
         icmpConfig.ip = ip
         icmpConfig.mac = mac
+        icmpConfig.dip = dip
+        icmpConfig.dmac = dmac
+        icmpConfig.Text = icmpText.get(1.0,255.0)
         Config.ICMP[1] = 1
         History_Displayer()
         
         
     #Button that links the previous function. 
     if l == "ICMP":
-        icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,font=(150))
+        icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
+        icmpPingData = Label(layer3_Frame, text="ICMP Ping Data:")
+        icmpText = Text(layer3_Frame, height=10, width=33)
         icmpb.place(x=175, y=475, width=100) # postioning on the button
+        icmpText.place(x=5, y=140)
+        icmpPingData.place(x=5, y=120)
 
 
     def arpdone():
         arpConfig.ip = ""
         arpConfig.mac = ""
-        ipa = ip1.get() #a = string 1 = entry
-        ipb = ip2.get()
-        ipc = ip3.get()
-        ipd = ip4.get()
-
-        maca = mac1.get()
-        macb = mac2.get()
-        macc = mac3.get()
-        macd = mac4.get()
-        mace = mac5.get()
-        macf = mac6.get()
         colon = ":"
         dot = "."
-        ip = ipa + dot + ipb + dot + ipc + dot + ipd # concatating all of the octects
-        mac = maca + colon + macb + colon + macc + colon + macd + colon + mace + colon + macf
+        ip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get() # concatating all of the octects
+        mac = mac1.get() + colon + mac2.get() + colon + mac3.get() + colon + mac4.get() + colon + mac5.get() + colon + mac6.get()
+        dip = ip5.get() + dot + ip6.get() + dot + ip7.get() + dot + ip8.get()
+        dmac = mac7.get() + colon + mac8.get() + colon + mac9.get() + colon + mac10.get() + colon + mac11.get() + colon + mac12.get()
         arpConfig.ip = ip
         arpConfig.mac = mac
+        arpConfig.dip = dip
+        arpConfig.dmac = dmac
         Config.ARP[1] = 1
+        History_Displayer()
      
     if l == "ARP":
-        arpb = Button(layer3_Frame, text = "✓", command=arpdone,)
+        arpb = Button(layer3_Frame, text = "✓", command=arpdone)
         arpb.place(x=220, y=30) # postioning on the button
 
 
@@ -579,54 +601,158 @@ def layer7_Displayer(l):
 # Sets the History and the Size Configuration
 def History_Displayer():
     icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+    arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
 
     #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
     def TrafficSize_Loader():
         if Config.ICMP[1] == 1:
             icmpConfig.size = icmpSpinbox.get()
-           
+        if Config.ARP[1] == 1:
+            arpConfig.size = arpSpinbox.get()
 
     TrafficSizeButton = Button(TrafficConfigFrame, text = "✓", command=TrafficSize_Loader)
     TrafficSizeButton.place(x=127,y=140)
 
     #Displays ICMP configuration
-    if Config.ICMP[1] == 1:
+    if Config.ICMP[1] == 1 and Config.ICMP[2] == 0:
+        Config.ICMP[2] = 1
         icmpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
-        icmpHistory.place(x=0, y=0)
+        icmpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1) )
 
         icmpHistoryLabel = Label(icmpHistory, text = "ICMP", font=("Arial", 16), borderwidth=1,  relief="solid",)
         icmpHistoryLabel.place(x=0, y=0)
-
+        placed = 0
         icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0)
         icmpHistoryButton.place(x=227, y=1)
-
-    
-        icmpSpinbox.place(x=40, y=3) #Code needs to be added to make this modular in the future (atm the location is static, I can change this around with some class stuff tho)
-
         icmpSpinboxLabel = Label(TrafficConfigFrame, text="ICMP:")
-        icmpSpinboxLabel.place(x=0, y=3)
-        
 
+        #If the option is odd then the option is displayed on the left 
+        if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
+            if LocationConfiguration.size == 1:
+                icmpSpinboxLabel.place(x=0, y=3)
+                icmpSpinbox.place(x=40, y=3)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 3:
+                icmpSpinboxLabel.place(x=0, y=28) #goes up in 25
+                icmpSpinbox.place(x=40, y=28)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 5:
+                icmpSpinboxLabel.place(x=0, y=53)
+                icmpSpinbox.place(x=40, y=53)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 7:
+                icmpSpinboxLabel.place(x=0, y=78)
+                icmpSpinbox.place(x=40, y=78)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+        #If the option is even then the option is displayed on the right
+        if (LocationConfiguration.size % 2) == 0 and placed == 0:
+            if LocationConfiguration.size == 2:
+                icmpSpinboxLabel.place(x=80, y=3)
+                icmpSpinbox.place(x=110, y=3)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 4:
+                icmpSpinboxLabel.place(x=80, y=28)
+                icmpSpinbox.place(x=110, y=53)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 6:
+                icmpSpinboxLabel.place(x=80, y=53)
+                icmpSpinbox.place(x=110, y=53)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 8:
+                icmpSpinboxLabel.place(x=80, y=78)
+                icmpSpinbox.place(x=110, y=78)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+
+    if Config.ARP[1] == 1 and Config.ARP[2] == 0: #Hasn't been displayed and is chosen
+        Config.ARP[2] = 1
+        print(Config.ARP)
+        print(LocationConfiguration.size)
+        arpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+       
+        arpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1) )
+        placed = 0
+        arpHistoryLabel = Label(arpHistory, text = "ARP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        arpHistoryLabel.place(x=0, y=0)
+
+        arpHistoryButton = Button(arpHistory, text = "INFO", width=3, height=0)
+        arpHistoryButton.place(x=227, y=1)
+        arpSpinboxLabel = Label(TrafficConfigFrame, text="ARP:")
+
+            #if Odd (left side)
+        if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
+            if LocationConfiguration.size == 1:
+                arpSpinboxLabel.place(x=0, y=3)
+                arpSpinbox.place(x=40, y=3)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 3:
+                arpSpinboxLabel.place(x=40, y=28) #goes up in 25
+                arpSpinbox.place
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 5:
+                arpSpinboxLabel.place(x=40, y=53)
+                arpSpinbox.place
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 5:
+                arpSpinboxLabel.place(x=40, y=78)
+                arpSpinbox.place
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            #if even (Right side)
+        if (LocationConfiguration.size % 2) == 0 and placed == 0:
+            if LocationConfiguration.size == 2:
+                arpSpinboxLabel.place(x=80, y=3)
+                arpSpinbox.place(x=110, y=3)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 4:
+                icmpSpinboxLabel.place(x=80, y=28)
+                icmpSpinbox.place(x=110, y=53)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 6:
+                icmpSpinboxLabel.place(x=80, y=53)
+                icmpSpinbox.place(x=110, y=53)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 8:
+                icmpSpinboxLabel.place(x=80, y=78)
+                icmpSpinbox.place(x=110, y=78)
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            
 #Function on the "create Pcap button", checks for errors, then calls the main writing function (PcapWrite())
 def createPcap():
     ErrorReset()   # clears all previous error checks from previous creations
     #Checker functions (This will be ran on pretty much every protocol, (Don't know how to make this more effective))
     # As tkinter doesn't like values being returned we have to use a place holder class to hold errors. This gets reset after each compare. (This allows for multiple protocols to use the error checking functions)
-    print(icmpConfig.ip)
-    print(icmpConfig.mac)
-    print(arpConfig.ip)
-    print(arpConfig.mac)
-
-
     if Config.ICMP[1] == 1:
         IP_checker(icmpConfig.ip) #calls the ip parse function
         icmpConfig.iperror[0] = IPErrors.error[0]
         icmpConfig.iperror[1] = IPErrors.error[1]
+        IP_checker(icmpConfig.dip)
+        icmpConfig.diperror[0] = IPErrors.error[0]
+        icmpConfig.diperror[1] = IPErrors.error[1]
         MAC_checker(icmpConfig.mac) #calls the mac parse function
         icmpConfig.macerror[0] = MACErrors.error[0]
         icmpConfig.macerror[1] = MACErrors.error[1]
         icmpConfig.macerror[2] = MACErrors.error[2]
         icmpConfig.macerror[3] = MACErrors.error[3]
+        MAC_checker(icmpConfig.dmac) #calls the mac parse function
+        icmpConfig.dmacerror[0] = MACErrors.error[0]
+        icmpConfig.dmacerror[1] = MACErrors.error[1]
+        icmpConfig.dmacerror[2] = MACErrors.error[2]
+        icmpConfig.dmacerror[3] = MACErrors.error[3]
         CMPErrorRest()
 
 
@@ -648,28 +774,33 @@ def createPcap():
     error_Popup.title("Packet Status")
     #If statement checking if there any issues for the different protocols.
     #I'll add more of these once Matthew as finished adding some of the different protocols.
-    if (int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0):
-        Config.ICMP[0] = 1 #This sets the error 
-    #Place holder error follow the same syntax
     
+    #checks if both the dip/ip and mac/dmac are acceptable.
+    if (int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0):
+        if (int(icmpConfig.dmacerror[0]) > 0 or int(icmpConfig.dmacerror[1]) > 0 or  int(icmpConfig.dmacerror[2]) > 0 or int(icmpConfig.dmacerror[3]) > 0 or int(icmpConfig.diperror[0]) > 0 or int(icmpConfig.diperror[1]) > 0):
+            Config.ICMP[0] = 1 #This sets the error 
+    
+    #Place holder error follow the same syntax
+
     if (int(arpConfig.macerror[0]) > 0 or int(arpConfig.macerror[1]) > 0 or  int(arpConfig.macerror[2]) > 0 or int(arpConfig.macerror[3]) > 0 or int(arpConfig.iperror[0]) > 0 or int(arpConfig.iperror[1]) > 0):
-        Config.ARP[0] = 1 #This sets the error 
-
-
-
+        if (int(icmpConfig.dmacerror[0]) > 0 or int(icmpConfig.dmacerror[1]) > 0 or  int(icmpConfig.dmacerror[2]) > 0 or int(icmpConfig.dmacerror[3]) > 0 or int(icmpConfig.diperror[0]) > 0 or int(icmpConfig.diperror[1]) > 0):
+            Config.ARP[0] = 1 #This sets the error 
 
 
 
     if Config.ICMP[0] != 0:
         IcmpErrorLabel = Label(error_Popup, text="ICMP ERROR: There was an error in your ICMP Configuration.")
         IcmpErrorLabel.pack()
-
     if Config.ARP[0] != 0:
         arpErrorLabel = Label(error_Popup, text="ARP ERROR: There was an error in your ARP Configuration.")
         arpErrorLabel.pack()
 
 
-    else:
+
+
+#Final Check
+
+    if Config.ICMP[0] == 0 and Config.ARP[0] == 0: 
         PcapStatusLabel = Label(error_Popup, text="The Pcap Creation was successful, find your generated pcap at /placeholder ")
         PcapStatusLabel.pack()
         pcapWrite()
