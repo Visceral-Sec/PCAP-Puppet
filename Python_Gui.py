@@ -317,6 +317,14 @@ def layer3_Displayer(l):
     dot2 = Label(layer3_Frame, text = ".")
     dot3 = Label(layer3_Frame, text = ".")
 
+    ip5 = Entry(layer3_Frame, width=2) #Octect 1 of the IP
+    ip6 = Entry(layer3_Frame, width=2) #Octect 2 of the ip 
+    ip7 = Entry(layer3_Frame, width=2) #Octect 3 of the ip 
+    ip8 = Entry(layer3_Frame, width=2) #Octect 4 of the ip 
+    dot4 = Label(layer3_Frame, text = ".") # Three dots seperating the fields
+    dot5 = Label(layer3_Frame, text = ".")
+    dot6 = Label(layer3_Frame, text = ".")
+
     # Defining the mac octect Entries
     mac1 = Entry(layer3_Frame, width=3)
     mac2 = Entry(layer3_Frame, width=3)
@@ -324,6 +332,12 @@ def layer3_Displayer(l):
     mac4 = Entry(layer3_Frame, width=3)
     mac5 = Entry(layer3_Frame, width=3)
     mac6 = Entry(layer3_Frame, width=3)
+    mac7 = Entry(layer3_Frame, width=3)
+    mac8 = Entry(layer3_Frame, width=3)
+    mac9 = Entry(layer3_Frame, width=3) 
+    mac10 = Entry(layer3_Frame, width=3)
+    mac11 = Entry(layer3_Frame, width=3)
+    mac12 = Entry(layer3_Frame, width=3)
 
     # The colons seperate the label
     colon1 = Label(layer3_Frame, text = ":")
@@ -331,38 +345,72 @@ def layer3_Displayer(l):
     colon3 = Label(layer3_Frame, text = ":")    
     colon4 = Label(layer3_Frame, text = ":")
     colon5 = Label(layer3_Frame, text = ":")   
+    colon6 = Label(layer3_Frame, text = ":")
+    colon7 = Label(layer3_Frame, text = ":")
+    colon8 = Label(layer3_Frame, text = ":")    
+    colon9 = Label(layer3_Frame, text = ":")
+    colon10 = Label(layer3_Frame, text = ":")   
 
     #Defining the text (like literally the words that say "IP:")
     iptext = Label(layer3_Frame, text = "Source IP:")
     mactext = Label(layer3_Frame, text = "Source MAC:")
+    diptext = Label(layer3_Frame, text = "Destination IP:")
+    dmactext = Label(layer3_Frame, text = "Destination MAC:")
 
-    #Ip text postioning
+    #source Ip text postioning
     iptext.place(x=2,y=4) 
-    #mac text postioning
-    mactext.place(x=2,y=34) #mac text postioning
+    #source mac text postioning
+    mactext.place(x=2,y=34) 
+    #desitination ip text postioning
+    diptext.place(x=2,y=64)
+    #desitination mac text postioning
+    dmactext.place(x=2,y=94)
+
 
     #Placing all of the previously defined labels. using .place for more accurate location (This does take a while to do tho)
-    ip1.place(x=20,y=5)     
-    ip2.place(x=50,y=5)
-    ip3.place(x=80,y=5)
-    ip4.place(x=110,y=5)
+    ip1.place(x=65,y=5)     
+    ip2.place(x=95,y=5)
+    ip3.place(x=125,y=5)
+    ip4.place(x=155,y=5)
 
-    dot1.place(x=40,y=5)
-    dot2.place(x=70,y=5)
-    dot3.place(x=100,y=5)
+    dot1.place(x=85,y=5)
+    dot2.place(x=115,y=5)
+    dot3.place(x=145,y=5)
 
-    mac1.place(x=40,y=35)   
-    mac2.place(x=70,y=35)
-    mac3.place(x=100,y=35)
-    mac4.place(x=130,y=35)
-    mac5.place(x=160,y=35)
-    mac6.place(x=190,y=35)
+    ip5.place(x=90,y=65)     
+    ip6.place(x=120,y=65)
+    ip7.place(x=150,y=65)
+    ip8.place(x=180,y=65)
 
-    colon1.place(x=60,y=35)
-    colon2.place(x=90,y=35)
-    colon3.place(x=120,y=35)
-    colon4.place(x=150,y=35)
-    colon5.place(x=180,y=35)
+    dot4.place(x=110,y=65)
+    dot5.place(x=140,y=65)
+    dot6.place(x=170,y=65)
+
+    mac1.place(x=80,y=35)   
+    mac2.place(x=110,y=35)
+    mac3.place(x=140,y=35)
+    mac4.place(x=170,y=35)
+    mac5.place(x=200,y=35)
+    mac6.place(x=230,y=35)
+
+    colon1.place(x=100,y=35)
+    colon2.place(x=130,y=35)
+    colon3.place(x=160,y=35)
+    colon4.place(x=190,y=35)
+    colon5.place(x=220,y=35)
+
+    mac7.place(x=105,y=95)   
+    mac8.place(x=135,y=95)
+    mac9.place(x=165,y=95)
+    mac10.place(x=195,y=95)
+    mac11.place(x=225,y=95)
+    mac12.place(x=255,y=95)
+
+    colon6.place(x=125,y=95)
+    colon7.place(x=155,y=95)
+    colon8.place(x=185,y=95)
+    colon9.place(x=215,y=95)
+    colon10.place(x=245,y=95)
     # Done function. This concatenates all of the octects into 2 strings and then loads into the class mentioned earlier.
     def icmpdone():
         icmpConfig.ip = ""
@@ -390,8 +438,8 @@ def layer3_Displayer(l):
         
     #Button that links the previous function. 
     if l == "ICMP":
-        icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
-        icmpb.place(x=220, y=30,width=20) # postioning on the button
+        icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,font=(150))
+        icmpb.place(x=175, y=475, width=100) # postioning on the button
 
 
     def arpdone():
