@@ -139,8 +139,8 @@ long power(int num, int pow)
 }
 
 
-//adds on to headerSegment epoch in hex and little endian
-void epoch(char headerSegment[], int l_emptyPointer)
+//adds on to pcap epoch in hex and little endian
+void epoch(char pcap[], int l_emptyPointer)
 {
     long seconds;
     seconds = time(NULL);
@@ -164,25 +164,25 @@ void epoch(char headerSegment[], int l_emptyPointer)
     	divisor /= 16;
     }
     
-    insertVarInto(hex, headerSegment, l_emptyPointer, 4);
+    insertVarInto(hex, pcap, l_emptyPointer, 4);
     
     return;
 }
 
-//is functional and dynamic for a single packet but needs some work for multiple
-void headerConstruct(char headerSegment[], char etherFrame[], int etherFrameLen)
+//is functional and dynamic for a single packet but needs some work for multiple - will need multiple functions for this (look into C overloading polymorphism)
+void headerConstruct(char pcap[], char etherFrame[], int etherFrameLen)
 {
     //is only written at the start of a pcap
     int l_emptyPointer = 0;
     char headerStart[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
-    insertVarInto(headerStart, headerSegment, 0, 40); l_emptyPointer += 24;
+    insertVarInto(headerStart, pcap, 0, 24); l_emptyPointer += 24;
 	
     //is after every packet 
-    epoch(headerSegment, l_emptyPointer); l_emptyPointer += 4;
-    headerSegment[l_emptyPointer++] = 0x81; headerSegment[l_emptyPointer++] = 0x08; headerSegment[l_emptyPointer++] = 0x03; headerSegment[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
-    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;//length of packet excluding header
-    headerSegment[l_emptyPointer++] = etherFrameLen; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00; headerSegment[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
-    insertVarInto(etherFrame, headerSegment, 40, etherFrameLen);
+    epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
+    pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
+    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
+    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
+    insertVarInto(etherFrame, pcap, 40, etherFrameLen);
     return;
 }
 
@@ -296,73 +296,73 @@ void etherConstruct(char etherFrame[], char networkPacket[], int netPacketLen)
 //construct all of the arrays into one frame array - needs more work
 int constructPacket(char bigArr[512], char protocol)
 {
-    int protocolSegLen;
-    char *protocolSegment;
+    int segmentLen;
+    char *segment;
     
     switch(protocol)
     {
 	case 'i':
 	
-    	protocolSegLen = 8 + strlen(PingReq.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpConstruct(protocolSegment);
+    	segmentLen = 8 + strlen(PingReq.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	icmpConstruct(segment);
     	
     	break;
     	
 	case 'u':
 	
-    	protocolSegLen = 6 + strlen(PingReq.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(protocolSegment);
+    	segmentLen = 6 + strlen(PingReq.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	udpConstruct(segment);
     	
     	break;
     	
     	
 	case 't':
 	
-    	protocolSegLen = 6 + strlen(PingReq.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegLen); //reserves (8 + length of payload) bytes on the heap
-    	tcpConstruct(protocolSegment);
+    	segmentLen = 6 + strlen(PingReq.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	tcpConstruct(segment);
     	
     	break;
     	
 	case 'a':
 	
-    	protocolSegLen = 6 + strlen(PingReq.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegLen); //reserves (8 + length of payload) bytes on the heap
-    	arpConstruct(protocolSegment);
+    	segmentLen = 6 + strlen(PingReq.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	arpConstruct(segment);
     	
     	break;
     	
 	case 'd':
 	
-    	protocolSegLen = 6 + strlen(PingReq.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsConstruct(protocolSegment);
+    	segmentLen = 6 + strlen(PingReq.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	dnsConstruct(segment);
     	
     	break;
     	
     }
     
     char *ipPacket;
-    int ipPacketLen = 20 + protocolSegLen;
-    ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 bytes onthe heap
-    ipConstruct(ipPacket, protocolSegment, protocolSegLen, ipPacketLen); //builds on top of the icmpseg
+    int ipPacketLen = 20 + segmentLen;
+    ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20  + segmentLen bytes on the heap
+    ipConstruct(ipPacket, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
     //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
     
     char *etherFrame;
     int etherFrameLen = 14 + ipPacketLen;
-    etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
+    etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 + ipPacketLen bytes on the heap
     etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
     
-    char *pcap; //header + frame in an array
+    char *pcap; //header + frame + packet footer in an array
     int pcapLen = 40 + etherFrameLen;
-    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 14 bytes on the heap
-    headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the ipPacket
+    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
+    headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the etherFrame by adding the header to the pcap
     
     insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(protocolSegment); //free up the reserved space on the heap
+    free(segment); //free up the reserved space on the heap
     free(ipPacket);
     free(etherFrame);
     free(pcap);
