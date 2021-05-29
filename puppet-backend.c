@@ -185,16 +185,19 @@ void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
 }
 
 //slaps icmp segment into the frame
-void icmpReqConstruct(char icmpSegment[], short seqNum)
+void icmpReqConstruct(char icmpReqSegment[], short seqNum, short segmentLen)
 {
     short l_emptyPointer = 0;
-    icmpSegment[l_emptyPointer++] = 0x08;//icmp ping request
-    icmpSegment[l_emptyPointer++] = 0x00;//code is 0
-    icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x00;/*placeholder value*///icmp checksum, I'm currently figuring it out
-    icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x01;//identifier?
-    char seqNumArr[2] = {seqNum >> 8, seqNum & 0xFF00};
-    icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x04;//sequence number 
-    insertVarInto(PingReq.payload, icmpSegment, l_emptyPointer, strlen(PingReq.payload));
+    icmpReqSegment[l_emptyPointer++] = 0x08;//icmp ping request
+    icmpReqSegment[l_emptyPointer++] = 0x00;//code is 0
+    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x00;//icmp checksum, this is a placeholder for later in the function
+    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
+    char seqNumArr[2] = {seqNum >> 8, seqNum & 0x00FF};
+    insertVarInto(seqNumArr, icmpReqSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insertVarInto(PingReq.payload, icmpReqSegment, l_emptyPointer, strlen(PingReq.payload));
+    short checksum = calcChecksum(icmpReqSegment, segmentLen);
+    char checksumArr[2] = {checksum & 0x00FF, checksum >> 8}; //was little endian, lower 8 bits read in first then upper to make it big endian (don't want to change checksum funct)
+    insertVarInto(checksumArr, icmpReqSegment, 2, 2);
     return;
 }
 
@@ -309,7 +312,7 @@ short constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 8 + strlen(PingReq.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpReqConstruct(segment, 0);
+    	icmpReqConstruct(segment, 0, segmentLen);
     	
     	break;
     /*	
@@ -400,7 +403,7 @@ int main()
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
 
-    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "abcdefghijklmnopqrstuvwabcdefghi"; char protocol = 'i';//placeholder line to get it to compile
+    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "abcdefghijklmnopqrstuvwabcdefgh"; char protocol = 'i';//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
     assemblePacket(protocol, fp);
