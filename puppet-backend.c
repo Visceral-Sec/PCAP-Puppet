@@ -185,13 +185,14 @@ void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
 }
 
 //slaps icmp segment into the frame
-void icmpConstruct(char icmpSegment[])
+void icmpReqConstruct(char icmpSegment[], short seqNum)
 {
     short l_emptyPointer = 0;
     icmpSegment[l_emptyPointer++] = 0x08;//icmp ping request
     icmpSegment[l_emptyPointer++] = 0x00;//code is 0
-    icmpSegment[l_emptyPointer++] = 0x4d; icmpSegment[l_emptyPointer++] = 0x57;/*placeholder value*///icmp check sum, I'm currently figuring it out
+    icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x00;/*placeholder value*///icmp checksum, I'm currently figuring it out
     icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x01;//identifier?
+    char seqNumArr[2] = {seqNum >> 8, seqNum & 0xFF00};
     icmpSegment[l_emptyPointer++] = 0x00; icmpSegment[l_emptyPointer++] = 0x04;//sequence number 
     insertVarInto(PingReq.payload, icmpSegment, l_emptyPointer, strlen(PingReq.payload));
     return;
@@ -272,7 +273,7 @@ void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
     ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
     char ipPacketLenArr[2] = {ipPacketLen >> 8, ipPacketLen & 0x00FF};
-    insertVarInto(ipPacketLenArr, ipPacket, l_emptyPointer, 1); l_emptyPointer += 2; //length of packet  (excl. ether)
+    insertVarInto(ipPacketLenArr, ipPacket, l_emptyPointer, 2); l_emptyPointer += 2; //length of packet  (excl. ether)
     ipPacket[l_emptyPointer++] = 0x1b; ipPacket[l_emptyPointer++] = 0xd1; //idenfitication???????????
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
@@ -290,7 +291,7 @@ void etherConstruct(char etherFrame[], char networkPacket[], short netPacketLen)
     short l_emptyPointer = 0;
     insertVarInto(PingReq.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
     insertVarInto(PingReq.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = 0x00; //etherversion?  (IPv4) can't seem to condense it into one line
+    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = 0x00; //etherversion? ¿IPv4? can't seem to condense it into one line
     insertVarInto(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
     return;
 }
@@ -308,7 +309,7 @@ short constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 8 + strlen(PingReq.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpConstruct(segment);
+    	icmpReqConstruct(segment, 0);
     	
     	break;
     /*	
