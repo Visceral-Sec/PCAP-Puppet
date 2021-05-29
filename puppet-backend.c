@@ -198,7 +198,7 @@ void icmpConstruct(char icmpSegment[])
     insertVarInto(PingReq.payload, icmpSegment, l_emptyPointer, strlen(PingReq.payload));
     return;
 }
-/*
+
 //creates a transport layer tcp header
 void tcpConstruct(char tcpSegment[])
 {
@@ -214,7 +214,6 @@ void tcpConstruct(char tcpSegment[])
     //then a bunch of options that are scary
     return;
 }
-*/
 
 void udpConstruct(char udpSegment[])
 {
@@ -236,7 +235,7 @@ void udpConstruct(char udpSegment[])
     insertVarInto(PingReq.payload, udpSegment, l_emptyPointer, strlen(PingReq.payload));
     return;
 }
-/*
+
 void arpConstruct(char arpSegment[])
 {
     int l_emptyPointer = 0;
@@ -317,7 +316,7 @@ int constructPacket(char bigArr[512], char protocol)
     	udpConstruct(protocolSegment);
     	
     	break;
-    	/*
+    	
     	
 	case 't':
 	
@@ -342,33 +341,33 @@ int constructPacket(char bigArr[512], char protocol)
     	dnsConstruct(protocolSegment);
     	
     	break;
-    	*/
+    	
     }
     
     char *ipPacket;
     int ipPacketLen = 20 + protocolSegLen;
     ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 bytes onthe heap
     ipConstruct(ipPacket, protocolSegment, protocolSegLen, ipPacketLen); //builds on top of the icmpseg
-    //read_pcap_out(ipPacket, ipPacketLen);
+    //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
     
     char *etherFrame;
     int etherFrameLen = 14 + ipPacketLen;
     etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
     etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
     
-    char *headerFrame;
-    int headerFrameLen = 40 + etherFrameLen;
-    headerFrame = (char *)malloc(sizeof(char) * (headerFrameLen)); //reserves 14 bytes on the heap
-    headerConstruct(headerFrame, etherFrame, etherFrameLen); //builds on top of the ipPacket
+    char *pcap; //header + frame in an array
+    int pcapLen = 40 + etherFrameLen;
+    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 14 bytes on the heap
+    headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the ipPacket
     
-    insertVarInto(headerFrame, bigArr, 0, headerFrameLen); //insert each of the parts of the frame into the bigArr
+    insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
     free(protocolSegment); //free up the reserved space on the heap
     free(ipPacket);
     free(etherFrame);
-    free(headerFrame);
+    free(pcap);
 
-    return headerFrameLen;
+    return pcapLen;
 }
 
 
@@ -378,7 +377,6 @@ void assemblePacket(char protocol, FILE *fp)
     int packetLen = 0; 
     packetLen = constructPacket(packetOut, protocol);
 
-/*
     char bigArr[512];
     int bigArrLen = packetLen + 40;
     headerConstruct(bigArr);
@@ -387,7 +385,7 @@ void assemblePacket(char protocol, FILE *fp)
     char *pcapOut;
     pcapOut = (char *)malloc(sizeof(char) * bigArrLen);
     insertVarInto(bigArr, pcapOut, 0, bigArrLen);
-*/
+
     //read_pcap_out(pcapOut, bigArrLen);
     fwrite(packetOut, 1, packetLen, fp);
     
