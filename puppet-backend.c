@@ -27,7 +27,7 @@ void read_pcap_out(char pcapOut[], short pcapLen)
     return;
 }
 
-// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (18/05/2021 - we need to cite this) to create a C function to calc an rfc 1071 checksum
+// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
 uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigned short
@@ -193,12 +193,12 @@ void icmpReqConstruct(char icmpReqSegment[], short seqNum, short segmentLen)
     icmpReqSegment[l_emptyPointer++] = 0x00;//code is 0
     icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x00;//icmp checksum, this is a placeholder for later in the function
     icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
-    char seqNumArr[2] = {seqNum >> 8, seqNum & 0x00FF};
-    insertVarInto(seqNumArr, icmpReqSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    icmpReqSegment[l_emptyPointer++] = seqNum >> 8;
+    icmpReqSegment[l_emptyPointer++] = seqNum & 0x00FF;
     insertVarInto(PingReq.payload, icmpReqSegment, l_emptyPointer, strlen(PingReq.payload));
-    short checksum = calcChecksum(icmpReqSegment, segmentLen);
-    char checksumArr[2] = {checksum & 0x00FF, checksum >> 8}; //was little endian, lower 8 bits read in first then upper to make it big endian (don't want to change checksum funct)
-    insertVarInto(checksumArr, icmpReqSegment, 2, 2);
+    uint16_t checksum = calcChecksum(icmpReqSegment, segmentLen);
+    icmpReqSegment[2] = checksum & 0x00FF;
+    icmpReqSegment[3] = checksum >> 8;
     return;
 }
 
@@ -276,16 +276,19 @@ void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen
     short l_emptyPointer = 0;
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
     ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    char ipPacketLenArr[2] = {ipPacketLen >> 8, ipPacketLen & 0x00FF};
-    insertVarInto(ipPacketLenArr, ipPacket, l_emptyPointer, 2); l_emptyPointer += 2; //length of packet  (excl. ether)
+    ipPacket[l_emptyPointer++] = ipPacketLen >> 8; //takes upper 8 bits
+    ipPacket[l_emptyPointer++] = ipPacketLen & 0x00FF; //takes lower 8 bits
     ipPacket[l_emptyPointer++] = 0x1b; ipPacket[l_emptyPointer++] = 0xd1; //idenfitication???????????
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
     ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum, 0000 means no validation
     insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
     insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
     insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
+    uint16_t checkSum = calcChecksum(ipPacket, ipPacketLen); //calc checksum (it doesnt work -_-)
+    ipPacket[10] = checkSum & 0x00FF;
+    ipPacket[11] = checkSum >> 8;
     return;
 }
 
