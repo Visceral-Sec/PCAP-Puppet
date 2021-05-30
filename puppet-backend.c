@@ -173,7 +173,8 @@ void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
     //is only written at the start of a pcap
     short l_emptyPointer = 0;
     char headerStart[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
-    insertVarInto(headerStart, pcap, 0, 40); l_emptyPointer += 24;
+
+    insertVarInto(headerStart, pcap, 0, 24); l_emptyPointer += 24;
 	
     //is after every packet 
     epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
@@ -303,6 +304,7 @@ void etherConstruct(char etherFrame[], char networkPacket[], short netPacketLen)
 //construct all of the arrays into one frame array - needs more work
 short constructPacket(char bigArr[512], char protocol)
 {
+
     short segmentLen;
     char *segment;
     
@@ -356,6 +358,7 @@ short constructPacket(char bigArr[512], char protocol)
     }
     
     char *ipPacket;
+
     short ipPacketLen = 20 + segmentLen;
     ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
     ipConstruct(ipPacket, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
