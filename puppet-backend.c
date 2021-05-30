@@ -123,7 +123,7 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
     return;
 }
 
-
+//is run once at the start of the program so that it is only at the top of the file
 void pcapHeaderConstruct(FILE *fp)
 {
 	int pcapHeaderLen = 24;
