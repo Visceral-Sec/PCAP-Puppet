@@ -373,23 +373,17 @@ int constructPacket(char bigArr[512], char protocol)
 
 void assemblePacket(char protocol, FILE *fp)
 {
-    char packetOut[512];
-    int packetLen = 0; 
-    packetLen = constructPacket(packetOut, protocol);
-
-    char bigArr[512];
-    int bigArrLen = packetLen + 40;
-    headerConstruct(bigArr);
-    insertVarInto(packetOut, bigArr, 40, packetLen);
+    char bigArr[1024];
+    short pcapLen = constructPacket(bigArr, protocol);
 
     char *pcapOut;
-    pcapOut = (char *)malloc(sizeof(char) * bigArrLen);
-    insertVarInto(bigArr, pcapOut, 0, bigArrLen);
+    pcapOut = (char *)malloc(sizeof(char) * pcapLen);
+    insertVarInto(bigArr, pcapOut, 0, pcapLen);
 
     //read_pcap_out(pcapOut, bigArrLen);
-    fwrite(packetOut, 1, packetLen, fp);
+    fwrite(pcapOut, 1, pcapLen, fp);
     
-    //free(pcapOut);
+    free(pcapOut);
 }
 
 
