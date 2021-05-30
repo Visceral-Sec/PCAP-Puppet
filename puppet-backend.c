@@ -271,7 +271,7 @@ void dnsConstruct(char dnsSegment[])
 }*/
 
 //slaps an IP header into the array
-void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen, short ipPacketLen)
+void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], short transportSegLen, short ipPacketLen)
 {
     short l_emptyPointer = 0;
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
@@ -282,12 +282,13 @@ void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
     ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum, 0000 means no validation
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum
     insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
     insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
+    insertVarInto(ipPacket, ipHeader, 0, 20); //make header by itself for checksum
     insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
-    uint16_t checkSum = calcChecksum(ipPacket, ipPacketLen); //calc checksum (it doesnt work -_-)
-    ipPacket[10] = checkSum & 0x00FF;
+    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum (it doesnt work -_-)
+    ipPacket[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
     ipPacket[11] = checkSum >> 8;
     return;
 }
@@ -360,11 +361,11 @@ short constructPacket(char bigArr[512], char protocol)
         puts("a valid protocol hasn't been passed");
     }
     
+    char ipHeader[20];
     char *ipPacket;
-
     short ipPacketLen = 20 + segmentLen;
     ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
-    ipConstruct(ipPacket, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
+    ipConstruct(ipPacket, ipHeader, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
     //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
     
     char *etherFrame;
@@ -409,7 +410,7 @@ int main()
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
 
-    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "abcdefghijklmnopqrstuvwabcdefgh"; char protocol = 'i';//placeholder line to get it to compile
+    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "I'm a pain"; char protocol = 'i';//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
     assemblePacket(protocol, fp);
