@@ -202,7 +202,6 @@ void icmpReqConstruct(char icmpReqSegment[], short seqNum, short segmentLen)
     return;
 }
 
-/*
 //creates a transport layer tcp header
 void tcpConstruct(char tcpSegment[])
 {
@@ -217,9 +216,8 @@ void tcpConstruct(char tcpSegment[])
     tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
     //then a bunch of options that are scary
     return;
-}*/
+}
 
-/*
 void udpConstruct(char udpSegment[])
 {
     short l_emptyPointer = 0;
@@ -239,9 +237,8 @@ void udpConstruct(char udpSegment[])
     //insertVarInto(checkSum, udpSegment, l_emptyPointer, 2);
     insertVarInto(PingReq.payload, udpSegment, l_emptyPointer, strlen(PingReq.payload));
     return;
-}*/
+}
 
-/*
 void arpConstruct(char arpSegment[])
 {
     short l_emptyPointer = 0;
@@ -255,9 +252,8 @@ void arpConstruct(char arpSegment[])
     insertVarInto(0x000000000000, arpSegment, l_emptyPointer, 6);
     insertVarInto(PingReq.target, arpSegment, l_emptyPointer, 4);
     return;
-}*/
+}
 
-/*
 void dnsConstruct(char dnsSegment[])
 {
     short l_emptyPointer = 0;
@@ -268,7 +264,7 @@ void dnsConstruct(char dnsSegment[])
     insertVarInto(0x00000000, dnsSegment, l_emptyPointer, 2);//RRses and stuff
     insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query));//the query response repeats the query's data in its own data section
     return;
-}*/
+}
 
 //slaps an IP header into the array
 void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen, short ipPacketLen)
@@ -317,7 +313,6 @@ short constructPacket(char bigArr[512], char protocol)
     	icmpReqConstruct(segment, 0, segmentLen);
     	
     	break;
-    /*	
 	case 'u':
 	
     	segmentLen = 6 + strlen(PingReq.payload);
@@ -351,7 +346,6 @@ short constructPacket(char bigArr[512], char protocol)
     	
     	break;
     	
-    */
     default :
 
         puts("a valid protocol hasn't been passed");
