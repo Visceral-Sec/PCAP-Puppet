@@ -124,6 +124,16 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
 }
 
 
+void pcapHeaderConstruct(FILE *fp)
+{
+	int pcapHeaderLen = 24;
+    	char pcapHeader[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
+	
+    	fwrite(pcapHeader, 1, pcapHeaderLen, fp);
+    	return;
+}
+
+
 //returns num^pow as a long short
 long power(short num, short pow)
 {
@@ -172,16 +182,13 @@ void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
 {
     //is only written at the start of a pcap
     short l_emptyPointer = 0;
-    char headerStart[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
-
-    insertVarInto(headerStart, pcap, 0, 24); l_emptyPointer += 24;
 	
     //is after every packet 
     epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
     pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
-    insertVarInto(etherFrame, pcap, 40, etherFrameLen);
+    insertVarInto(etherFrame, pcap, 16, etherFrameLen);
     return;
 }
 
@@ -374,7 +381,7 @@ short constructPacket(char bigArr[512], char protocol)
     etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
     
     char *pcap; //header + frame in an array
-    short pcapLen = 40 + etherFrameLen;
+    short pcapLen = 16 + etherFrameLen;
     pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
     headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the ipPacket
     
@@ -409,6 +416,7 @@ int main()
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
+    pcapHeaderConstruct(fp);
 
     char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "I'm a pain"; char protocol = 'i';//placeholder line to get it to compile
     dataParse(sMac, dMac, target, source, sPort, dPort, data);
