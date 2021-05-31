@@ -431,7 +431,7 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 	line = 0;
 	if (strcmp(currentLine, "icmp8") == 0) {
 		while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8 + 9 * loopCounter) { //reads the 7 lines under icmp8 
-			fputs(currentLine, stdout);
+			//fputs(currentLine, stdout);
 			if (line == 1 + 9 * loopCounter){
 				strcpy(sMac, currentLine);
 			}
