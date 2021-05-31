@@ -412,50 +412,61 @@ void assemblePacket(char protocol, FILE *fp)
 }
 
 
-void readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507])
+int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter)
 {
 	int len;
 	int line = 0;
 	char currentLine[1000]; //variable holds current line in textfile
+	int fileEnd = 0;
 	
 	FILE *fptr; //Declaring a pointer
-    fptr = fopen("data.txt", "r"); //read
+    	fptr = fopen("data.txt", "r"); //read
 	if (fptr == NULL) { //check to see if file exists
 		printf("Unable to open file");
 		exit(1);
 	}
-	while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
-		line = 0;
-		if (strcmp(currentLine, "icmp8") == 0) {
-			while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8) { //reads the 7 lines under icmp8 
-				fputs(currentLine, stdout);
-				if (line == 1){
-					strcpy(sMac, currentLine);
-				}
-				if (line == 2) {
-					strcpy(dMac, currentLine);
-				}
-				if (line == 3) {
-					strcpy(target, currentLine);
-				}
-				if (line == 4) {
-					strcpy(source, currentLine);
-				}
-				if (line == 5) {
-					strcpy(sPort, currentLine);
-				}
-				if (line == 6) {
-					strcpy(dPort, currentLine);
-				}
-				if (line == 7) {
-					strcpy(data, currentLine);
-				}
-				line += 1;
+	
+	//while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
+	fscanf(fptr, "%s", currentLine);
+	line = 0;
+	if (strcmp(currentLine, "icmp8") == 0) {
+		while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8 + 9 * loopCounter) { //reads the 7 lines under icmp8 
+			fputs(currentLine, stdout);
+			if (line == 1 + 9 * loopCounter){
+				strcpy(sMac, currentLine);
 			}
+			if (line == 2 + 9 * loopCounter) {
+				strcpy(dMac, currentLine);
+			}
+			if (line == 3 + 9 * loopCounter) {
+				strcpy(target, currentLine);
+			}
+			if (line == 4 + 9 * loopCounter) {
+				strcpy(source, currentLine);
+			}
+			if (line == 5 + 9 * loopCounter) {
+				strcpy(sPort, currentLine);
+			}
+			if (line == 6 + 9 * loopCounter) {
+				strcpy(dPort, currentLine);
+			}
+			if (line == 7 + 9 * loopCounter) {
+				strcpy(data, currentLine);
+			}
+			line += 1;
 		}
-		//run dataparse with each set of variables?
 	}
+		//run dataparse with each set of variables?
+	//}
+	
+	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
+	{
+		fileEnd = 1;
+	}
+	
 	fclose(fptr);
+	
+	return(fileEnd);
 }
 
 
@@ -463,12 +474,15 @@ void assembleAllPackets(FILE *fp)
 {
 	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = 'i';
 	
-	readData(sMac, dMac, target, source, sPort, dPort, data);
-	
-   	dataParse(sMac, dMac, target, source, sPort, dPort, data);
+	int fileEnd = 0;
+	for(int i = 0; fileEnd == 0; i++)
+	{
+		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i);
+		
+	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-    	assemblePacket(protocol, fp);
-	
+	    	assemblePacket(protocol, fp);
+    	}
 }
 
 
