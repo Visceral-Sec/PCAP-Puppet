@@ -412,16 +412,73 @@ void assemblePacket(char protocol, FILE *fp)
 }
 
 
+void readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507])
+{
+	int len;
+	int line = 0;
+	char currentLine[1000]; //variable holds current line in textfile
+	
+	FILE *fptr; //Declaring a pointer
+    fptr = fopen("data.txt", "r"); //read
+	if (fptr == NULL) { //check to see if file exists
+		printf("Unable to open file");
+		exit(1);
+	}
+	while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
+		line = 0;
+		if (strcmp(currentLine, "icmp8") == 0) {
+			while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8) { //reads the 7 lines under icmp8 
+				fputs(currentLine, stdout);
+				if (line == 1){
+					strcpy(sMac, currentLine);
+				}
+				if (line == 2) {
+					strcpy(dMac, currentLine);
+				}
+				if (line == 3) {
+					strcpy(target, currentLine);
+				}
+				if (line == 4) {
+					strcpy(source, currentLine);
+				}
+				if (line == 5) {
+					strcpy(sPort, currentLine);
+				}
+				if (line == 6) {
+					strcpy(dPort, currentLine);
+				}
+				if (line == 7) {
+					strcpy(data, currentLine);
+				}
+				line += 1;
+			}
+		}
+		//run dataparse with each set of variables?
+	}
+	fclose(fptr);
+}
+
+
+void assembleAllPackets(FILE *fp)
+{
+	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = 'i';
+	
+	readData(sMac, dMac, target, source, sPort, dPort, data);
+	
+   	dataParse(sMac, dMac, target, source, sPort, dPort, data);
+
+    	assemblePacket(protocol, fp);
+	
+}
+
+
 int main()
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
     pcapHeaderConstruct(fp);
 
-    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "I'm a pain"; char protocol = 'i';//placeholder line to get it to compile
-    dataParse(sMac, dMac, target, source, sPort, dPort, data);
-
-    assemblePacket(protocol, fp);
+    assembleAllPackets(fp);
     
     fclose(fp);
 
