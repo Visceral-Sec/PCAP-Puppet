@@ -113,21 +113,13 @@ class LocationConfiguration:
 # This all classes. Currently, Classes are used for holding user inputs as well as potential errors.
 # Classes are used because they have a wider scope than the function they are in, so they are used for returning values.
 
-
-
-class icmpConfig:
-    icmptext = ""
-    ip = ""
-    mac = ""
-    dip = ""
-    dmac = ""
-    macerror = [0,0,0,0]
-    dmacerror = [0,0,0,0]
-    iperror = [0,0]
-    diperror = [0,0]
-    size = [0]
-    Text = ""
-
+#Layer 2 Classes
+class ethernetConfig:
+    placeholder = ""
+class tokenringConfig:
+    placeholder = ""
+class WIFI:
+    placeholder = ""
 class arpConfig:
     icmptext = ""
     ip = ""
@@ -140,8 +132,113 @@ class arpConfig:
     diperror = [0,0]
     size = [0]
 
+
+#Layer 3 Classes
+class natConfig:
+    placeholder = ""
+class icmpConfig:
+    icmptext = ""
+    ip = ""
+    mac = ""
+    dip = ""
+    dmac = ""
+    macerror = [0,0,0,0]
+    dmacerror = [0,0,0,0]
+    iperror = [0,0]
+    diperror = [0,0]
+    size = [0]
+    Text = ""
+class ripConfig:
+    placeholder = ""
+class OSPF:
+    placeholder = ""
+class IP:
+    placeholder = ""
+
+#Layer 4 UDP/TCP
+class udpConfig:
+    placeholder = ""
+class tcpConfig:
+    placeholder = ""
+
+#Layer 5
+
+class socksConfig:
+    placeholder = ""
+class netbiosConfig:
+    placeholder = ""
+class smbConfig:
+    placeholder = ""
+
+#layer 6
+
+class tlsConfig:
+    placeholder = ""
+class sslConfig:
+    placeholder = ""
+class sshConfig:
+    placeholder = ""
+
+
+#Layer 7
+
+class soapConfig:
+    placeholder = ""
+class dhcpConfig:
+    placeholder = ""
+class telnetConfig:
+    placeholder = ""
+class ircConfig:
+    command = ""
+    message = ""
+    Name = ""
+    size = ""
+class ftpConfig:
+    ip = ""
+    dip = ""
+    port = ""
+    data = ""
+    file = ""
+    size = ""
+    type = [0,0]
+class httpConfig:
+    URL = ""
+    UserAgent = ""
+    PostUri = ""
+    GetUri = ""
+    GetReferrer = ""
+    PostData = ""
+    size = ""
+class httpsConfig:
+    URL = ""
+    UserAgent = ""
+    PostUri = ""
+    GetUri = ""
+    GetReferrer = ""
+    PostData = ""
+    size = ""
+    SSLKey = ""
+class dnsConfig:
+    dip = ""
+    Cport = ""
+    Type = ""
+    Class = ""
+    AnswerIP = ""
+    TIL = ""
+    AnswerName = ""
+
+# Misc:
+
 class TrafficSize:
     size = ""
+
+    #Used for configuring where to put spinboxes (Locations change depending on previous choices (e.g dynamic locations))
+class LocationConfiguration:
+        size = 1
+        x = 0
+        y = 0
+        xl = 0
+        yl = 0
 
 #These Classes exist for error checking purposes and checks if the protocol is being used
 class Config:
@@ -227,7 +324,73 @@ def pcapWrite():
 
     f.write("end\n")
 
-    
+def LocationConfig():
+    placed = 0 
+    print(LocationConfiguration.size)
+    LocationConfiguration.x = 0 
+    LocationConfiguration.y = 0
+    LocationConfiguration.xl = 0
+    LocationConfiguration.yl = 0
+    if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
+            if LocationConfiguration.size == 1:
+                LocationConfiguration.xl = 0
+                LocationConfiguration.yl = 3
+                LocationConfiguration.x = 40
+                LocationConfiguration.y = 3
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1 
+            if LocationConfiguration.size == 3:
+                LocationConfiguration.xl = 0
+                LocationConfiguration.yl = 28
+                LocationConfiguration.x = 40
+                LocationConfiguration.y = 28
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1 
+            if LocationConfiguration.size == 5:
+                LocationConfiguration.xl = 0
+                LocationConfiguration.yl = 53
+                LocationConfiguration.x = 40
+                LocationConfiguration.y = 53
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+            if LocationConfiguration.size == 7:
+                LocationConfiguration.xl = 0
+                LocationConfiguration.yl = 78
+                LocationConfiguration.x = 40
+                LocationConfiguration.y = 78
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1 
+        #If the option is even then the option is displayed on the right
+    if (LocationConfiguration.size % 2) == 0 and placed == 0:
+        if LocationConfiguration.size == 2:
+                LocationConfiguration.xl = 80
+                LocationConfiguration.yl = 3
+                LocationConfiguration.x = 110
+                LocationConfiguration.y = 3
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+        if LocationConfiguration.size == 4:
+                LocationConfiguration.xl = 80
+                LocationConfiguration.yl = 28
+                LocationConfiguration.x = 110
+                LocationConfiguration.y = 53
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+        if LocationConfiguration.size == 6:
+                LocationConfiguration.xl = 80
+                LocationConfiguration.yl = 53
+                LocationConfiguration.x = 110
+                LocationConfiguration.y = 53
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+        if LocationConfiguration.size == 8:
+                LocationConfiguration.xl = 80
+                LocationConfiguration.yl = 78
+                LocationConfiguration.x = 110
+                LocationConfiguration.y = 78
+                LocationConfiguration.size = LocationConfiguration.size + 1
+                placed = 1
+
 
 def ErrorReset():   # This function resets every error, (This is used to prevent from previous errors displaying)  
     IPErrors.error[0] = 0
@@ -563,52 +726,421 @@ def SizeLoader():
     TrafficSize.size = SizeEntry.get()
 
 def layer7_Displayer(l):
-    layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration")
-    layer7_Frame.place(x=100, y=50)
+    layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)
+    layer7_Frame.place(x=217, y=0)
     soap_Ip = Entry(layer7_Frame)
     dhcp_Ip = Entry(layer7_Frame)
-    telnet_Ip = Entry(layer7_Frame)
-    irc_Ip = Entry(layer7_Frame)
-    ftp_Ip = Entry(layer7_Frame)
-    http_Ip = Entry(layer7_Frame)
-    https_Ip = Entry(layer7_Frame)
-    dns_Ip = Entry(layer7_Frame)
 
-    if l == layersArray[6][0]:
+
+    if l == "SOAP":
         soap_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
 
-    if l == layersArray[6][1]:
+    if l == "DHCP":
         dhcp_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
     
-    if l == layersArray[6][2]:
-        telnet_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+    if l == "TELNET":
+        TelCommandVar = StringVar(layer7_Frame)
+        TelCommandVar.set("COMMAND:")
 
-    if l == layersArray[6][3]:
-        irc_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        TelCommandText = Label(layer7_Frame, text="Telnet Remote Machine Commands (WIP):")
+        TelCommandText.place(x=1,y=2)
 
-    if l == layersArray[6][4]:
-        ftp_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        TelCommand1Text = Label(layer7_Frame, text="Telnet Command 1:")
+        TelCommand1Text.place(x=1,y=25)
+        TelCommand1 = Entry(layer7_Frame, width=30)
+        TelCommand1.place(x=4,y=50)
 
-    if l == layersArray[6][5]:
-        http_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        TelCommand2Text = Label(layer7_Frame, text="Telnet Command 2:")
+        TelCommand2Text.place(x=1,y=65)
+        TelCommand2 = Entry(layer7_Frame, width=30)
+        TelCommand2.place(x=4,y=90)
+      
+        TelCommand3Text = Label(layer7_Frame, text="Telnet Command 3:")
+        TelCommand3Text.place(x=1,y=105)
+        TelCommand3 = Entry(layer7_Frame, width=30)
+        TelCommand3.place(x=4,y=130)
 
-    if l == layersArray[6][6]:
-        https_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        TelCommand4Text = Label(layer7_Frame, text="Telnet Command 4:")
+        TelCommand4Text.place(x=1,y=145)
+        TelCommand4 = Entry(layer7_Frame, width=30)
+        TelCommand4.place(x=4,y=170)
 
-    if l == layersArray[6][7]:
-        dns_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        TelCommand5Text = Label(layer7_Frame, text="Telnet Command 5:")
+        TelCommand5Text.place(x=1,y=185)
+        TelCommand5 = Entry(layer7_Frame, width=30)
+        TelCommand5.place(x=4,y=210)
+
+        TelnetCommandText = Label(layer7_Frame, text="Telnet Commands:")
+        TelnetCommandVar = StringVar(layer7_Frame)
+        TelnetCommandVar.set("COMMAND:")
+        TelnetCommand = OptionMenu(layer7_Frame, TelnetCommandVar, "SE","NOP","DM","BRK","IP","AO","AYT","EC","GA","SB","WILL","WONT","DO","DON'T","IAC")
+        TelnetCommand.place(x=4,y=250)
+        TelnetCommandText.place(x=4,y=230)
+        
+
+        TelnetCommandText = Label(layer7_Frame, text="Telnet Commands:")
+        TelnetCommandVar = StringVar(layer7_Frame)
+        TelnetCommandVar.set("COMMAND:")
+        TelnetCommand = OptionMenu(layer7_Frame, TelnetCommandVar, "SE","NOP","DM","BRK","IP","AO","AYT","EC","GA","SB","WILL","WONT","DO","DON'T","IAC")
+        TelnetCommand.place(x=4,y=250)
+        TelnetCommandText.place(x=4,y=230)
+
+
+    if l == "IRC":
+        IRCCommandVar = StringVar(layer7_Frame)
+        IRCCommandVar.set("COMMAND:")
+        IRCCommandText = Label(layer7_Frame, text="IRC Command (WIP): ") 
+        IRCCommand = OptionMenu(layer7_Frame, IRCCommandVar, "ADMIN", "AWAY", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE" ,"ENCAP", "ERROR", "HELP","INFO", "INVITE", "JOIN", "KICK", "KILL", "KNOCK", "LINKS","LIST","LUSERS","MODE","MOTD","NAMES","NAMESX","OPER","PART","PASS","PING","PONG","PRIVMSG","QUIT","REHASH","RESTART","RULES","SERVER","SERVICE","SERVLIST","SQUERY","SQUIT","SETNAME","SILENCE","STATS","SUMMON","TOPIC","TRACE","UHNAMES","USER","VERISON","WALLOPS","WATCH","WHO","WHOIS","WHOWAS")
+        IRCCommand.place(x=120,y=5)
+        IRCCommandText.place(x=2,y=10)
+
+        IRCMessageText = Label(layer7_Frame, text="IRC Message:") 
+        IRCMessage = Text(layer7_Frame, height=5, width=34)
+        IRCMessage.place(x=4,y=60)
+        IRCMessageText.place(x=2,y=40)
+
+
+        IRCUserText = Label(layer7_Frame, text="IRC User Name:")
+        IRCUserText.place(x=2,y=140)
+        IRCUser = Entry(layer7_Frame, width=30)
+        IRCUser.place(x=4,y=160)
+
+        def ircdone():
+            Config.IRC[1] = 1
+            ircConfig.command = IRCCommandVar.get()
+            ircConfig.message = IRCMessage.get(1.0,1000.0)
+            ircConfig.Name = IRCUser.get()
+            History_Displayer()
+
+        ircb = Button(layer7_Frame, text = "✓", command=ircdone)
+        ircb.place(x=175, y=475, width=100) 
+
+    if l == "FTP":
+        #Destination IP Placement
+        iptext = Label(layer7_Frame, text = "FTP Destination IP:")
+        iptext.place(x=2,y=4) 
+        ip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
+        ip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
+        ip3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
+        ip4 = Entry(layer7_Frame, width=2) #Octect 4 of the ip 
+        dot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
+        dot2 = Label(layer7_Frame, text = ".")
+        dot3 = Label(layer7_Frame, text = ".")
+        ip1.place(x=105,y=5)     
+        ip2.place(x=135,y=5)
+        ip3.place(x=165,y=5)
+        ip4.place(x=195,y=5)
+        dot1.place(x=125,y=5)
+        dot2.place(x=155,y=5)
+        dot3.place(x=185,y=5)
+        # Source Port Placement
+        sourcePortText = Label(layer7_Frame, text = "FTP Source Port:")
+        sourcePort = Entry(layer7_Frame, width=6)
+        sourcePortText.place(x=2, y=30)
+        sourcePort.place(x=100,y=30)
+        # Source Ip
+        ipsrctext = Label(layer7_Frame, text = "FTP Destination IP:")
+        ipsrctext.place(x=2,y=55)
+        ipsrc1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
+        ipsrc2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
+        ipsrc3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
+        ipsrc4 = Entry(layer7_Frame, width=2) #Octect 4 of the ip 
+        ipsrc1.place(x=105,y=55)     
+        ipsrc2.place(x=135,y=55)
+        ipsrc3.place(x=165,y=55)
+        ipsrc4.place(x=195,y=55)
+        dotsrc1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
+        dotsrc2 = Label(layer7_Frame, text = ".")
+        dotsrc3 = Label(layer7_Frame, text = ".")
+        dotsrc1.place(x=125,y=60)
+        dotsrc2.place(x=155,y=60)
+        dotsrc3.place(x=185,y=60)
+
+        #Radio button (ftp protocol ver)
+        ftptext = Label(layer7_Frame, text = "FTP Protocol Verison:")
+        ftptext.place(x=2,y=85)
+        uftptext = Label(layer7_Frame, text = "TFTP File Name:")
+        uftpFile = Entry(layer7_Frame, width=30)
+        tftptext = Label(layer7_Frame, text = "UFTP File Name:")
+        tftpFile = Entry(layer7_Frame, width=30)
+        varftp = IntVar()
+        def uftpcmd():
+            uftptext.place(x=30, y=150)
+            uftpFile.place(x=34, y=170)
+            ftpConfig.type[1] = 0
+            ftpConfig.type[0] = 1
+        def tftpcmd():
+            tftptext.place(x=30, y=150)
+            tftpFile.place(x=34, y=170)
+            ftpConfig.type[1] = 1
+            ftpConfig.type[0] = 0
+
+        uftp = Radiobutton(layer7_Frame, text="UFTP", variable=varftp, value= 1, command=uftpcmd)
+        tftp = Radiobutton(layer7_Frame, text="TFTP", variable=varftp, value= 2, command=tftpcmd)
+        uftp.place(x=40, y=110)
+        tftp.place(x=120, y=110)
+        #data
+        ftpfiledata = Text(layer7_Frame, height=10, width=33)
+        ftpfiledata.place(x=5, y=250)
+        icmpfiledatatext = Label(layer7_Frame, text="FTP File Data (WIP):")
+        icmpfiledatatext.place(x=5, y=225)
+        def ftpdone():
+            Config.FTP[1] = 1
+            dot = "."
+            dip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get()
+            sip = ipsrc1.get() + dot + ipsrc2.get() + dot + ipsrc3.get() + dot + ipsrc4.get()
+            if ftpConfig.type[1] == 1:
+                ftpConfig.file = ""
+                ftpConfig.file = uftpFile.get()
+            if ftpConfig.type[0] == 1:
+                ftpConfig.file = ""
+                ftpConfig.file = tftpFile.get()
+            ftpConfig.ip = sip
+            ftpConfig.dip = dip
+            ftpConfig.port = sourcePort.get()
+            ftpConfig.data = ftpfiledata.get(1.0,1000.0)
+            History_Displayer()
+        ftpb = Button(layer7_Frame, text = "✓", command=ftpdone,)
+        ftpb.place(x=175, y=475, width=100) 
+
+        #Potentially The data being transferrred (might be hard)        ftp_Ip.grid(row = (1), column = 3, sticky = E, pady=25, padx=82)
+        #Destination Address and Source Address
+        #Type of FTP (UFTP or TFTP)
+        #Source File (Wip)
+        
+    if l == "HTTP":
+        #Target Website
+        httptext = Label(layer7_Frame, text = "Host URL:")
+        httptext.place(x=2,y=4)
+        websiteEntry = Entry(layer7_Frame, width=30)
+        websiteEntry.place(x=80,y=4)
+        #User Agent
+        httpAgenttext = Label(layer7_Frame, text = "User-Agent:")
+        agentvar = StringVar(layer7_Frame)
+        agentvar.set("User Agent")
+        httpAgent = OptionMenu(layer7_Frame, agentvar, "Chrome", "Firefox", "Microsoft Edge", "Internet Explorer 11.0", "Google Bot", "Apple Ipad", "HTC", "CURL", "WGET")
+        httpAgenttext.place(x=2,y=28)
+        httpAgent.place(x=80, y=24)
+        #Radio Button (Get/Post) (Only supported atm)
+        postVar = IntVar()
+        getVar = IntVar()
+        GetUriEntry = Text(layer7_Frame, height=2, width=34)
+        referer = Text(layer7_Frame, height=2, width=34)
+        PosturiEntry = Text(layer7_Frame, height=2, width=34)
+        PostDataEntry = Text(layer7_Frame, height=4, width=34)
+        def POST():
+            text = Label(layer7_Frame, text = "Post Request Paramaters")
+            text.place(x=80, y= 90)
+            PosturiLabel = Label(layer7_Frame, text = "POST Request URI:")
+            PosturiLabel.place(x=2,y=115)
+            PosturiEntry.place(x=2,y=140)
+            PostDataLabel = Label(layer7_Frame, text = "POST Request Data:")
+            PostDataLabel.place(x=2,y=175)
+            PostDataEntry.place(x=2,y=200)
+        def GET():
+            text = Label(layer7_Frame, text = "GET Request Paramaters")
+            text.place(x=80, y= 270)
+            geturi = Label(layer7_Frame, text = "GET Request URI:")
+            geturi.place(x=2, y=290)
+            GetUriEntry.place(x=2, y=320)
+            referertext = Label(layer7_Frame, text = "Referrer:")
+            referertext.place(x=2, y = 355)
+            referer.place(x=2, y = 380)
+
+        postButton = Radiobutton(layer7_Frame, text = "POST Request", variable=postVar, command=POST)
+        getButton = Radiobutton(layer7_Frame, text = "GET Request", variable=getVar, command=GET)
+        postButton.place(x=40, y=60)
+        getButton.place(x=140, y=60)
+        def httpdone():
+            Config.HTTP[1] = 1
+            httpConfig.URL = websiteEntry.get()
+            httpConfig.UserAgent = agentvar.get()
+            httpConfig.PostUri = PosturiEntry.get(1.0,1000.0)
+            httpConfig.GetUri = GetUriEntry.get(1.0,1000.0)
+            httpConfig.GetReferrer = referer.get(1.0,200.0)
+            httpConfig.PostData = PostDataEntry.get(1.0,5000.0)
+            History_Displayer()
+
+
+        httpb = Button(layer7_Frame, text = "✓", command=httpdone)
+        httpb.place(x=175, y=475, width=100) 
+    if l == "HTTPS":
+        HTTPStext = Label(layer7_Frame, text = "Host URL:")
+        HTTPStext.place(x=2,y=4)
+        HTTPSwebsiteEntry = Entry(layer7_Frame, width=30)
+        HTTPSwebsiteEntry.place(x=80,y=4)
+        #User Agent
+        HTTPSAgenttext = Label(layer7_Frame, text = "User-Agent:")
+        HTTPSagentvar = StringVar(layer7_Frame)
+        HTTPSagentvar.set("User Agent")
+        HTTPSAgent = OptionMenu(layer7_Frame, HTTPSagentvar, "Chrome", "Firefox", "Microsoft Edge", "Internet Explorer 11.0", "Google Bot", "Apple Ipad", "HTC", "CURL", "WGET")
+        HTTPSAgenttext.place(x=2,y=28)
+        HTTPSAgent.place(x=80, y=24)
+        #Radio Button (Get/Post) (Only supported atm)
+        HTTPSpostVar = IntVar()
+        HTTPSgetVar = IntVar()
+        HTTPSGetUriEntry = Text(layer7_Frame, height=2, width=34)
+        HTTPSreferer = Text(layer7_Frame, height=2, width=34)
+        HTTPSPosturiEntry = Text(layer7_Frame, height=2, width=34)
+        HTTPSPostDataEntry = Text(layer7_Frame, height=4, width=34)
+        def POST():
+            text = Label(layer7_Frame, text = "Post Request Paramaters")
+            text.place(x=80, y= 90)
+            PosturiLabel = Label(layer7_Frame, text = "POST Request URI:")
+            PosturiLabel.place(x=2,y=115)
+            HTTPSPosturiEntry.place(x=2,y=140)
+            PostDataLabel = Label(layer7_Frame, text = "POST Request Data:")
+            PostDataLabel.place(x=2,y=175)
+            HTTPSPostDataEntry.place(x=2,y=200)
+        def GET():
+            text = Label(layer7_Frame, text = "GET Request Paramaters")
+            text.place(x=80, y= 270)
+            geturi = Label(layer7_Frame, text = "GET Request URI:")
+            geturi.place(x=2, y=290)
+            HTTPSGetUriEntry.place(x=2, y=320)
+            referertext = Label(layer7_Frame, text = "Referrer:")
+            referertext.place(x=2, y = 355)
+            HTTPSreferer.place(x=2, y = 380)
+
+        HTTPSpostButton = Radiobutton(layer7_Frame, text = "POST Request", variable=HTTPSpostVar, command=POST)
+        HTTPSgetButton = Radiobutton(layer7_Frame, text = "GET Request", variable=HTTPSgetVar, command=GET)
+        HTTPSpostButton.place(x=40, y=60)
+        HTTPSgetButton.place(x=140, y=60)
+        SSLEntry = Text(layer7_Frame, height=2, width=34)
+        SSLEntryLabel = Label(layer7_Frame, text = "SSL Key (WIP)")
+        SSLEntryLabel.place(x=2, y=420)
+        SSLEntry.place(x=2,y=442)
+        def httpsdone():
+            Config.HTTP[1] = 1
+            httpsConfig.URL = HTTPSwebsiteEntry.get()
+            httpsConfig.UserAgent = HTTPSagentvar.get()
+            httpsConfig.PostUri = HTTPSPosturiEntry.get(1.0,1000.0)
+            httpsConfig.GetUri = HTTPSGetUriEntry.get(1.0,1000.0)
+            httpsConfig.GetReferrer = HTTPSreferer.get(1.0,200.0)
+            httpsConfig.PostData = HTTPSPostDataEntry.get(1.0,5000.0)
+            httpsConfig.SSLKey = SSLEntry.get(1.0,5000.0)
+            History_Displayer()
+
+        HTTPSb = Button(layer7_Frame, text = "✓", command=httpsdone)
+        HTTPSb.place(x=175, y=480, width=100) 
+    if l == "DNS":
+        DNStext = Label(layer7_Frame, text = "Query URL:")
+        iptext = Label(layer7_Frame, text = "DNS Destination Server IP:")
+        iptext.place(x=2,y=4) 
+        ip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
+        ip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
+        ip3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
+        ip4 = Entry(layer7_Frame, width=2) #Octect 4 of the ip 
+        dot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
+        dot2 = Label(layer7_Frame, text = ".")
+        dot3 = Label(layer7_Frame, text = ".")
+        ip1.place(x=145,y=5)     
+        ip2.place(x=175,y=5)
+        ip3.place(x=205,y=5)
+        ip4.place(x=235,y=5)
+        dot1.place(x=165,y=5)
+        dot2.place(x=195,y=5)
+        dot3.place(x=225,y=5)
+        DNSCommunicationPortText = Label(layer7_Frame, text= "DNS Communication Port:")
+        DNSCommunicationPortText.place(x=2, y=30)
+        DNSCommunicationPort = Entry(layer7_Frame, width=3)
+        DNSCommunicationPort.place(x=150,y=30)
+        DNStext.place(x=2,y=50)
+        DNSQuery = Text(layer7_Frame, height=1, width=33)
+        DNSQuery.place(x=4,y=70)
+
+        DNSTypeVar = StringVar(layer7_Frame)
+        DNSTypeVar.set("Type")
+        DNSTypeText = Label(layer7_Frame, text="DNS Query Type: ") 
+        DNSType = OptionMenu(layer7_Frame, DNSTypeVar, "A", "AAAA", "ALIAS", "CNAME", "MX", "NS" ,"SOA", "SRV", "TXT")
+        DNSTypeText.place(x=2, y=95)
+        DNSType.place(x=100,y=90)
+        DNSNameText = Label(layer7_Frame, text= "DNS Answer Name:")
+        DNSName = Entry(layer7_Frame, width=33)
+        DNSNameText.place(x=2, y=120)
+        DNSName.place(x=2,y=140)
+
+        DNSClassText = Label(layer7_Frame, text= "DNS Class:")
+        DNSClassText.place(x=2,y=175)
+        DNSClassVar = StringVar(layer7_Frame)
+        DNSClassVar.set("Class (IN Default)")
+        DNSClass = OptionMenu(layer7_Frame, DNSClassVar, "IN", "CS", "CH", "HS")
+        DNSClass.place(x=70,y=170)
+
+        DNSClassText = Label(layer7_Frame, text= "DNS Answer Address:")
+        DNSClassText.place(x=2,y=215)
+        Ansip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
+        Ansip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
+        Ansip3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
+        Ansip4 = Entry(layer7_Frame, width=2) #Octect 4 of the ip 
+        Ansdot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
+        Ansdot2 = Label(layer7_Frame, text = ".")
+        Ansdot3 = Label(layer7_Frame, text = ".")
+        Ansip1.place(x=125,y=215)     
+        Ansip2.place(x=155,y=215)
+        Ansip3.place(x=185,y=215)
+        Ansip4.place(x=215,y=215)
+        Ansdot1.place(x=145,y=215)
+        Ansdot2.place(x=175,y=215)
+        Ansdot3.place(x=205,y=215)
+        
+        DNSTimeText = Label(layer7_Frame, text= "DNS Answer Time to Live: ")
+        DNSTimeText.place(x=2,y=245)
+        DNSTime = Entry(layer7_Frame, width=5)
+        DNSTime.place(x=145,y=245)
+
+        def dnsdone():
+            dot = "."
+            Config.DNS[1] = 1
+            dnsConfig.dip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get()
+            dnsConfig.Type = DNSType.get()
+            dnsConfig.Class = DNSClass.get()
+            dnsConfig.Cport= DNSCommunicationPort.get()
+            dnsConfig.AnswerIP = Ansip1.get() + dot + Ansip2.get() + dot + Ansip3.get() + dot + Ansip4.get()
+            dnsConfig.TIL = DNSTime.get()
+            dnsConfig.AnswerName = DNSName.get()
+            History_Displayer()
+        dnsb = Button(layer7_Frame, text = "✓", command=dnsdone)
+        dnsb.place(x=175, y=475, width=100) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Sets the History and the Size Configuration
 def History_Displayer():
     icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
     arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-
+    ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+    httpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+    httpsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+    ircSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
     #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
     def TrafficSize_Loader():
         if Config.ICMP[1] == 1:
             icmpConfig.size = icmpSpinbox.get()
         if Config.ARP[1] == 1:
             arpConfig.size = arpSpinbox.get()
+        if Config.FTP[1] == 1:
+            ftpConfig.size = ftpSpinbox.get()
+        if Config.HTTP[1] == 1:
+            httpConfig.size = httpSpinbox.get()
+        if Config.HTTPS[1] == 1:
+            httpsConfig.size = httpsSpinbox.get()
+        if Config.IRC[1] == 1:
+            ircConfig.size = ircSpinbox.get()
 
     TrafficSizeButton = Button(TrafficConfigFrame, text = "✓", command=TrafficSize_Loader)
     TrafficSizeButton.place(x=127,y=140)
@@ -618,119 +1150,176 @@ def History_Displayer():
         Config.ICMP[2] = 1
         icmpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
         icmpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1) )
-
+        LocationConfig()
         icmpHistoryLabel = Label(icmpHistory, text = "ICMP", font=("Arial", 16), borderwidth=1,  relief="solid",)
         icmpHistoryLabel.place(x=0, y=0)
-        placed = 0
-        icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0)
+        def ICMPDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current ICMP Configuration")
+            PopupLabel = LabelFrame(Popup, text="ICMP Configuration", width=250, height=250)
+            PopupLabel.pack()
+            PopupIP = Label(PopupLabel, text=("Source IP: " + icmpConfig.ip))
+            PopupDIP = Label(PopupLabel, text=("Destination IP: " + icmpConfig.dip))
+            Popupmac = Label(PopupLabel, text=("Source Mac: " + icmpConfig.mac))
+            Popupdmac = Label(PopupLabel, text=("Destination Mac: " + icmpConfig.mac))
+            Popuptext = Label(PopupLabel, text=("ICMP Ping Data: " + icmpConfig.Text))
+            PopupIP.pack()
+            PopupDIP.pack()
+            Popupmac.pack()
+            Popupdmac.pack()
+            Popuptext.pack()
+
+        icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0, command=ICMPDisplay)
         icmpHistoryButton.place(x=227, y=1)
         icmpSpinboxLabel = Label(TrafficConfigFrame, text="ICMP:")
-
-        #If the option is odd then the option is displayed on the left 
-        if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
-            if LocationConfiguration.size == 1:
-                icmpSpinboxLabel.place(x=0, y=3)
-                icmpSpinbox.place(x=40, y=3)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 3:
-                icmpSpinboxLabel.place(x=0, y=28) #goes up in 25
-                icmpSpinbox.place(x=40, y=28)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 5:
-                icmpSpinboxLabel.place(x=0, y=53)
-                icmpSpinbox.place(x=40, y=53)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 7:
-                icmpSpinboxLabel.place(x=0, y=78)
-                icmpSpinbox.place(x=40, y=78)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-        #If the option is even then the option is displayed on the right
-        if (LocationConfiguration.size % 2) == 0 and placed == 0:
-            if LocationConfiguration.size == 2:
-                icmpSpinboxLabel.place(x=80, y=3)
-                icmpSpinbox.place(x=110, y=3)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 4:
-                icmpSpinboxLabel.place(x=80, y=28)
-                icmpSpinbox.place(x=110, y=53)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 6:
-                icmpSpinboxLabel.place(x=80, y=53)
-                icmpSpinbox.place(x=110, y=53)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 8:
-                icmpSpinboxLabel.place(x=80, y=78)
-                icmpSpinbox.place(x=110, y=78)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
+        icmpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        icmpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
 
     if Config.ARP[1] == 1 and Config.ARP[2] == 0: #Hasn't been displayed and is chosen
         Config.ARP[2] = 1
-        print(Config.ARP)
-        print(LocationConfiguration.size)
         arpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
-       
         arpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1) )
-        placed = 0
+        LocationConfig()
         arpHistoryLabel = Label(arpHistory, text = "ARP", font=("Arial", 16), borderwidth=1,  relief="solid",)
         arpHistoryLabel.place(x=0, y=0)
+        def ARPDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current ARP Configuration")
+            PopupLabel = LabelFrame(Popup, text="ARP Configuration", width=250, height=250)
+            PopupLabel.pack()
+            PopupIP = Label(PopupLabel, text=("Source IP: " + arpConfig.ip))
+            PopupDIP = Label(PopupLabel, text=("Destination IP: " + arpConfig.dip))
+            Popupmac = Label(PopupLabel, text=("Source Mac: " + arpConfig.mac))
+            Popupdmac = Label(PopupLabel, text=("Destination Mac: " + arpConfig.mac))
+            PopupIP.pack()
+            PopupDIP.pack()
+            Popupmac.pack()
+            Popupdmac.pack()
 
-        arpHistoryButton = Button(arpHistory, text = "INFO", width=3, height=0)
+        arpHistoryButton = Button(arpHistory, text = "INFO", width=3, height=0, command=ARPDisplay())
         arpHistoryButton.place(x=227, y=1)
         arpSpinboxLabel = Label(TrafficConfigFrame, text="ARP:")
-
-            #if Odd (left side)
-        if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
-            if LocationConfiguration.size == 1:
-                arpSpinboxLabel.place(x=0, y=3)
-                arpSpinbox.place(x=40, y=3)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 3:
-                arpSpinboxLabel.place(x=40, y=28) #goes up in 25
-                arpSpinbox.place
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 5:
-                arpSpinboxLabel.place(x=40, y=53)
-                arpSpinbox.place
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 5:
-                arpSpinboxLabel.place(x=40, y=78)
-                arpSpinbox.place
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            #if even (Right side)
-        if (LocationConfiguration.size % 2) == 0 and placed == 0:
-            if LocationConfiguration.size == 2:
-                arpSpinboxLabel.place(x=80, y=3)
-                arpSpinbox.place(x=110, y=3)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 4:
-                icmpSpinboxLabel.place(x=80, y=28)
-                icmpSpinbox.place(x=110, y=53)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 6:
-                icmpSpinboxLabel.place(x=80, y=53)
-                icmpSpinbox.place(x=110, y=53)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
-            if LocationConfiguration.size == 8:
-                icmpSpinboxLabel.place(x=80, y=78)
-                icmpSpinbox.place(x=110, y=78)
-                LocationConfiguration.size = LocationConfiguration.size + 1
-                placed = 1
+        arpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        arpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
             
+
+    if Config.FTP[1] == 1 and Config.FTP[2] == 0:
+        Config.FTP[2] = 1
+        ftpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        ftpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1) )
+        LocationConfig()
+        ftpHistoryLabel = Label(ftpHistory, text = "FTP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        ftpHistoryLabel.place(x=0, y=0)
+        placed = 0
+        def ftpDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current FTP Configuration")
+            PopupLabel = LabelFrame(Popup, text="FTP Configuration", width=250, height=250)
+            PopupLabel.pack()
+            PopupIP = Label(PopupLabel, text=("Source IP: " + ftpConfig.ip))
+            PopupDIP = Label(PopupLabel, text=("Destination IP: " + ftpConfig.dip))
+            Popupport = Label(PopupLabel, text=("Source Port: " + ftpConfig.port))
+            Popupdfile = Label(PopupLabel, text=("Chosen File " + ftpConfig.file))
+            Popupdata = Label(PopupLabel, text=("FTP File Data: " + ftpConfig.data))
+            PopupIP.pack()
+            PopupDIP.pack()
+            Popupport.pack()
+            Popupdfile.pack()
+            Popupdata.pack()
+
+        ftpHistoryButton = Button(ftpHistory, text = "INFO", width=3, height=0, command=ftpDisplay)
+        ftpHistoryButton.place(x=227, y=1)
+        ftpSpinboxLabel = Label(TrafficConfigFrame, text="FTP:")
+        ftpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        ftpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+    
+    if Config.HTTP[1] == 1 and Config.HTTP[2] == 0:
+        Config.HTTP[2] = 1
+        httpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        httpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        httpHistoryLabel = Label(httpHistory, text = "HTTP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        httpHistoryLabel.place(x=0, y=0)
+        placed = 0
+        def httpDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current HTTP Configuration")
+            PopupLabel = LabelFrame(Popup, text="HTTP Configuration", width=250, height=250)
+            PopupLabel.pack()
+            Popupurl = Label(PopupLabel, text=("URL: " + httpConfig.URL))
+            Popupagent = Label(PopupLabel, text=("User Agent: " + httpConfig.UserAgent))
+            PopupPOSTuri = Label(PopupLabel, text=("POST Request URI: " + httpConfig.PostUri))
+            PopupGETuri = Label(PopupLabel, text=("GET Request URI: " + httpConfig.GetUri))
+            PopupdRef = Label(PopupLabel, text=("GET Request Referrer: " + httpConfig.GetReferrer))
+            Popupdata = Label(PopupLabel, text=("POST Data File Data: " + httpConfig.PostData))
+            Popupurl.pack()
+            Popupagent.pack()
+            PopupPOSTuri.pack()
+            PopupGETuri.pack()
+            PopupdRef.pack()
+            Popupdata.pack()
+        httpHistoryButton = Button(httpHistory, text = "INFO", width=3, height=0, command=httpDisplay)
+        httpHistoryButton.place(x=227, y=1)
+        httpSpinboxLabel = Label(TrafficConfigFrame, text="HTTP:")
+        httpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        httpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+    
+    if Config.HTTP[1] == 1 and Config.HTTP[2] == 0:
+        Config.HTTP[2] = 1
+        httpsHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        httpsHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        httpsHistoryLabel = Label(httpsHistory, text = "HTTPS", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        httpsHistoryLabel.place(x=0, y=0)
+        placed = 0
+        def httpsDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current HTTPS Configuration")
+            PopupLabel = LabelFrame(Popup, text="HTTP Configuration", width=250, height=250)
+            PopupLabel.pack()
+            Popupurl = Label(PopupLabel, text=("URL: " + httpsConfig.URL))
+            Popupagent = Label(PopupLabel, text=("User Agent: " + httpsConfig.UserAgent))
+            PopupPOSTuri = Label(PopupLabel, text=("POST Request URI: " + httpsConfig.PostUri))
+            PopupGETuri = Label(PopupLabel, text=("GET Request URI: " + httpsConfig.GetUri))
+            PopupdRef = Label(PopupLabel, text=("GET Request Referrer: " + httpsConfig.GetReferrer))
+            Popupdata = Label(PopupLabel, text=("POST Data File Data: " + httpsConfig.PostData))
+            PopupSSL = Label(PopupLabel, text=("HTTPS SSL KEY: " + httpsConfig.SSLKey))
+            PopupSSL.pack()
+            Popupurl.pack()
+            Popupagent.pack()
+            PopupPOSTuri.pack()
+            PopupGETuri.pack()
+            PopupdRef.pack()
+            Popupdata.pack()
+        httpsHistoryButton = Button(httpsHistory, text = "INFO", width=3, height=0, command=httpsDisplay)
+        httpsHistoryButton.place(x=227, y=1)
+        httpsSpinboxLabel = Label(TrafficConfigFrame, text="HTTPS:")
+        httpsSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        httpsSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+    if Config.IRC[1] == 1 and Config.IRC[2] == 0:
+        Config.IRC[2] = 1
+        IRCHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        IRCHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        IRCHistoryLabel = Label(IRCHistory, text = "IRC", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        IRCHistoryLabel.place(x=0, y=0)
+        placed = 0
+        def ircDisplay(): #Info Button displays all of the currently chosen configuration
+            Popup = Toplevel()
+            Popup.title("Current IRC Configuration")
+            PopupLabel = LabelFrame(Popup, text="IRC Configuration", width=250, height=250)
+            PopupLabel.pack()
+            PopupName = Label(PopupLabel, text=("User Name: " + ircConfig.Name))
+            PopupMessage = Label(PopupLabel, text=("IRC Message" + ircConfig.message))
+            PopupCommand = Label(PopupLabel, text=("IRC Commadn" + ircConfig.command))
+            PopupName.pack()
+            PopupMessage.pack()
+            PopupCommand.pack()
+        ircHistoryButton = Button(IRCHistory, text = "INFO", width=3, height=0, command=ircDisplay)
+        ircHistoryButton.place(x=227, y=1)
+        ircSpinboxLabel = Label(TrafficConfigFrame, text="IRC:")
+        ircSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        ircSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
 #Function on the "create Pcap button", checks for errors, then calls the main writing function (PcapWrite())
 def createPcap():
     ErrorReset()   # clears all previous error checks from previous creations
