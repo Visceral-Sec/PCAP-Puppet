@@ -420,7 +420,7 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 	int fileEnd = 0;
 	
 	FILE *fptr; //Declaring a pointer
-    	fptr = fopen("data.txt", "r"); //read
+    	fptr = fopen("Data.txt", "r"); //read
 	if (fptr == NULL) { //check to see if file exists
 		printf("Unable to open file");
 		exit(1);
