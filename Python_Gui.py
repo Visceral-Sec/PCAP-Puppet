@@ -20,7 +20,7 @@ master.title("PCAP PUPPET")
 #master.resizable(width=False, height=False) # prevents the size from being adjusted
 
 #change this depending on path
-path = "Project"
+#path = "Project"
 
 #Frame for Pcap Settings
 sConfig_Frame= Frame(master)
@@ -292,8 +292,8 @@ class PcapConfig:
 #This function writes to a txt doc which the c function will use to create the pcap
 def pcapWrite():
     #The library to write to files is very similar to that of C file.io library
-    pcap_path = os.path.join(path, "PlaceholderPcap.txt")
-    f = open(pcap_path, "w")
+    #pcap_path = os.path.join(path, "PlaceholderPcap.txt") No longer necessary - writing to current path instead
+    f = open("PlaceholderPcap.txt", "w")
 
     f.write("meta\n") 
     f.write(PcapConfig.wiresharkVER + "\n")

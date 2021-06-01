@@ -27,7 +27,7 @@ void read_pcap_out(char pcapOut[], short pcapLen)
     return;
 }
 
-// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (18/05/2021 - we need to cite this) to create a C function to calc an rfc 1071 checksum
+// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
 uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigned short
@@ -123,6 +123,16 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
     return;
 }
 
+//is run once at the start of the program so that it is only at the top of the file
+void pcapHeaderConstruct(FILE *fp)
+{
+	int pcapHeaderLen = 24;
+    	char pcapHeader[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
+	
+    	fwrite(pcapHeader, 1, pcapHeaderLen, fp);
+    	return;
+}
+
 
 //returns num^pow as a long short
 long power(short num, short pow)
@@ -172,16 +182,13 @@ void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
 {
     //is only written at the start of a pcap
     short l_emptyPointer = 0;
-    char headerStart[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
-
-    insertVarInto(headerStart, pcap, 0, 24); l_emptyPointer += 24;
 	
     //is after every packet 
     epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
     pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
-    insertVarInto(etherFrame, pcap, 40, etherFrameLen);
+    insertVarInto(etherFrame, pcap, 16, etherFrameLen);
     return;
 }
 
@@ -193,12 +200,12 @@ void icmpReqConstruct(char icmpReqSegment[], short seqNum, short segmentLen)
     icmpReqSegment[l_emptyPointer++] = 0x00;//code is 0
     icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x00;//icmp checksum, this is a placeholder for later in the function
     icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
-    char seqNumArr[2] = {seqNum >> 8, seqNum & 0x00FF};
-    insertVarInto(seqNumArr, icmpReqSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    icmpReqSegment[l_emptyPointer++] = seqNum >> 8;
+    icmpReqSegment[l_emptyPointer++] = seqNum & 0x00FF;
     insertVarInto(PingReq.payload, icmpReqSegment, l_emptyPointer, strlen(PingReq.payload));
-    short checksum = calcChecksum(icmpReqSegment, segmentLen);
-    char checksumArr[2] = {checksum & 0x00FF, checksum >> 8}; //was little endian, lower 8 bits read in first then upper to make it big endian (don't want to change checksum funct)
-    insertVarInto(checksumArr, icmpReqSegment, 2, 2);
+    uint16_t checksum = calcChecksum(icmpReqSegment, segmentLen);
+    icmpReqSegment[2] = checksum & 0x00FF;
+    icmpReqSegment[3] = checksum >> 8;
     return;
 }
 
@@ -267,21 +274,25 @@ void dnsConstruct(char dnsSegment[])
 }
 
 //slaps an IP header into the array
-void ipConstruct(char ipPacket[], char transportSegment[], short transportSegLen, short ipPacketLen)
+void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], short transportSegLen, short ipPacketLen)
 {
     short l_emptyPointer = 0;
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
     ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    char ipPacketLenArr[2] = {ipPacketLen >> 8, ipPacketLen & 0x00FF};
-    insertVarInto(ipPacketLenArr, ipPacket, l_emptyPointer, 2); l_emptyPointer += 2; //length of packet  (excl. ether)
+    ipPacket[l_emptyPointer++] = ipPacketLen >> 8; //takes upper 8 bits
+    ipPacket[l_emptyPointer++] = ipPacketLen & 0x00FF; //takes lower 8 bits
     ipPacket[l_emptyPointer++] = 0x1b; ipPacket[l_emptyPointer++] = 0xd1; //idenfitication???????????
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
     ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //header checksum, 0000 means no validation
+    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum
     insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
     insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
+    insertVarInto(ipPacket, ipHeader, 0, 20); //make header by itself for checksum
     insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
+    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum (it doesnt work -_-)
+    ipPacket[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
+    ipPacket[11] = checkSum >> 8;
     return;
 }
 
@@ -351,11 +362,11 @@ short constructPacket(char bigArr[512], char protocol)
         puts("a valid protocol hasn't been passed");
     }
     
+    char ipHeader[20];
     char *ipPacket;
-
     short ipPacketLen = 20 + segmentLen;
     ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
-    ipConstruct(ipPacket, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
+    ipConstruct(ipPacket, ipHeader, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
     //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
     
     char *etherFrame;
@@ -364,7 +375,7 @@ short constructPacket(char bigArr[512], char protocol)
     etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
     
     char *pcap; //header + frame in an array
-    short pcapLen = 40 + etherFrameLen;
+    short pcapLen = 16 + etherFrameLen;
     pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
     headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the ipPacket
     
@@ -395,15 +406,87 @@ void assemblePacket(char protocol, FILE *fp)
 }
 
 
+int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter)
+{
+	int len;
+	int line = 0;
+	char currentLine[1000]; //variable holds current line in textfile
+	int fileEnd = 0;
+	
+	FILE *fptr; //Declaring a pointer
+    	fptr = fopen("Data.txt", "r"); //read
+	if (fptr == NULL) { //check to see if file exists
+		printf("Unable to open file");
+		exit(1);
+	}
+	
+	//while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
+	fscanf(fptr, "%s", currentLine);
+	line = 0;
+	if (strcmp(currentLine, "icmp8") == 0) {
+		while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8 + 9 * loopCounter) { //reads the 7 lines under icmp8 
+			//fputs(currentLine, stdout);
+			if (line == 1 + 9 * loopCounter){
+				strcpy(sMac, currentLine);
+			}
+			if (line == 2 + 9 * loopCounter) {
+				strcpy(dMac, currentLine);
+			}
+			if (line == 3 + 9 * loopCounter) {
+				strcpy(target, currentLine);
+			}
+			if (line == 4 + 9 * loopCounter) {
+				strcpy(source, currentLine);
+			}
+			if (line == 5 + 9 * loopCounter) {
+				strcpy(sPort, currentLine);
+			}
+			if (line == 6 + 9 * loopCounter) {
+				strcpy(dPort, currentLine);
+			}
+			if (line == 7 + 9 * loopCounter) {
+				strcpy(data, currentLine);
+			}
+			line += 1;
+		}
+	}
+		//run dataparse with each set of variables?
+	//}
+	
+	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
+	{
+		fileEnd = 1;
+	}
+	
+	fclose(fptr);
+	
+	return(fileEnd);
+}
+
+
+void assembleAllPackets(FILE *fp)
+{
+	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = 'i';
+	
+	int fileEnd = 0;
+	for(int i = 0; fileEnd == 0; i++)
+	{
+		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i);
+		
+	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
+
+	    	assemblePacket(protocol, fp);
+    	}
+}
+
+
 int main()
 {
     FILE *fp;
     fp = fopen("pingReq.pcapng","wb");
+    pcapHeaderConstruct(fp);
 
-    char sMac[17] = "a8:a1:59:33:f4:00"; char dMac[17] = "40:0d:10:53:0d:e0"; char target[11] = "ac.d9.a9.4e"; char source[11] = "c0.a8.00.3a"; char sPort[5] = "1b.43"; char dPort[5] = "00.50"; char data[33] = "abcdefghijklmnopqrstuvwabcdefgh"; char protocol = 'i';//placeholder line to get it to compile
-    dataParse(sMac, dMac, target, source, sPort, dPort, data);
-
-    assemblePacket(protocol, fp);
+    assembleAllPackets(fp);
     
     fclose(fp);
 
