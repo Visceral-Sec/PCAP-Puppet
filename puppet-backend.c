@@ -270,7 +270,7 @@ void dnsReqConstruct(char dnsSegment[])
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
     //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
-    insertVarInto(g_currentFrame.query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
+    insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
 }
 
 //slaps an IP header into the array
@@ -290,7 +290,7 @@ void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], ui
     insertVarInto(g_currentFrame.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
     insertVarInto(ipPacket, ipHeader, 0, 20); //make header by itself for checksum
     insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
-    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum (it doesnt work -_-)
+    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum
     ipPacket[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
     ipPacket[11] = checkSum >> 8;
     return;
