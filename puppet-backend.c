@@ -15,6 +15,7 @@ struct packet
     char dPort[2];
     char payload[100];
     char lastSeq[2];
+    char transactionID[2];
 };
 struct packet g_currentFrame;
 
@@ -252,22 +253,24 @@ void arpConstruct(char arpSegment[])
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
     insertVarInto(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6);
     insertVarInto(g_currentFrame.source, arpSegment, l_emptyPointer, 4);
-    insertVarInto(0x000000000000, arpSegment, l_emptyPointer, 6); //What is this?
+    char placeholderArr[6] = {0,0,0,0,0,0};
+    insertVarInto(placeholderArr, arpSegment, l_emptyPointer, 6); //What is this?
     insertVarInto(g_currentFrame.target, arpSegment, l_emptyPointer, 4);
     return;
 }
 
-void dnsConstruct(char dnsSegment[])
+void dnsReqConstruct(char dnsSegment[])
 {
     uint16_t l_emptyPointer = 0;
-    uint16_t transactionID = rand() % 16;
-    insertVarInto(TransactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
-    insertVarInto(flags, dnsSegment, l_emptyPointer, 2);//0100 for standard query, 8580 for standard query response
-    insertVarInto(0x0001, dnsSegment, l_emptyPointer, 2);//questions
-    insertVarInto(0x0000, dnsSegment, l_emptyPointer, 2);//answers, would be 0x0001 for a response
-    insertVarInto(0x00000000, dnsSegment, l_emptyPointer, 2);//RRses and stuff
-    insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query));//the query response repeats the query's data in its own data section
-    return;
+    uint16_t flags = rand() % 16;
+    insertVarInto(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
+    dnsSegment[l_emptyPointer++] = flags >> 8;
+    dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
+    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
+    insertVarInto(g_currentFrame.query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
 }
 
 //slaps an IP header into the array
@@ -349,7 +352,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsConstruct(segment);
+    	dnsReqConstruct(segment);
     	
     	break;
     	
@@ -400,6 +403,12 @@ void assemblePacket(char protocol, FILE *fp)
     free(pcapOut);
 }
 
+void icmp8Found()
+{
+
+    return;
+}
+
 int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter)
 {
 	int len;
@@ -413,7 +422,7 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 		printf("Unable to open file");
 		exit(1);
 	}
-	
+
 	//while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
 	fscanf(fptr, "%s", currentLine);
 	line = 0;
