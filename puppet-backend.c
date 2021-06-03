@@ -233,8 +233,8 @@ void udpConstruct(char udpSegment[], uint16_t udpSegmentLen)
     uint16_t l_emptyPointer = 0;
     insertVarInto(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
     insertVarInto(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    udpSegment[l_emptyPointer++] = strlen(g_currentFrame.payload) >> 24;
-    udpSegment[l_emptyPointer++] = strlen(g_currentFrame.payload) & 0x000000FF;
+    udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) >> 24;
+    udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) & 0x000000FF;
     udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
     insertVarInto(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
     uint16_t checksum = calcChecksum(udpSegment, udpSegmentLen);
