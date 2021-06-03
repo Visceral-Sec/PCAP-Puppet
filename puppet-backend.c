@@ -242,8 +242,8 @@ void udpConstruct(char udpSegment[], uint16_t udpSegmentLen)
     udpSegment[7] = checksum >> 8;
     return;
 }
-/*
-void arpConstruct(char arpSegment[])
+
+void arpReqConstruct(char arpSegment[])
 {
     uint16_t l_emptyPointer = 0;
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
@@ -261,6 +261,7 @@ void arpConstruct(char arpSegment[])
 
 void dnsReqConstruct(char dnsSegment[])
 {
+    char query[32];//this is here to allow compilation
     uint16_t l_emptyPointer = 0;
     uint16_t flags = rand() % 16;
     insertVarInto(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
@@ -271,7 +272,7 @@ void dnsReqConstruct(char dnsSegment[])
     //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
     insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
-}*/
+}
 
 //slaps an IP header into the array
 void ipConstruct(char ipPacket[], char transportSegment[], uint16_t transportSegLen, uint16_t ipPacketLen, int protocol)
@@ -317,8 +318,6 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     uint16_t ipPacketLen;
     char *ipPacket;
     
-    uint16_t segmentLen;
-    char *segment;
     switch(protocol)
     {
 	case 'i':
@@ -330,10 +329,6 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	ipPacketLen = 20 + segmentLen;
         ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
         ipConstruct(ipPacket, segment, segmentLen, ipPacketLen, 1); //builds on top of the icmpseg
-        
-        segmentLen = ipPacketLen;
-        segment = (char *)malloc(sizeof(char) * (segmentLen)); 
-        insertVarInto(ipPacket, segment, 0, segmentLen);
     	
     	break;
     
@@ -346,34 +341,30 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	ipPacketLen = 20 + segmentLen;
         ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
         ipConstruct(ipPacket, segment, segmentLen, ipPacketLen, 17); //builds on top of the icmpseg
-        
-        segmentLen = ipPacketLen;
-        segment = (char *)malloc(sizeof(char) * (segmentLen)); 
-        insertVarInto(ipPacket, segment, 0, segmentLen);
     	
     	break;
-    	
+    /*	
 	case 't':
 	
-    	segmentLen = 6 + strlen(PingReq.payload);
+    	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	tcpConstruct(segment);
     	
     	break;
-    	
+    */	
 	case 'a':
 	
-    	segmentLen = 6 + strlen(PingReq.payload);
+    	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	arpConstruct(segment);
+    	arpReqConstruct(segment);
     	
     	break;
     	
 	case 'd':
 	
-    	segmentLen = 6 + strlen(PingReq.payload);
+    	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsConstruct(segment);
+    	dnsReqConstruct(segment);
     	
     	break;
     	
@@ -513,7 +504,6 @@ int main()
     pcapHeaderConstruct(fp);
 
     assembleAllPackets(fp);
-    
     fclose(fp);
 
     return 0;
