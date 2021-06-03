@@ -126,12 +126,12 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
 }
 
 //is run once at the start of the program so that it is only at the top of the file
-void pcapHeaderConstruct(FILE *fp)
+void pcapHeaderConstruct(FILE *fpWrite)
 {
 	int pcapHeaderLen = 24;
     	char pcapHeader[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
 	
-    	fwrite(pcapHeader, 1, pcapHeaderLen, fp);
+    	fwrite(pcapHeader, 1, pcapHeaderLen, fpWrite);
     	return;
 }
 
@@ -243,6 +243,11 @@ void udpConstruct(char udpSegment[], uint16_t udpSegmentLen)
     return;
 }
 
+void udpDataConstruct(char udpFrame[], uint16_t udpSegmentLen)
+{
+    udpConstruct();
+    return;
+}
 
 void arpReqConstruct(char arpSegment[])
 {
@@ -325,8 +330,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     switch(protocol)
     {
 	case 'i':
-	
-	networkID = 0;
+	    networkID = 0;
 	
     	segmentLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
@@ -335,26 +339,19 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	packetLen = 20 + segmentLen;
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
         ipConstruct(packet, segment, segmentLen, packetLen, 1); //builds on top of the icmpseg
-    	
     	break;
-    
 	case 'u':
-	
-	networkID = 0;
-	
+        networkID = 0;
     	segmentLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(segment, segmentLen);
+    	udpDataConstruct(segment, segmentLen);
     	
     	packetLen = 20 + segmentLen;
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
         ipConstruct(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
-    	
     	break;
-    	
 	case 'a':
-	
-	networkID = 6;
+	    networkID = 6;
 	
         packet = (char *)malloc(sizeof(char) * (1));
     	segment = (char *)malloc(sizeof(char) * 1);
@@ -362,30 +359,22 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	packetLen = 28;
     	packet = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	arpReqConstruct(segment);
-    	
-    	break;
-    	
-    	/*
+        break;
+    /*
 	case 't':
-	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	tcpConstruct(segment);
-    	
     	break;
-    	*/
+        */
 	case 'd':
-	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	dnsReqConstruct(segment);
-    	
     	break;
-    	
     default :
         puts("a valid protocol hasn't been passed");
     }
-    
     
     char *etherFrame;
     uint16_t etherFrameLen = 14 + segmentLen;
@@ -394,13 +383,12 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     
     char *pcap; //header + frame in an array
     uint16_t pcapLen = 16 + etherFrameLen;
-    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
+    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 16 + etherFrameLen bytes on the heap
     headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the packet
     
     insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
     free(segment); //free up the reserved space on the heap
-    free(segment);
     free(packet);
     free(etherFrame);
     free(pcap);
@@ -408,7 +396,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     return pcapLen;
 }
 
-void assemblePacket(char protocol, FILE *fp)
+void assemblePacket(char protocol, FILE *fpWrite)
 {
     char bigArr[1024];
     uint16_t pcapLen = constructPacket(bigArr, protocol);
@@ -418,86 +406,48 @@ void assemblePacket(char protocol, FILE *fp)
     insertVarInto(bigArr, pcapOut, 0, pcapLen);
 
     //read_pcap_out(pcapOut, bigArrLen);
-    fwrite(pcapOut, 1, pcapLen, fp);
+    fwrite(pcapOut, 1, pcapLen, fpWrite);
     
     free(pcapOut);
-}
-
-void icmp8Found()
-{
-
     return;
 }
 
-int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char protocol[1])
+
+void readData(char currentLine[128], FILE *fpRead, char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], char protocol)
 {
-	int len, line = 0;
-	char currentLine[128]; //variable holds current line in textfile
-	int fileEnd = 0;
+    switch (currentLine[1])
+    {
+        case 'i':
+            strcpy(sMac, fgets(currentLine, 128, fpRead));
+            strcpy(dMac, fgets(currentLine, 128, fpRead));
+            strcpy(target, fgets(currentLine, 128, fpRead));
+            strcpy(source, fgets(currentLine, 128, fpRead));
+            strcpy(data, fgets(currentLine, 128, fpRead));
+            dataParse(sMac, dMac, target, source, "00.00", "00.00", data);
+        break;
+        case 'u':
+            strcpy(sMac, fgets(currentLine, 128, fpRead));
+            strcpy(dMac, fgets(currentLine, 128, fpRead));
+            strcpy(target, fgets(currentLine, 128, fpRead));
+            strcpy(source, fgets(currentLine, 128, fpRead));
+            strcpy(data, fgets(currentLine, 128, fpRead));
+            dataParse(sMac, dMac, target, source, sPort, dPort, data);
+        break;
+        case 'a':
+        break;
+        case 'd':
+        break;
+    }
+
+	fclose(fpRead);
 	
-	FILE *fptr; //Declaring a pointer
-    	fptr = fopen("Data.txt", "r"); //read
-	if (fptr == NULL) { //check to see if file exists
-		printf("Unable to open file");
-		exit(1);
-	}
-	
-	fscanf(fptr, "%s", currentLine);
-	line = 0;
-	
-	while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 9 + 9 * loopCounter) { //reads the 7 lines under icmp8 
-		
-		if (line == 1 + 9 * loopCounter){
-			switch(currentLine[1])
-			{
-				case 'i': protocol[0] = 'i'; break;
-				
-				case 'u': protocol[0] = 'u'; break;
-				
-				case 'a': protocol[0] = 'a'; break;
-				
-				default: printf("Invalid file format.");
-			}
-		}
-		if (line == 2 + 9 * loopCounter){
-			strcpy(sMac, currentLine);
-		}
-		if (line == 3 + 9 * loopCounter) {
-			strcpy(dMac, currentLine);
-		}
-		if (line == 4 + 9 * loopCounter) {
-			strcpy(target, currentLine);
-		}
-		if (line == 5 + 9 * loopCounter) {
-			strcpy(source, currentLine);
-		}
-		if (line == 6 + 9 * loopCounter) {
-			strcpy(sPort, currentLine);
-		}
-		if (line == 7 + 9 * loopCounter) {
-			strcpy(dPort, currentLine);
-		}
-		if (line == 8 + 9 * loopCounter) {
-			strcpy(data, currentLine);
-		}
-		line += 1;
-	}
-	
-	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
-	{
-		fileEnd = 1;
-	}
-	
-	fclose(fptr);
-	
-	return(fileEnd);
+	return;
 }
 
-
-void assembleAllPackets(FILE *fp)
+/*
+void assembleAllPackets(FILE *fpWrite)
 {
 	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol[1] = "i";
-	
 	int fileEnd = 0;
 	for(int i = 0; fileEnd == 0; i++)
 	{
@@ -505,22 +455,38 @@ void assembleAllPackets(FILE *fp)
 		
 	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemblePacket(protocol[0], fp);
-    	}
+	    	assemblePacket(protocol[0], fpWrite);
+    }
 }
-
+*/
 
 int main()
 {
     time_t t;
     srand((unsigned) time(&t));
-    FILE *fp;
-    fp = fopen("generated-packets.pcapng","wb");
-    pcapHeaderConstruct(fp);
+    FILE *fpWrite;
+    fpWrite = fopen("generated-packets.pcapng","wb");
+    pcapHeaderConstruct(fpWrite);
 
-    assembleAllPackets(fp);
-    
-    fclose(fp);
+    char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = '0';
+
+    FILE *fpRead; //Declaring a pointer
+    fpRead = fopen("Data.txt", "r"); //read
+	if (fpRead == NULL) { //check to see if file exists
+		puts("Unable to open file, exiting...");
+        fclose(fpRead);
+        fclose(fpWrite);
+		exit(0);
+	}
+
+    char currentLine[128];
+    while (fgets(currentLine, 128, fpRead) != NULL)
+    {
+        readData(currentLine, fpRead, sMac, dMac, target, source, sPort, dPort, data, protocol);
+    }
+
+    fclose(fpRead);
+    fclose(fpWrite);
 
     return 0;
 }
