@@ -311,8 +311,8 @@ void etherConstruct(char etherFrame[], char networkPacket[], uint16_t netPacketL
 //construct all of the arrays into one frame array - needs more work
 uint16_t constructPacket(char bigArr[512], char protocol)
 {
-    uint16_t protocolSegmentLen;
-    char *protocolSegment;
+    uint16_t segmentLen;
+    char *segment;
     
     uint16_t ipPacketLen;
     char *ipPacket;
@@ -323,13 +323,13 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     {
 	case 'i':
 	
-    	protocolSegmentLen = 8 + strlen(g_currentFrame.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpReqConstruct(protocolSegment, protocolSegmentLen);
+    	segmentLen = 8 + strlen(g_currentFrame.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	icmpReqConstruct(segment, segmentLen);
     	
-    	ipPacketLen = 20 + protocolSegmentLen;
-        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + protocolSegmentLen bytes onthe heap
-        ipConstruct(ipPacket, protocolSegment, protocolSegmentLen, ipPacketLen, 1); //builds on top of the icmpseg
+    	ipPacketLen = 20 + segmentLen;
+        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
+        ipConstruct(ipPacket, segment, segmentLen, ipPacketLen, 1); //builds on top of the icmpseg
         
         segmentLen = ipPacketLen;
         segment = (char *)malloc(sizeof(char) * (segmentLen)); 
@@ -339,20 +339,19 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     
 	case 'u':
 	
-    	protocolSegmentLen = 8 + strlen(g_currentFrame.payload);
-    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegmentLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(protocolSegment, protocolSegmentLen);
+    	segmentLen = 8 + strlen(g_currentFrame.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	udpConstruct(segment, segmentLen);
     	
-    	ipPacketLen = 20 + protocolSegmentLen;
-        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + protocolSegmentLen bytes onthe heap
-        ipConstruct(ipPacket, protocolSegment, protocolSegmentLen, ipPacketLen, 17); //builds on top of the icmpseg
+    	ipPacketLen = 20 + segmentLen;
+        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
+        ipConstruct(ipPacket, segment, segmentLen, ipPacketLen, 17); //builds on top of the icmpseg
         
         segmentLen = ipPacketLen;
         segment = (char *)malloc(sizeof(char) * (segmentLen)); 
         insertVarInto(ipPacket, segment, 0, segmentLen);
     	
     	break;
-    	/*	
     	
 	case 't':
 	
@@ -378,7 +377,6 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	
     	break;
     	
-    */
     default :
         puts("a valid protocol hasn't been passed");
     }
@@ -396,7 +394,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     
     insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(protocolSegment); //free up the reserved space on the heap
+    free(segment); //free up the reserved space on the heap
     free(segment);
     free(ipPacket);
     free(etherFrame);
