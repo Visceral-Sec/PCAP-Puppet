@@ -158,7 +158,7 @@ void epoch(char pcap[], uint16_t l_emptyPointer)
     char hex[4];
     uint16_t temp;
     
-    for(uint16_t i = 9; i >= 0; i--)
+    for(int i = 9; i >= 0; i--)// i needs to be an int for some reason
     {
     	uint16_t result = seconds/divisor;
     	if(i % 2 == 1)
@@ -228,7 +228,7 @@ void tcpConstruct(char tcpSegment[])
     return;
 }*/
 
-void udpConstruct(char udpSegment[], char lowerSection[], uint16_t udpSegmentLen)
+void udpConstruct(char udpSegment[], uint16_t udpSegmentLen)
 {
     uint16_t l_emptyPointer = 0;
     insertVarInto(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
@@ -236,13 +236,13 @@ void udpConstruct(char udpSegment[], char lowerSection[], uint16_t udpSegmentLen
     udpSegment[l_emptyPointer++] = strlen(g_currentFrame.payload) >> 24;
     udpSegment[l_emptyPointer++] = strlen(g_currentFrame.payload) & 0x000000FF;
     udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    insertVarInto(lowerSection, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
+    insertVarInto(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
     uint16_t checksum = calcChecksum(udpSegment, udpSegmentLen);
     udpSegment[6] = checksum & 0x00FF;
     udpSegment[7] = checksum >> 8;
     return;
 }
-
+/*
 void arpConstruct(char arpSegment[])
 {
     uint16_t l_emptyPointer = 0;
@@ -271,11 +271,12 @@ void dnsReqConstruct(char dnsSegment[])
     //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
     insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
-}
+}*/
 
 //slaps an IP header into the array
-void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], uint16_t transportSegLen, uint16_t ipPacketLen)
+void ipConstruct(char ipPacket[], char transportSegment[], uint16_t transportSegLen, uint16_t ipPacketLen, int protocol)
 {
+    char ipHeader[20];
     uint16_t l_emptyPointer = 0;
     ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
     ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
@@ -284,7 +285,7 @@ void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], ui
     ipPacket[l_emptyPointer++] = 0x1b; ipPacket[l_emptyPointer++] = 0xd1; //idenfitication???????????
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
     ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
-    ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
+    ipPacket[l_emptyPointer++] = protocol; //icmp is 01
     ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum
     insertVarInto(g_currentFrame.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
     insertVarInto(g_currentFrame.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
@@ -310,31 +311,52 @@ void etherConstruct(char etherFrame[], char networkPacket[], uint16_t netPacketL
 //construct all of the arrays into one frame array - needs more work
 uint16_t constructPacket(char bigArr[512], char protocol)
 {
-
+    uint16_t protocolSegmentLen;
+    char *protocolSegment;
+    
+    uint16_t ipPacketLen;
+    char *ipPacket;
+    
     uint16_t segmentLen;
     char *segment;
-    
     switch(protocol)
     {
 	case 'i':
 	
-    	segmentLen = 8 + strlen(g_currentFrame.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpReqConstruct(segment, segmentLen);
+    	protocolSegmentLen = 8 + strlen(g_currentFrame.payload);
+    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegmentLen); //reserves (8 + length of payload) bytes on the heap
+    	icmpReqConstruct(protocolSegment, protocolSegmentLen);
+    	
+    	ipPacketLen = 20 + protocolSegmentLen;
+        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + protocolSegmentLen bytes onthe heap
+        ipConstruct(ipPacket, protocolSegment, protocolSegmentLen, ipPacketLen, 1); //builds on top of the icmpseg
+        
+        segmentLen = ipPacketLen;
+        segment = (char *)malloc(sizeof(char) * (segmentLen)); 
+        insertVarInto(ipPacket, segment, 0, segmentLen);
     	
     	break;
+    
 	case 'u':
 	
-    	segmentLen = 6 + strlen(g_currentFrame.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(segment);
+    	protocolSegmentLen = 8 + strlen(g_currentFrame.payload);
+    	protocolSegment = (char *)malloc(sizeof(char) * protocolSegmentLen); //reserves (8 + length of payload) bytes on the heap
+    	udpConstruct(protocolSegment, protocolSegmentLen);
+    	
+    	ipPacketLen = 20 + protocolSegmentLen;
+        ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + protocolSegmentLen bytes onthe heap
+        ipConstruct(ipPacket, protocolSegment, protocolSegmentLen, ipPacketLen, 17); //builds on top of the icmpseg
+        
+        segmentLen = ipPacketLen;
+        segment = (char *)malloc(sizeof(char) * (segmentLen)); 
+        insertVarInto(ipPacket, segment, 0, segmentLen);
     	
     	break;
-    	
+    	/*	
     	
 	case 't':
 	
-    	segmentLen = 6 + strlen(g_currentFrame.payload);
+    	segmentLen = 6 + strlen(PingReq.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	tcpConstruct(segment);
     	
@@ -342,7 +364,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	
 	case 'a':
 	
-    	segmentLen = 6 + strlen(g_currentFrame.payload);
+    	segmentLen = 6 + strlen(PingReq.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	arpConstruct(segment);
     	
@@ -350,28 +372,22 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     	
 	case 'd':
 	
-    	segmentLen = 6 + strlen(g_currentFrame.payload);
+    	segmentLen = 6 + strlen(PingReq.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsReqConstruct(segment);
+    	dnsConstruct(segment);
     	
     	break;
     	
+    */
     default :
-
         puts("a valid protocol hasn't been passed");
     }
     
-    char ipHeader[20];
-    char *ipPacket;
-    uint16_t ipPacketLen = 20 + segmentLen;
-    ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
-    ipConstruct(ipPacket, ipHeader, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
-    //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
     
     char *etherFrame;
-    uint16_t etherFrameLen = 14 + ipPacketLen;
+    uint16_t etherFrameLen = 14 + segmentLen;
     etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
-    etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
+    etherConstruct(etherFrame, segment, segmentLen); //builds on top of the ipPacket
     
     char *pcap; //header + frame in an array
     uint16_t pcapLen = 16 + etherFrameLen;
@@ -380,7 +396,8 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     
     insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(segment); //free up the reserved space on the heap
+    free(protocolSegment); //free up the reserved space on the heap
+    free(segment);
     free(ipPacket);
     free(etherFrame);
     free(pcap);
@@ -409,7 +426,7 @@ void icmp8Found()
     return;
 }
 
-int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter)
+int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char protocol[1])
 {
 	int len;
 	int line = 0;
@@ -417,44 +434,50 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 	int fileEnd = 0;
 	
 	FILE *fptr; //Declaring a pointer
-    	fptr = fopen("Data.txt", "r"); //read
+    	fptr = fopen("data.txt", "r"); //read
 	if (fptr == NULL) { //check to see if file exists
 		printf("Unable to open file");
 		exit(1);
 	}
-
-	//while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
+	
 	fscanf(fptr, "%s", currentLine);
 	line = 0;
-	if (strcmp(currentLine, "icmp8") == 0) {
-		while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8 + 9 * loopCounter) { //reads the 7 lines under icmp8 
-			//fputs(currentLine, stdout);
-			if (line == 1 + 9 * loopCounter){
-				strcpy(sMac, currentLine);
+	
+	while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 9 + 9 * loopCounter) { //reads the 7 lines under icmp8 
+		
+		if (line == 1 + 9 * loopCounter){
+			switch(currentLine[1])
+			{
+				case 'i': protocol[0] = 'i'; break;
+				
+				case 'u': protocol[0] = 'u'; break;
+				
+				default: printf("Invalid file format.");
 			}
-			if (line == 2 + 9 * loopCounter) {
-				strcpy(dMac, currentLine);
-			}
-			if (line == 3 + 9 * loopCounter) {
-				strcpy(target, currentLine);
-			}
-			if (line == 4 + 9 * loopCounter) {
-				strcpy(source, currentLine);
-			}
-			if (line == 5 + 9 * loopCounter) {
-				strcpy(sPort, currentLine);
-			}
-			if (line == 6 + 9 * loopCounter) {
-				strcpy(dPort, currentLine);
-			}
-			if (line == 7 + 9 * loopCounter) {
-				strcpy(data, currentLine);
-			}
-			line++;
 		}
+		if (line == 2 + 9 * loopCounter){
+			strcpy(sMac, currentLine);
+		}
+		if (line == 3 + 9 * loopCounter) {
+			strcpy(dMac, currentLine);
+		}
+		if (line == 4 + 9 * loopCounter) {
+			strcpy(target, currentLine);
+		}
+		if (line == 5 + 9 * loopCounter) {
+			strcpy(source, currentLine);
+		}
+		if (line == 6 + 9 * loopCounter) {
+			strcpy(sPort, currentLine);
+		}
+		if (line == 7 + 9 * loopCounter) {
+			strcpy(dPort, currentLine);
+		}
+		if (line == 8 + 9 * loopCounter) {
+			strcpy(data, currentLine);
+		}
+		line += 1;
 	}
-		//run dataparse with each set of variables?
-	//}
 	
 	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
 	{
@@ -469,16 +492,16 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 
 void assembleAllPackets(FILE *fp)
 {
-	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = 'i';
+	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol[1] = "i";
 	
 	int fileEnd = 0;
 	for(int i = 0; fileEnd == 0; i++)
 	{
-		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i);
+		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i, protocol);
 		
 	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemblePacket(protocol, fp);
+	    	assemblePacket(protocol[0], fp);
     	}
 }
 
