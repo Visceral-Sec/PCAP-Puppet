@@ -61,7 +61,7 @@ uint16_t calcChecksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsig
 }
 
 //takes array and inserts it into the desired position in a chosen array
-void insertVarInto(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint16_t bytesToWrite)
+void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint16_t bytesToWrite)
 {
     for (uint16_t x = 0; x < bytesToWrite; x++)
     {
@@ -127,12 +127,12 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
 }
 
 //is run once at the start of the program so that it is only at the top of the file
-void pcapHeaderConstruct(FILE *fp)
+void pcapHeaderConstruct(FILE *rpWrite)
 {
 	int pcapHeaderLen = 24;
     	char pcapHeader[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
 	
-    	fwrite(pcapHeader, 1, pcapHeaderLen, fp);
+    	fwrite(pcapHeader, 1, pcapHeaderLen, rpWrite);
     	return;
 }
 
@@ -174,13 +174,13 @@ void epoch(char pcap[], uint16_t l_emptyPointer)
     	divisor /= 16;
     }
     
-    insertVarInto(hex, pcap, l_emptyPointer, 4);
+    insert_var_into(hex, pcap, l_emptyPointer, 4);
     
     return;
 }
 
 //is functional and dynamic for a single packet but needs some work for multiple
-void headerConstruct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
+void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 {
     //is only written at the start of a pcap
     uint16_t l_emptyPointer = 0;
@@ -190,12 +190,12 @@ void headerConstruct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
     pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
-    insertVarInto(etherFrame, pcap, 16, etherFrameLen);
+    insert_var_into(etherFrame, pcap, 16, etherFrameLen);
     return;
 }
 
 //slaps icmp segment into the frame
-void icmpReqConstruct(char icmpReqSegment[], uint16_t segmentLen)
+void icmp_req_construct(char icmpReqSegment[], uint16_t segmentLen)
 {
     uint16_t l_emptyPointer = 0;
     uint32_t seqNum = rand();
@@ -205,7 +205,7 @@ void icmpReqConstruct(char icmpReqSegment[], uint16_t segmentLen)
     icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
     icmpReqSegment[l_emptyPointer++] = seqNum >> 24;
     icmpReqSegment[l_emptyPointer++] = seqNum & 0x000000FF;
-    insertVarInto(g_currentFrame.payload, icmpReqSegment, l_emptyPointer, strlen(g_currentFrame.payload));
+    insert_var_into(g_currentFrame.payload, icmpReqSegment, l_emptyPointer, strlen(g_currentFrame.payload));
     uint16_t checksum = calcChecksum(icmpReqSegment, segmentLen);
     icmpReqSegment[2] = checksum & 0x00FF;
     icmpReqSegment[3] = checksum >> 8;
@@ -214,71 +214,38 @@ void icmpReqConstruct(char icmpReqSegment[], uint16_t segmentLen)
 
 /* we need to do handshakes
 //creates a transport layer tcp header
-void tcpConstruct(char tcpSegment[])
+void tcp_construct(char tcpSegment[])
 {
     uint16_t l_emptyPointer = 0;
-    insertVarInto(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insertVarInto(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insertVarInto(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
-    insertVarInto(AckNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
+    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
+    insert_var_into(AckNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
     tcpSegment[l_emptyPointer++] = flags; //tcp flags - probably easier to impliment once parsing is done
-    insertVarInto(windowSize, tcpSegment, l_emptyPointer, 2);
-    insertVarInto(checkSum, tcpSegment, l_emptyPointer, 2);
+    insert_var_into(windowSize, tcpSegment, l_emptyPointer, 2);
+    insert_var_into(checkSum, tcpSegment, l_emptyPointer, 2);
     tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
     //then a bunch of options that are scary
     return;
 }*/
 
-void udpConstruct(char udpSegment[], uint16_t udpSegmentLen)
+void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen)
 {
     uint16_t l_emptyPointer = 0;
-    insertVarInto(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insertVarInto(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
     udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) >> 24;
     udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) & 0x000000FF;
     udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    insertVarInto(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
+    insert_var_into(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
     uint16_t checksum = calcChecksum(udpSegment, udpSegmentLen);
     udpSegment[6] = checksum & 0x00FF;
     udpSegment[7] = checksum >> 8;
     return;
 }
 
-
-void arpReqConstruct(char arpSegment[])
-{
-    uint16_t l_emptyPointer = 0;
-    char placeholderArr[6] = {0,0,0,0,0,0};
-    
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
-    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
-    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//protocol size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
-    insertVarInto(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
-    insertVarInto(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    insertVarInto(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
-    insertVarInto(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    return;
-}
-
-void dnsReqConstruct(char dnsSegment[])
-{
-    char query[16];
-    uint16_t l_emptyPointer = 0;
-    uint16_t flags = rand() % 16;
-    insertVarInto(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
-    dnsSegment[l_emptyPointer++] = flags >> 8;
-    dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
-    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
-    insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
-}
-
 //slaps an IP header into the array
-void ipConstruct(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int protocol)
+void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int protocol)
 {
     char ipHeader[20];
     uint16_t l_emptyPointer = 0;
@@ -291,10 +258,10 @@ void ipConstruct(char packet[], char transportSegment[], uint16_t transportSegLe
     packet[l_emptyPointer++] = 0x80; //ttl of 128
     packet[l_emptyPointer++] = protocol;
     packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //checksum
-    insertVarInto(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
-    insertVarInto(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
-    insertVarInto(packet, ipHeader, 0, 20); //make header by itself for checksum
-    insertVarInto(transportSegment, packet, l_emptyPointer, transportSegLen);
+    insert_var_into(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insert_var_into :(
+    insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
+    insert_var_into(packet, ipHeader, 0, 20); //make header by itself for checksum
+    insert_var_into(transportSegment, packet, l_emptyPointer, transportSegLen);
     uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum
     packet[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
     packet[11] = checkSum >> 8;
@@ -302,18 +269,50 @@ void ipConstruct(char packet[], char transportSegment[], uint16_t transportSegLe
 }
 
 //constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-void etherConstruct(char etherFrame[], char networkPacket[], uint16_t netPacketLen, uint16_t networkID)
+void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPacketLen, uint16_t networkID)
 {
     uint16_t l_emptyPointer = 0;
-    insertVarInto(g_currentFrame.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    insertVarInto(g_currentFrame.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
     etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = networkID; //etherversion? ¿IPv4? can't seem to condense it into one line
-    insertVarInto(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
+    insert_var_into(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
     return;
 }
 
+void arp_req_construct(char arpSegment[])
+{
+    uint16_t l_emptyPointer = 0;
+    char placeholderArr[6] = {0,0,0,0,0,0};
+    
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
+    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
+    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
+    arpSegment[l_emptyPointer++] = 0x04;//protocol size
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
+    insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+    insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
+    insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+    return;
+}
+
+void dns_req_construct(char dnsSegment[])
+{
+    char query[16];
+    uint16_t l_emptyPointer = 0;
+    uint16_t flags = rand() % 16;
+    insert_var_into(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
+    dnsSegment[l_emptyPointer++] = flags >> 8;
+    dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
+    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
+    insert_var_into(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
+}
+
 //construct all of the arrays into one frame array - needs more work
-uint16_t constructPacket(char bigArr[512], char protocol)
+uint16_t construct_packet(char bigArr[512], char protocol)
 {
     uint16_t segmentLen;
     char *segment;
@@ -331,11 +330,11 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpReqConstruct(segment, segmentLen);
+    	icmp_req_construct(segment, segmentLen);
     	
     	packetLen = 20 + segmentLen;
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
-        ipConstruct(packet, segment, segmentLen, packetLen, 1); //builds on top of the icmpseg
+        insert_ip_header(packet, segment, segmentLen, packetLen, 1); //builds on top of the icmpseg
     	
     	break;
     
@@ -345,11 +344,11 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(segment, segmentLen);
+    	insert_udp_header(segment, segmentLen);
     	
     	packetLen = 20 + segmentLen;
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
-        ipConstruct(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
+        insert_ip_header(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
     	
     	break;
     	
@@ -362,7 +361,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	packetLen = 28;
     	packet = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	arpReqConstruct(segment);
+    	arp_req_construct(segment);
     	
     	break;
     	
@@ -371,7 +370,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	tcpConstruct(segment);
+    	tcp_construct(segment);
     	
     	break;
     	*/
@@ -379,7 +378,7 @@ uint16_t constructPacket(char bigArr[512], char protocol)
 	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsReqConstruct(segment);
+    	dns_req_construct(segment);
     	
     	break;
     	
@@ -391,14 +390,14 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     char *etherFrame;
     uint16_t etherFrameLen = 14 + segmentLen;
     etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
-    etherConstruct(etherFrame, segment, segmentLen, networkID); //builds on top of the packet
+    insert_ether_header(etherFrame, segment, segmentLen, networkID); //builds on top of the packet
     
     char *pcap; //header + frame in an array
     uint16_t pcapLen = 16 + etherFrameLen;
     pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
-    headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the packet
+    header_construct(pcap, etherFrame, etherFrameLen); //builds on top of the packet
     
-    insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
+    insert_var_into(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
     free(segment); //free up the reserved space on the heap
     free(segment);
@@ -409,28 +408,22 @@ uint16_t constructPacket(char bigArr[512], char protocol)
     return pcapLen;
 }
 
-void assemblePacket(char protocol, FILE *fp)
+void assemble_packet(char protocol, FILE *rpWrite)
 {
     char bigArr[1024];
-    uint16_t pcapLen = constructPacket(bigArr, protocol);
+    uint16_t pcapLen = construct_packet(bigArr, protocol);
 
     char *pcapOut;
     pcapOut = (char *)malloc(sizeof(char) * pcapLen);
-    insertVarInto(bigArr, pcapOut, 0, pcapLen);
+    insert_var_into(bigArr, pcapOut, 0, pcapLen);
 
     //read_pcap_out(pcapOut, bigArrLen);
-    fwrite(pcapOut, 1, pcapLen, fp);
+    fwrite(pcapOut, 1, pcapLen, rpWrite);
     
     free(pcapOut);
 }
 
-void icmp8Found()
-{
-
-    return;
-}
-
-int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char protocol[1])
+int read_data(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char protocol[1])
 {
 	int len, line = 0;
 	char currentLine[128]; //variable holds current line in textfile
@@ -495,18 +488,18 @@ int readData(char sMac[17], char dMac[17], char target[11], char source[11], cha
 }
 
 
-void assembleAllPackets(FILE *fp)
+void assemble_all_packets(FILE *rpWrite)
 {
 	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol[1] = "i";
 	
 	int fileEnd = 0;
 	for(int i = 0; fileEnd == 0; i++)
 	{
-		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i, protocol);
+		fileEnd = read_data(sMac, dMac, target, source, sPort, dPort, data, i, protocol);
 		
 	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemblePacket(protocol[0], fp);
+	    	assemble_packet(protocol[0], rpWrite);
     	}
 }
 
@@ -515,29 +508,13 @@ int main()
 {
     time_t t;
     srand((unsigned) time(&t));
-    FILE *fp;
-    fp = fopen("generated-packets.pcapng","wb");
-    pcapHeaderConstruct(fp);
+    FILE *rpWrite;
+    rpWrite = fopen("generated-packets.pcapng","wb");
+    pcapHeaderConstruct(rpWrite);
 
-    assembleAllPackets(fp);
+    assemble_all_packets(rpWrite);
     
-    fclose(fp);
+    fclose(rpWrite);
 
     return 0;
 }
-
-    © 2021 GitHub, Inc.
-    Terms
-    Privacy
-    Security
-    Status
-    Docs
-
-    Contact GitHub
-    Pricing
-    API
-    Training
-    Blog
-    About
-
-Loading complete
