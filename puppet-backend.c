@@ -1,37 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@cafelargo
-Visceral-Sec /
-PCAP-Puppet
-Private
-
-1
-0
-
-    0
-
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-
-    Insights
-
-PCAP-Puppet/puppet-backend.c
-@cafelargo
-cafelargo fixing compilation again
-Latest commit 60adea0 yesterday
-History
-2 contributors
-@cafelargo
-@Rob-a-dob-dob
 526 lines (439 sloc) 18.2 KB
 #include <stdio.h>
 #include <string.h>
@@ -67,11 +33,11 @@ void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 // the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
-uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigned uint16_t
+uint16_t calcChecksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
     char* data = (char*)vdata; //Cast the data pointer to one that can be indexed.
     uint32_t acc = 0xffff; // Initialise the accumulator
-    for (size_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
+    for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
     {
         uint16_t word; // a word being 16-bits
         memcpy(&word, data + i, 2);
