@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-struct packet
+struct packetStruct
 {
     char sMac[6];
     char dMac[6];
@@ -18,7 +18,7 @@ struct packet
     char lastSeq[2];
     char transactionID[2];
 };
-struct packet g_currentFrame;
+struct packetStruct g_currentFrame;
 
 //for testing mainly
 void read_pcap_out(char pcapOut[], uint16_t pcapLen)
@@ -136,7 +136,6 @@ void pcapHeaderConstruct(FILE *rpWrite)
     	return;
 }
 
-
 //returns num^pow as a long uint16_t
 long power(uint16_t num, uint16_t pow)
 {
@@ -195,20 +194,20 @@ void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 }
 
 //slaps icmp segment into the frame
-void icmp_req_construct(char icmpReqSegment[], uint16_t segmentLen)
+void icmp_construct(char icmpReqSeg[], uint16_t segmentLen, uint16_t icmpID, char type)
 {
     uint16_t l_emptyPointer = 0;
     uint32_t seqNum = rand();
-    icmpReqSegment[l_emptyPointer++] = 0x08;//icmp ping request
-    icmpReqSegment[l_emptyPointer++] = 0x00;//code is 0
-    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
-    icmpReqSegment[l_emptyPointer++] = seqNum >> 24;
-    icmpReqSegment[l_emptyPointer++] = seqNum & 0x000000FF;
-    insert_var_into(g_currentFrame.payload, icmpReqSegment, l_emptyPointer, strlen(g_currentFrame.payload));
-    uint16_t checksum = calcChecksum(icmpReqSegment, segmentLen);
-    icmpReqSegment[2] = checksum & 0x00FF;
-    icmpReqSegment[3] = checksum >> 8;
+    icmpReqSeg[l_emptyPointer++] = type;//icmp ping request
+    icmpReqSeg[l_emptyPointer++] = 0x00;//code is 0
+    icmpReqSeg[l_emptyPointer++] = 0x00; icmpReqSeg[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
+    icmpReqSeg[l_emptyPointer++] = icmpID >> 8; icmpReqSeg[l_emptyPointer++] = icmpID & 0x00FF;//identifier?
+    icmpReqSeg[l_emptyPointer++] = seqNum >> 24;
+    icmpReqSeg[l_emptyPointer++] = seqNum & 0x000000FF;
+    insert_var_into(g_currentFrame.payload, icmpReqSeg, l_emptyPointer, strlen(g_currentFrame.payload));
+    uint16_t checksum = calcChecksum(icmpReqSeg, segmentLen);
+    icmpReqSeg[2] = checksum & 0x00FF;
+    icmpReqSeg[3] = checksum >> 8;
     return;
 }
 
@@ -245,7 +244,7 @@ void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen)
 }
 
 //slaps an IP header into the array
-void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int protocol)
+void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int packetType)
 {
     char ipHeader[20];
     uint16_t l_emptyPointer = 0;
@@ -256,7 +255,7 @@ void insert_ip_header(char packet[], char transportSegment[], uint16_t transport
     packet[l_emptyPointer++] = 0x1b; packet[l_emptyPointer++] = 0xd1; //idenfitication???????????
     packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //flags and fragment offset
     packet[l_emptyPointer++] = 0x80; //ttl of 128
-    packet[l_emptyPointer++] = protocol;
+    packet[l_emptyPointer++] = packetType;
     packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //checksum
     insert_var_into(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insert_var_into :(
     insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
@@ -287,7 +286,7 @@ void arp_req_construct(char arpSegment[])
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
     arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
     arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//protocol size
+    arpSegment[l_emptyPointer++] = 0x04;//packetType size
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
     insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
     insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
@@ -312,7 +311,7 @@ void dns_req_construct(char dnsSegment[])
 }
 
 //construct all of the arrays into one frame array - needs more work
-uint16_t construct_packet(char bigArr[512], char protocol)
+uint16_t construct_packet(char bigArr[512], char packetType)
 {
     uint16_t segmentLen;
     char *segment;
@@ -322,7 +321,7 @@ uint16_t construct_packet(char bigArr[512], char protocol)
     
     uint16_t networkID = 0;
     
-    switch(protocol)
+    switch(packetType)
     {
 	case 'i':
 	
@@ -383,7 +382,7 @@ uint16_t construct_packet(char bigArr[512], char protocol)
     	break;
     	
     default :
-        puts("a valid protocol hasn't been passed");
+        puts("a valid packetType hasn't been passed");
     }
     
     
@@ -408,10 +407,10 @@ uint16_t construct_packet(char bigArr[512], char protocol)
     return pcapLen;
 }
 
-void assemble_packet(char protocol, FILE *rpWrite)
+void assemble_packet(char packetType, FILE *rpWrite)
 {
     char bigArr[1024];
-    uint16_t pcapLen = construct_packet(bigArr, protocol);
+    uint16_t pcapLen = construct_packet(bigArr, packetType);
 
     char *pcapOut;
     pcapOut = (char *)malloc(sizeof(char) * pcapLen);
@@ -423,32 +422,49 @@ void assemble_packet(char protocol, FILE *rpWrite)
     free(pcapOut);
 }
 
-int read_data(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char protocol[1])
+int read_data(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char packetType[1])
 {
 	int len, line = 0;
 	char currentLine[128]; //variable holds current line in textfile
 	int fileEnd = 0;
 	
-	FILE *fptr; //Declaring a pointer
-    	fptr = fopen("Data.txt", "r"); //read
-	if (fptr == NULL) { //check to see if file exists
+	FILE *fpRead; //Declaring a pointer
+    	fpRead = fopen("Data.txt", "r"); //read
+	if (fpRead == NULL) { //check to see if file exists
 		printf("Unable to open file");
+        fclose(fpRead);
 		exit(1);
 	}
 	
-	fscanf(fptr, "%s", currentLine);
+	fscanf(fpRead, "%s", currentLine);
 	line = 0;
 	
-	while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 9 + 9 * loopCounter) { //reads the 7 lines under icmp8 
+	while (fgets(currentLine, sizeof(currentLine), fpRead) != NULL && line < 9 + 9 * loopCounter) { //reads the 7 lines under icmp8 
 		
 		if (line == 1 + 9 * loopCounter){
-			switch(currentLine[1])
+			switch (currentLine[1])
 			{
-				case 'i': protocol[0] = 'i'; break;
+				case 'i':
+                    packetType[0] = 'i';
+                    switch (currentLine[2])
+                    {
+                        case 'r':
+                            packetType[1] = 'r';
+                        break;
+                        case 'a':
+                            packetType[1] = 'a';
+                        break;
+                        default:
+                            puts("malformed passed data, expected param for response/answer, exiting...");
+                            fclose(fpread);
+                            exit(1);
+                        break;
+                    }
+                break;
 				
-				case 'u': protocol[0] = 'u'; break;
+				case 'u': packetType[0] = 'u'; break;
 				
-				case 'a': protocol[0] = 'a'; break;
+				case 'a': packetType[0] = 'a'; break;
 				
 				default: printf("Invalid file format.");
 			}
@@ -477,12 +493,12 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 		line += 1;
 	}
 	
-	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
+	if(fgets(currentLine, sizeof(currentLine), fpRead) == NULL)
 	{
 		fileEnd = 1;
 	}
 	
-	fclose(fptr);
+	fclose(fpRead);
 	
 	return(fileEnd);
 }
@@ -490,16 +506,16 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 
 void assemble_all_packets(FILE *rpWrite)
 {
-	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol[1] = "i";
+	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[1024] = "default"; char packetType[2] = {'i','r'};
 	
 	int fileEnd = 0;
 	for(int i = 0; fileEnd == 0; i++)
 	{
-		fileEnd = read_data(sMac, dMac, target, source, sPort, dPort, data, i, protocol);
+		fileEnd = read_data(sMac, dMac, target, source, sPort, dPort, data, i, packetType);
 		
 	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemble_packet(protocol[0], rpWrite);
+	    	assemble_packet(packetType[0], rpWrite);
     	}
 }
 
