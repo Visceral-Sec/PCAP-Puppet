@@ -1,4 +1,3 @@
-526 lines (439 sloc) 18.2 KB
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -127,12 +126,12 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
 }
 
 //is run once at the start of the program so that it is only at the top of the file
-void pcapHeaderConstruct(FILE *rpWrite)
+void pcapHeaderConstruct(FILE *fpWrite)
 {
 	int pcapHeaderLen = 24;
     	char pcapHeader[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
 	
-    	fwrite(pcapHeader, 1, pcapHeaderLen, rpWrite);
+    	fwrite(pcapHeader, 1, pcapHeaderLen, fpWrite);
     	return;
 }
 
@@ -324,21 +323,18 @@ uint16_t construct_packet(char bigArr[512], char packetType)
     switch(packetType)
     {
 	case 'i':
-	
-	networkID = 0;
+	    networkID = 0;
 	
     	segmentLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmp_req_construct(segment, segmentLen);
+    	icmp_construct(segment, segmentLen);
     	
     	packetLen = 20 + segmentLen;
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
         insert_ip_header(packet, segment, segmentLen, packetLen, 1); //builds on top of the icmpseg
     	
-    	break;
-    
+    break;
 	case 'u':
-	
 	networkID = 0;
 	
     	segmentLen = 8 + strlen(g_currentFrame.payload);
@@ -349,8 +345,7 @@ uint16_t construct_packet(char bigArr[512], char packetType)
         packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
         insert_ip_header(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
     	
-    	break;
-    	
+    break;
 	case 'a':
 	
 	networkID = 6;
@@ -362,25 +357,23 @@ uint16_t construct_packet(char bigArr[512], char packetType)
     	packet = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	arp_req_construct(segment);
     	
-    	break;
-    	
-    	/*
+    break;
+    /*
 	case 't':
 	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	tcp_construct(segment);
     	
-    	break;
-    	*/
+    break;
+    */
 	case 'd':
 	
     	segmentLen = 6 + strlen(g_currentFrame.payload);
     	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
     	dns_req_construct(segment);
     	
-    	break;
-    	
+    break;
     default :
         puts("a valid packetType hasn't been passed");
     }
@@ -407,7 +400,7 @@ uint16_t construct_packet(char bigArr[512], char packetType)
     return pcapLen;
 }
 
-void assemble_packet(char packetType, FILE *rpWrite)
+void assemble_packet(char packetType, FILE *fpWrite)
 {
     char bigArr[1024];
     uint16_t pcapLen = construct_packet(bigArr, packetType);
@@ -417,7 +410,7 @@ void assemble_packet(char packetType, FILE *rpWrite)
     insert_var_into(bigArr, pcapOut, 0, pcapLen);
 
     //read_pcap_out(pcapOut, bigArrLen);
-    fwrite(pcapOut, 1, pcapLen, rpWrite);
+    fwrite(pcapOut, 1, pcapLen, fpWrite);
     
     free(pcapOut);
 }
@@ -504,7 +497,7 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 }
 
 
-void assemble_all_packets(FILE *rpWrite)
+void assemble_all_packets(FILE *fpWrite)
 {
 	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[1024] = "default"; char packetType[2] = {'i','r'};
 	
@@ -515,7 +508,7 @@ void assemble_all_packets(FILE *rpWrite)
 		
 	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemble_packet(packetType[0], rpWrite);
+	    	assemble_packet(packetType[0], fpWrite);
     	}
 }
 
@@ -524,13 +517,13 @@ int main()
 {
     time_t t;
     srand((unsigned) time(&t));
-    FILE *rpWrite;
-    rpWrite = fopen("generated-packets.pcapng","wb");
-    pcapHeaderConstruct(rpWrite);
+    FILE *fpWrite;
+    fpWrite = fopen("generated-packets.pcapng","wb");
+    pcapHeaderConstruct(fpWrite);
 
-    assemble_all_packets(rpWrite);
+    assemble_all_packets(fpWrite);
     
-    fclose(rpWrite);
+    fclose(fpWrite);
 
     return 0;
 }
