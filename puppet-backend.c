@@ -14,8 +14,8 @@ struct packetStruct
     char sPort[2];
     char dPort[2];
     char payload[100];
-    char lastSeq[2];
     char transactionID[2];
+    char seqNum[2];
 };
 struct packetStruct g_currentFrame;
 
@@ -34,22 +34,22 @@ void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 
 uint16_t calcChecksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
-    char* data = (char*)vdata; //Cast the data pointer to one that can be indexed.
+    char* payload = (char*)vdata; //Cast the payload pointer to one that can be indexed.
     uint32_t acc = 0xffff; // Initialise the accumulator
     for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
     {
         uint16_t word; // a word being 16-bits
-        memcpy(&word, data + i, 2);
+        memcpy(&word, payload + i, 2);
         acc += ntohs(word);
         if (acc > 0xffff)
         {
             acc -= 0xffff;
         }
     }
-    if (length&1) // Handle any partial block at the end of the data.
+    if (length&1) // Handle any partial block at the end of the payload.
     {
         uint16_t word = 0;
-        memcpy(&word, data + length - 1, 1);
+        memcpy(&word, payload + length - 1, 1);
         acc += ntohs(word);
         if (acc > 0xffff)
         {
@@ -69,7 +69,7 @@ void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint1
     return;
 }
 
-//parse data from python frontend
+//parse payload from python frontend
 uint16_t * condenseChar(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
     uint16_t l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
@@ -92,8 +92,8 @@ uint16_t * condenseChar(char currentParam[], uint16_t paramSize)//Turns a two di
     return returnParam;
 }
 
-//converts the incoming data into the correct formats for writing
-void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[])
+//converts the incoming payload into the correct formats for writing
+void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[])
 {   
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in g_currentFrame.sMac
     for(uint16_t i = 0; i < 6; i++)
@@ -121,7 +121,7 @@ void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], c
     	g_currentFrame.dPort[i] = condenseChar(dPort, 5)[i];
     }
     
-    strcpy(g_currentFrame.payload, data);
+    strcpy(g_currentFrame.payload, payload);
     return;
 }
 
@@ -193,39 +193,20 @@ void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 }
 
 //slaps icmp segment into the frame
-void icmp_construct(char icmpReqSeg[], uint16_t segmentLen, uint16_t icmpID, char type)
+void icmp_construct(char icmpReqSeg[], uint16_t segmentLen, char type)
 {
     uint16_t l_emptyPointer = 0;
-    uint32_t seqNum = rand();
     icmpReqSeg[l_emptyPointer++] = type;//icmp ping request
     icmpReqSeg[l_emptyPointer++] = 0x00;//code is 0
     icmpReqSeg[l_emptyPointer++] = 0x00; icmpReqSeg[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    icmpReqSeg[l_emptyPointer++] = icmpID >> 8; icmpReqSeg[l_emptyPointer++] = icmpID & 0x00FF;//identifier?
-    icmpReqSeg[l_emptyPointer++] = seqNum >> 24;
-    icmpReqSeg[l_emptyPointer++] = seqNum & 0x000000FF;
+    insert_var_into(g_currentFrame.transactionID, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //identifier?
+    insert_var_into(g_currentFrame.seqNum, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //sequence number
     insert_var_into(g_currentFrame.payload, icmpReqSeg, l_emptyPointer, strlen(g_currentFrame.payload));
     uint16_t checksum = calcChecksum(icmpReqSeg, segmentLen);
     icmpReqSeg[2] = checksum & 0x00FF;
     icmpReqSeg[3] = checksum >> 8;
     return;
 }
-
-/* we need to do handshakes
-//creates a transport layer tcp header
-void tcp_construct(char tcpSegment[])
-{
-    uint16_t l_emptyPointer = 0;
-    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
-    insert_var_into(AckNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
-    tcpSegment[l_emptyPointer++] = flags; //tcp flags - probably easier to impliment once parsing is done
-    insert_var_into(windowSize, tcpSegment, l_emptyPointer, 2);
-    insert_var_into(checkSum, tcpSegment, l_emptyPointer, 2);
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
-    //then a bunch of options that are scary
-    return;
-}*/
 
 void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen)
 {
@@ -298,7 +279,7 @@ void dns_req_construct(char dnsSegment[])
 {
     char query[16];
     uint16_t l_emptyPointer = 0;
-    uint16_t flags = rand() % 16;
+    uint16_t flags = 0;
     insert_var_into(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
     dnsSegment[l_emptyPointer++] = flags >> 8;
     dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
@@ -347,10 +328,9 @@ uint16_t construct_packet(char bigArr[512], char packetType)
     	
     break;
 	case 'a':
-	
 	networkID = 6;
 	
-        packet = (char *)malloc(sizeof(char) * (1));
+        packet = (char *)malloc(sizeof(char) * 1);
     	segment = (char *)malloc(sizeof(char) * 1);
 	
     	packetLen = 28;
@@ -415,7 +395,7 @@ void assemble_packet(char packetType, FILE *fpWrite)
     free(pcapOut);
 }
 
-int read_data(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter, char packetType[1])
+int read_data(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[65507], int loopCounter, char packetType[2], char transactionID[2], char seqNum[2])
 {
 	int len, line = 0;
 	char currentLine[128]; //variable holds current line in textfile
@@ -435,11 +415,11 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 	while (fgets(currentLine, sizeof(currentLine), fpRead) != NULL && line < 9 + 9 * loopCounter) { //reads the 7 lines under icmp8 
 		
 		if (line == 1 + 9 * loopCounter){
-			switch (currentLine[1])
+			switch (currentLine[1]) //checking which proto to use
 			{
 				case 'i':
                     packetType[0] = 'i';
-                    switch (currentLine[2])
+                    switch (currentLine[2]) //checking whether to do request or answer
                     {
                         case 'r':
                             packetType[1] = 'r';
@@ -448,8 +428,8 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
                             packetType[1] = 'a';
                         break;
                         default:
-                            puts("malformed passed data, expected param for response/answer, exiting...");
-                            fclose(fpread);
+                            puts("malformed passed payload, expected param for response/answer, exiting...");
+                            fclose(fpRead);
                             exit(1);
                         break;
                     }
@@ -481,7 +461,7 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 			strcpy(dPort, currentLine);
 		}
 		if (line == 8 + 9 * loopCounter) {
-			strcpy(data, currentLine);
+			strcpy(payload, currentLine);
 		}
 		line += 1;
 	}
@@ -499,14 +479,23 @@ int read_data(char sMac[17], char dMac[17], char target[11], char source[11], ch
 
 void assemble_all_packets(FILE *fpWrite)
 {
-	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[1024] = "default"; char packetType[2] = {'i','r'};
+	char sMac[17] = "00:00:00:00:00:00";
+    char dMac[17] = "00:00:00:00:00:00";
+    char target[11] = "00.00.00.00";
+    char source[11] = "00.00.00.00";
+    char sPort[5] = "00.00";
+    char dPort[5] = "00.00";
+    char payload[1024] = "default";
+    char packetType[2] = {'0','0'};
+    char transactionID[2] = {'0','0'};
+    char seqNum[2] = {'0','0'};
 	
 	int fileEnd = 0;
 	for(int i = 0; fileEnd == 0; i++)
-	{
-		fileEnd = read_data(sMac, dMac, target, source, sPort, dPort, data, i, packetType);
+	{ //call (read_data, data_parse, assemble_packet) repeatedly for each packet found
+		fileEnd = read_data(sMac, dMac, target, source, sPort, dPort, payload, i, packetType, transactionID, seqNum);
 		
-	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
+	    	data_parse(sMac, dMac, target, source, sPort, dPort, payload);
 
 	    	assemble_packet(packetType[0], fpWrite);
     	}
