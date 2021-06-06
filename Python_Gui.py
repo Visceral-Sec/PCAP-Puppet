@@ -28,7 +28,7 @@ import tkinter
 #Tkinter works a bit like HTML, but instead of objects etc we have widgets
 
 master = Tk() #This is the root of the entire gui
-master.geometry('779x582') # sets default size
+master.geometry('775x615') # sets default size
 master.title("PCAP PUPPET") #Setting the Title
 master.resizable(False, False) #Prevents the GUI from being resizable
 
@@ -76,11 +76,11 @@ cConfigLabel.place(x=510, y= 268)
 
 #Frame for Traffic Configuration
 TrafficConfigFrame = LabelFrame(master, text = "", width=160, height=174)
-TrafficConfigFrame.place(x = 618, y = 66)
+TrafficConfigFrame.place(x = 615, y = 66)
 
 #Traffic Size Frame
 
-TrafficSizeFrame = LabelFrame(master, text = "", width=108, height=174)
+TrafficSizeFrame = LabelFrame(master, text = "", width=105, height=174)
 TrafficSizeFrame.place(x = 511, y = 66)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Start_Window ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,27 +122,27 @@ tPcapConfig = Label(tConfig_Frame, text = "PCAP SETTINGS", font=("Arial", 25), b
 tPcapConfig.grid(row = 0, column = 2, sticky = W)
 
 #Current Traffic Label
-CurrentTraffic = Label(master, text = "Current Traffic", font=("Arial", 16), borderwidth=1,  relief="solid", width=22)
+CurrentTraffic = Label(master, text = "Current Traffic", font=("Arial", 15), borderwidth=1,  relief="solid", width=24)
 CurrentTraffic.place(x = 510, y = 240)
 
 #Current Traffic Configuration Label
-TrafficConfiguration = Label(master, text = "Traffic  Configuration", font=("Arial", 13), borderwidth=1,  relief="solid",)
-TrafficConfiguration.place(x = 617, y = 43)
+TrafficConfiguration = Label(master, text = "Traffic Configuration", font=("Arial", 13), borderwidth=1,  relief="solid",)
+TrafficConfiguration.place(x = 610, y = 45)
 
 #Pcap Specific Settings
-TrafficConfiguration = Label(master, text = " Traffic Size   ", font=("Arial", 13), borderwidth=1,  relief="solid",)
-TrafficConfiguration.place(x = 510, y = 43)
+TrafficConfiguration = Label(master, text = "Traffic Size  ", font=("Arial", 13), borderwidth=1,  relief="solid",)
+TrafficConfiguration.place(x = 510, y = 45)
 
 #Pcap Size Entry:
 SizeEntry = Entry(TrafficSizeFrame, width=10)
 SizeEntry.place(x=4, y=30)
 
 #Pcap Max Packet Size
-SizeEntryLabel = Label(TrafficSizeFrame,text="Max Packet Size:")
+SizeEntryLabel = Label(TrafficSizeFrame,text="Max Packet Size:", font=("Arial", 9),)
 SizeEntryLabel.place(x=1, y=5)
 
 #Wireshark Label 
-WireSharkLabel = Label(TrafficSizeFrame,text="Wireshark Version:")
+WireSharkLabel = Label(TrafficSizeFrame,text="Pcap Version:",font=("Arial", 9))
 WireSharkLabel.place(x=1, y=50)
 
 #Wiresharkvar
@@ -1004,7 +1004,7 @@ def MAC_checker(MAC): # Coded by Matt
 
 #Layer 2 Button Displayer
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
-    layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529) # This then prints the label heading as the name of the chosen protocol + the option
+    layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=556)# This then prints the label heading as the name of the chosen protocol + the option
     layer2_Frame.place(x=217, y=0)# Postioning
 
     # Ethernet Configuration
@@ -1380,7 +1380,7 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
 #layer 3 
 def layer3_Displayer(l):
     #Defining the tkinter type
-    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)    # Using .place geomotry manager under the label frame in order to position correctly
+    layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=556)   # Using .place geomotry manager under the label frame in order to position correctly
     layer3_Frame.place(x=217, y=0)
     #Button that links the previous function. 
     if l == "ICMP":
@@ -1441,61 +1441,61 @@ def layer3_Displayer(l):
         #source Ip text postioning
         iptext.place(x=2,y=4) 
         #source mac text postioning
-        mactext.place(x=2,y=34) 
+        mactext.place(x=2,y=54) 
         #desitination ip text postioning
-        diptext.place(x=2,y=64)
+        diptext.place(x=2,y=104)
         #desitination mac text postioning
-        dmactext.place(x=2,y=94)
+        dmactext.place(x=2,y=154)
 
 
         #Placing all of the previously defined labels. using .place for more accurate location (This does take a while to do tho)
-        ip1.place(x=65,y=5)     
-        ip2.place(x=95,y=5)
-        ip3.place(x=125,y=5)
-        ip4.place(x=155,y=5)
+        ip1.place(x=5,y=25)     
+        ip2.place(x=35,y=25)
+        ip3.place(x=65,y=25)
+        ip4.place(x=95,y=25)
 
-        dot1.place(x=85,y=5)
-        dot2.place(x=115,y=5)
-        dot3.place(x=145,y=5)
+        dot1.place(x=25,y=25)
+        dot2.place(x=55,y=25)
+        dot3.place(x=85,y=25)
 
-        ip5.place(x=90,y=65)     
-        ip6.place(x=120,y=65)
-        ip7.place(x=150,y=65)
-        ip8.place(x=180,y=65)
+        ip5.place(x=5,y=75)     
+        ip6.place(x=35,y=75)
+        ip7.place(x=65,y=75)
+        ip8.place(x=95,y=75)
 
-        dot4.place(x=110,y=65)
-        dot5.place(x=140,y=65)
-        dot6.place(x=170,y=65)
+        dot4.place(x=25,y=75)
+        dot5.place(x=55,y=75)
+        dot6.place(x=85,y=75)
 
-        mac1.place(x=80,y=35)   
-        mac2.place(x=110,y=35)
-        mac3.place(x=140,y=35)
-        mac4.place(x=170,y=35)
-        mac5.place(x=200,y=35)
-        mac6.place(x=230,y=35)
+        mac1.place(x=5,y=125)   
+        mac2.place(x=45,y=125)
+        mac3.place(x=85,y=125)
+        mac4.place(x=125,y=125)
+        mac5.place(x=165,y=125)
+        mac6.place(x=205,y=125)
 
-        colon1.place(x=100,y=35)
-        colon2.place(x=130,y=35)
-        colon3.place(x=160,y=35)
-        colon4.place(x=190,y=35)
-        colon5.place(x=220,y=35)
+        colon1.place(x=30,y=125)
+        colon2.place(x=70,y=125)
+        colon3.place(x=110,y=125)
+        colon4.place(x=150,y=125)
+        colon5.place(x=190,y=125)
 
-        mac7.place(x=105,y=95)   
-        mac8.place(x=135,y=95)
-        mac9.place(x=165,y=95)
-        mac10.place(x=195,y=95)
-        mac11.place(x=225,y=95)
-        mac12.place(x=255,y=95)
+        mac7.place(x=5,y=175)   
+        mac8.place(x=45,y=175)
+        mac9.place(x=85,y=175)
+        mac10.place(x=125,y=175)
+        mac11.place(x=165,y=175)
+        mac12.place(x=205,y=175)
 
-        colon6.place(x=125,y=95)
-        colon7.place(x=155,y=95)
-        colon8.place(x=185,y=95)
-        colon9.place(x=215,y=95)
-        colon10.place(x=245,y=95)
+        colon6.place(x=30,y=175)
+        colon7.place(x=70,y=175)
+        colon8.place(x=110,y=175)
+        colon9.place(x=150,y=175)
+        colon10.place(x=190,y=175)
         icmpPingData = Label(layer3_Frame, text="ICMP Ping Data:")
         icmpText = Text(layer3_Frame, height=10, width=33)
-        icmpText.place(x=5, y=140)
-        icmpPingData.place(x=5, y=120)
+        icmpText.place(x=5, y=240)
+        icmpPingData.place(x=5, y=220)
         def icmpdone():
                 icmpConfig.ip = ""
                 icmpConfig.mac = ""
@@ -1692,7 +1692,7 @@ def layer3_Displayer(l):
         
 
 def layer4_Displayer(l):
-    layer4_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=529)
+    layer4_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=556)
     layer4_Frame.place(x=217, y=0)
 
     if l == "UDP":
@@ -1905,7 +1905,7 @@ def layer4_Displayer(l):
         tcpb.place(x=175, y=475, width=100) 
 
 def layer5_Displayer(l):
-    layer5_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=529)
+    layer5_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=556)
     layer5_Frame.place(x=217, y=0)
     
     if l == "SOCKS":
@@ -2039,7 +2039,7 @@ def layer5_Displayer(l):
 
 
 def layer6_Displayer(l):    
-    layer6_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=529)
+    layer6_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration",width=284, height=556)
     layer6_Frame.place(x=217, y=0)
 
     if l == "TLS/SSL":
@@ -2093,7 +2093,7 @@ def layer6_Displayer(l):
         sslLabel.pack()
 
 def layer7_Displayer(l):
-    layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)
+    layer7_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=556)
     layer7_Frame.place(x=217, y=0)
     if l == "DHCP":
         dhcpServerText = Label(layer7_Frame, text="DHCP Server IP:")
@@ -2615,19 +2615,19 @@ def layer7_Displayer(l):
 # History Displayer uses the size class described earlier, It postions everything dynamically depending on the location of previously placed protocols, it also defines spinboxes and the info tab for each protocol
 
 def History_Displayer():
-    icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size ,width=4,)
-    arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    httpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    httpsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    ircSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4, )
-    telnetSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    dhcpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    smbSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4, )
-    biosSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4,)
-    ospfSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    ripSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
-    dnsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size ,width=3,)
+    arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    httpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    httpsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    ircSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3, )
+    telnetSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    dhcpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    smbSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3, )
+    biosSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3,)
+    ospfSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    ripSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
+    dnsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=3)
     #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
     tlsLabelTick = Label(TrafficConfigFrame, text="✓")
     socksLabelTick = Label(TrafficConfigFrame, text="✓")
@@ -2668,7 +2668,7 @@ def History_Displayer():
 
     #Button that calls the function above
     TrafficSizeButton = Button(TrafficConfigFrame, text = "✓", command=TrafficSize_Loader)
-    TrafficSizeButton.place(x=127,y=140)
+    TrafficSizeButton.place(x=110,y=135)
 
     #Next If Statements checks if the Protocol is being used and if so has it already been displayed. If A protocol hits the critera then it is displayed on the gui and a info button is given  which allows a user to check what the protocol configuration has been set to
 
@@ -2697,7 +2697,7 @@ def History_Displayer():
             Popuptext.pack()
             Popupsize.pack()
         icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0, command=ICMPDisplay)
-        icmpHistoryButton.place(x=227, y=1)
+        icmpHistoryButton.place(x=210, y=0)
         icmpSpinboxLabel = Label(TrafficConfigFrame, text="ICMP:")
         icmpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         icmpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2724,7 +2724,7 @@ def History_Displayer():
             Popupdmac.pack()
 
         arpHistoryButton = Button(arpHistory, text = "INFO", width=3, height=0, command=ARPDisplay)
-        arpHistoryButton.place(x=227, y=1)
+        arpHistoryButton.place(x=210, y=0)
         arpSpinboxLabel = Label(TrafficConfigFrame, text="ARP:")
         arpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         arpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2755,7 +2755,7 @@ def History_Displayer():
             Popupdata.pack()
 
         ftpHistoryButton = Button(ftpHistory, text = "INFO", width=3, height=0, command=ftpDisplay)
-        ftpHistoryButton.place(x=227, y=1)
+        ftpHistoryButton.place(x=210, y=0)
         ftpSpinboxLabel = Label(TrafficConfigFrame, text="FTP:")
         ftpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ftpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2786,7 +2786,7 @@ def History_Displayer():
             PopupdRef.pack()
             Popupdata.pack()
         httpHistoryButton = Button(httpHistory, text = "INFO", width=3, height=0, command=httpDisplay)
-        httpHistoryButton.place(x=227, y=1)
+        httpHistoryButton.place(x=210, y=0)
         httpSpinboxLabel = Label(TrafficConfigFrame, text="HTTP:")
         httpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         httpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2819,7 +2819,7 @@ def History_Displayer():
             PopupdRef.pack()
             Popupdata.pack()
         httpsHistoryButton = Button(httpsHistory, text = "INFO", width=3, height=0, command=httpsDisplay)
-        httpsHistoryButton.place(x=227, y=1)
+        httpsHistoryButton.place(x=210, y=0)
         httpsSpinboxLabel = Label(TrafficConfigFrame, text="HTTPS:")
         httpsSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         httpsSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2843,7 +2843,7 @@ def History_Displayer():
             PopupMessage.pack()
             PopupCommand.pack()
         ircHistoryButton = Button(IRCHistory, text = "INFO", width=3, height=0, command=ircDisplay)
-        ircHistoryButton.place(x=227, y=1)
+        ircHistoryButton.place()
         ircSpinboxLabel = Label(TrafficConfigFrame, text="IRC:")
         ircSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ircSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2877,7 +2877,7 @@ def History_Displayer():
             Popupoperation.pack()
             Popupoperationoption.pack()
         telnetHistoryButton = Button(telnetHistory, text = "INFO", width=3, height=0, command=telnetDisplay)
-        telnetHistoryButton.place(x=227, y=1)
+        telnetHistoryButton.place(x=210, y=0)
         telnetSpinboxLabel = Label(TrafficConfigFrame, text="Telnet:")
         telnetSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         telnetSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2909,7 +2909,7 @@ def History_Displayer():
             PopupRouter.pack()
             PopupSubnet.pack()
         dhcpHistoryButton = Button(dhcpHistory, text = "INFO", width=3, height=0, command=dhcpDisplay)
-        dhcpHistoryButton.place(x=227, y=1)
+        dhcpHistoryButton.place(x=210, y=0)
         dhcpSpinboxLabel = Label(TrafficConfigFrame, text="DHCP")
         dhcpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         dhcpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2932,7 +2932,7 @@ def History_Displayer():
             PopupCERT.pack()
             PopupSuite.pack()
         tlsHistoryButton = Button(tlsHistory, text = "INFO", width=3, height=0, command=tlsDisplay)
-        tlsHistoryButton.place(x=227, y=1)
+        tlsHistoryButton.place(x=210, y=0)
         tlsSpinboxLabel = Label(TrafficConfigFrame, text="TLS:")
         tlsSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         tlsLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2956,7 +2956,7 @@ def History_Displayer():
             PopupSMBcmd.pack()
             PopupSMBimp.pack()
         smbHistoryButton = Button(smbHistory, text = "INFO", width=3, height=0, command=smbDisplay)
-        smbHistoryButton.place(x=227, y=1)
+        smbHistoryButton.place(x=210, y=0)
         smbSpinboxLabel = Label(TrafficConfigFrame, text="SMB:")
         smbSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         smbSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -2984,7 +2984,7 @@ def History_Displayer():
             PopupDatagram.pack()
             PopupService.pack()
         biosHistoryButton = Button(biosHistory, text = "INFO", width=3, height=0, command=biosDisplay)
-        biosHistoryButton.place(x=227, y=1)
+        biosHistoryButton.place(x=210, y=0)
         biosSpinboxLabel = Label(TrafficConfigFrame, text="BIOS:")
         biosSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         biosSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3012,7 +3012,7 @@ def History_Displayer():
             PopupSockID.pack()
             PopupSockConfig.pack()
         sockHistoryButton = Button(socksHistory, text = "INFO", width=3, height=0, command=sockDisplay)
-        sockHistoryButton.place(x=227, y=1)
+        sockHistoryButton.place(x=210, y=0)
         sockSpinboxLabel = Label(TrafficConfigFrame, text="SOCKS:")
         sockSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         socksLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3050,7 +3050,7 @@ def History_Displayer():
             PopupWifiChannel.pack()
 
         wifiHistoryButton = Button(wifiHistory, text = "INFO", width=3, height=0, command=wifiDisplay)
-        wifiHistoryButton.place(x=227, y=1)
+        wifiHistoryButton.place(x=210, y=0)
         wifiSpinboxLabel = Label(TrafficConfigFrame, text="WIFI:")
         wifiSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         wifiLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3073,7 +3073,7 @@ def History_Displayer():
             EthSourceMac.pack()
 
         ethHistoryButton = Button(ethHistory, text = "INFO", width=3, height=0, command=EthDisplay)
-        ethHistoryButton.place(x=227, y=1)
+        ethHistoryButton.place(x=210, y=0)
         ethSpinboxLabel = Label(TrafficConfigFrame, text="Eth:")
         ethSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ethLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3099,7 +3099,7 @@ def History_Displayer():
             PopupOSPFMask.pack()
             PopupOSPFMessage.pack()
         ospfHistoryButton = Button(ospfHistory, text = "INFO", width=3, height=0, command=ospfDisplay)
-        ospfHistoryButton.place(x=227, y=1)
+        ospfHistoryButton.place(x=210, y=0)
         ospfSpinboxLabel = Label(TrafficConfigFrame, text="OSPF:")
         ospfSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ospfSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3122,7 +3122,7 @@ def History_Displayer():
             PopupRIPRes.pack()
             PopupRIPVer.pack()
         ripHistoryButton = Button(ripHistory, text = "INFO", width=3, height=0, command=ripDisplay)
-        ripHistoryButton.place(x=227, y=1)
+        ripHistoryButton.place(x=210, y=0)
         ripSpinboxLabel = Label(TrafficConfigFrame, text="RIP:")
         ripSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ripSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3149,7 +3149,7 @@ def History_Displayer():
             PopupIP.pack()
             PopupIP
         ipHistoryButton = Button(ipHistory, text = "INFO", width=3, height=0, command=ipDisplay)
-        ipHistoryButton.place(x=227, y=1)
+        ipHistoryButton.place(x=210, y=0)
         ipSpinboxLabel = Label(TrafficConfigFrame, text="IP:")
         ipSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ipLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3179,7 +3179,7 @@ def History_Displayer():
             PopupWindow.pack()
             PopupPadding.pack()
         tcpHistoryButton = Button(tcpHistory, text = "INFO", width=3, height=0, command=tcpDisplay)
-        tcpHistoryButton.place(x=227, y=1)
+        tcpHistoryButton.place(x=210, y=0)
         tcpSpinboxLabel = Label(TrafficConfigFrame, text="TCP:")
         tcpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         tcpLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3205,7 +3205,7 @@ def History_Displayer():
             Popupip.pack()
             Popupdip.pack()
         udpHistoryButton = Button(udpHistory, text = "INFO", width=3, height=0, command=udpDisplay)
-        udpHistoryButton.place(x=227, y=1)
+        udpHistoryButton.place(x=210, y=0)
         udpSpinboxLabel = Label(TrafficConfigFrame, text="UDP:")
         udpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         udpLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3239,7 +3239,7 @@ def History_Displayer():
             PopupresponseURL.pack()
             Popupdip.pack()
         dnsHistoryButton = Button(dnsHistory, text = "INFO", width=3, height=0, command=dnsDisplay)
-        dnsHistoryButton.place(x=227, y=1)
+        dnsHistoryButton.place(x=210, y=0)
         dnsSpinboxLabel = Label(TrafficConfigFrame, text="DNS:")
         dnsSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         dnsSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
@@ -3591,7 +3591,7 @@ layersArray = [
     
 
 TrafficSizeDone = Button(TrafficSizeFrame, text="✓", command=SizeLoader)
-TrafficSizeDone.place(x=75, y=140)
+TrafficSizeDone.place(x=5, y=135)
 
 
 #Setting the titles and general outline of the GUI
@@ -3615,7 +3615,7 @@ layerTitle7.set("Layer 7")
 
 # setting the buttons
 
-pcapCbutton = Button(master, text = "Create Pcap", command=createPcap, height=7, width=37, borderwidth=1, relief=SOLID)
+pcapCbutton = Button(master, text = "Create Pcap", command=createPcap, height=8, width=30, borderwidth=1, relief=SOLID)
 pcapCbutton.place(x=510,y=463)
 
 
