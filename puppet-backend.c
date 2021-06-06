@@ -203,28 +203,27 @@ void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 void dns_req_construct(char dnsSegment[], int type)
 {
     uint16_t l_emptyPointer = 0;
-    //uint16_t flags = rand() % 16;
     insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
-    //dnsSegment[l_emptyPointer++] = flags >> 8;
-    //dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
     dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = type; //how many answers, would be 0x0001 for a response
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
     //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
-    dnsSegment[l_emptyPointer++] = 0x03; insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
+    dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload); insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
     
-    if(type == 1)
+    if(type == 2)
     {
     	dnsSegment[2] = 0x85;
     	dnsSegment[3] = 0x80;
+    	dnsSegment[7] = 0x01;
     	
     	dnsSegment[l_emptyPointer++] = 0xc0; dnsSegment[l_emptyPointer++] = 0x0c; //Name?
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x04; //IP length
 	insert_var_into(g_currentFrame.target, dnsSegment, l_emptyPointer, 4);
     }
 }
@@ -259,9 +258,9 @@ void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
     {
 	char *dnsSegment;
 	    
-	dnsLen = 4 + 28/dns;
+	dnsLen = 2 + 16 * dns;
 	uint16_t dnsSegmentLen;
-	dnsSegmentLen = 4 + 28/dns + strlen(g_currentFrame.payload);
+	dnsSegmentLen = dnsLen + strlen(g_currentFrame.payload);
 	dnsSegment = (char *)malloc(sizeof(char) * dnsSegmentLen); //reserves (8 + length of payload) bytes on the heap
 	dns_req_construct(dnsSegment, dns);
 	    
@@ -396,16 +395,31 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
             break;
     	}
     break;
+    	case 'd':
 	networkID = 0;
-	
-    	segLen = 40 + strlen(g_currentFrame.payload);
-    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-    	insert_udp_header(segment, segLen, 1);
+        
+        switch (packetType[1])
+        {
+            case 'r':
+	    	segLen = 26 + strlen(g_currentFrame.payload);
+	    	segment = (char *)calloc(segLen, 1); 
+    		insert_udp_header(segment, segLen, 1);
+                break;
+            case 'a':
+	    	segLen = 42 + strlen(g_currentFrame.payload);
+	    	segment = (char *)calloc(segLen, 1); 
+    		insert_udp_header(segment, segLen, 2);
+                break;
+            default:
+	    	segment = (char *)calloc(1, 1); 
+                printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
+                exit(1);
+            break;
+    	}
     	
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
         insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
-        free(segment);
     	
     break;
     default :
@@ -489,6 +503,21 @@ int read_data(char sMac[], char dMac[], char target[], char source[], char sPort
             break;
         case 'a':
             packetType[0] = 'a';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
+            break;
+        case 'd':
+            packetType[0] = 'd';
             switch (proto[1]) //checking whether to do request or answer
             {
                 case 'r':
