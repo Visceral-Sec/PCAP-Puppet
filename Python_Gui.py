@@ -807,7 +807,7 @@ def LocationConfig():
                 LocationConfiguration.xl = 80
                 LocationConfiguration.yl = 28
                 LocationConfiguration.x = 110
-                LocationConfiguration.y = 53
+                LocationConfiguration.y = 28
                 LocationConfiguration.size = LocationConfiguration.size + 1
                 placed = 1
         if LocationConfiguration.size == 6:
