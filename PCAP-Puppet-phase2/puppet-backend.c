@@ -312,7 +312,7 @@ void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPa
     return;
 }
 
-void arp_req_construct(char arpSegment[])
+void arp_construct(char arpSegment[], char type)
 {
     uint16_t l_emptyPointer = 0;
     char placeholderArr[6] = {0,0,0,0,0,0};
@@ -321,7 +321,7 @@ void arp_req_construct(char arpSegment[])
     arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
     arpSegment[l_emptyPointer++] = 0x06;//Hardware size
     arpSegment[l_emptyPointer++] = 0x04;//packetType size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = type;//Request
     insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
     insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
     insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
@@ -329,28 +329,12 @@ void arp_req_construct(char arpSegment[])
     return;
 }
 
-void arp_res_construct(char arpSegment[])
-{
-    uint16_t l_emptyPointer = 0;
-    
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
-    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
-    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//protocol size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x02;//Reply
-    insert_var_into(g_currentFrame.dMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
-    insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
-    insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    return;
-}
 
 //construct all of the arrays into one frame array - needs more work
 uint16_t construct_packet(char bigArr[2048], char packetType[2])
 {
     uint16_t segLen;
     char *segment;
-    
     uint16_t packetLen;
     char *packet;
     
@@ -382,8 +366,8 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	
     break;
 	case 'u':
-	networkID = 0;
-	
+	    networkID = 0;
+    	
     	segLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
     	insert_udp_header(segment, segLen, 0);
@@ -391,17 +375,25 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
         insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
-    	
     break;
 	case 'a':
-	networkID = 6;
-	
-    	segment = (char *)calloc(1, 1);
-	
+	    networkID = 6;
     	packetLen = 28;
-    	packet = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-    	arp_req_construct(segment);
-    	
+    	packet = (char *)calloc(packetLen, 1); //reserves (8 + length of payload) bytes on the heap
+        switch (packetType[1])
+        {
+            case 'r':
+                arp_construct(packet, 1);
+                break;
+            case 'a':
+                g_currentFrame.seqNum[1]++;
+                arp_construct(packet, 2);
+                break;
+            default:
+                printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
+                exit(1);
+            break;
+    	}
     break;
 	networkID = 0;
 	
@@ -412,6 +404,7 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
         insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
+        free(segment);
     	
     break;
     default :
@@ -431,8 +424,8 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     
     insert_var_into(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(segment); //free up the reserved space on the heap
-    free(packet);
+    free(segment);
+    free(packet);//free up the reserved space on the heap
     free(etherFrame);
     free(pcap);
 
@@ -495,6 +488,18 @@ int read_data(char sMac[], char dMac[], char target[], char source[], char sPort
             break;
         case 'a':
             packetType[0] = 'a';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
             break;
         case '\0':
             return 1;
