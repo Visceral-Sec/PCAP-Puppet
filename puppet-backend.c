@@ -71,11 +71,12 @@ void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint1
     return;
 }
 
-//Parse payload from python frontend
+//condense_char takes an array, takes two characters to produce a hexadecimal number, skips the third character then loops.
+//It stores each number in a array that it returns
 uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
-    uint16_t l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
-    static uint16_t returnParam[/*paramSize - 3 - (paramSize - 7)/2*/10];
+    uint16_t l_emptyPointer = 0;
+    static uint16_t returnParam[10];
     for(uint16_t i = 0; i < paramSize; i += 3) //robert's magic to convert to suitable uint16_t arrays
     {
         uint16_t digit1 = currentParam[i] - 48;
@@ -96,9 +97,9 @@ uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two d
 
 //data_parse takes the data retrived by read_data from Data.txt, which is in a format legible to humans, and writes it to g_currentFrame.
 //In g_currentFrame an address is stored in a string such that the ascii of each character represents a point of the address. 
+//For example the IP address 97.98.99.100 would be stored in g_currentFrame.source as {97, 98, 99, 100} or as the string "abcd"
 void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[], char identification[], char seqNum[])
 {   
-    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in g_currentFrame.sMac
     for(uint16_t i = 0; i < 6; i++)
     {
     	g_currentFrame.sMac[i] = condense_char(sMac, 17)[i];
