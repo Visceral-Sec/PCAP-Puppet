@@ -32,7 +32,7 @@ void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 // the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
-uint16_t calcChecksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
+uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
     char* payload = (char*)vdata; //Cast the payload pointer to one that can be indexed.
     uint32_t acc = 0xffff; // Initialise the accumulator
@@ -204,7 +204,7 @@ void dns_req_construct(char dnsSegment[], int type)
 {
     uint16_t l_emptyPointer = 0;
     //uint16_t flags = rand() % 16;
-    insert_var_into(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
+    insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
     //dnsSegment[l_emptyPointer++] = flags >> 8;
     //dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
     dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
@@ -239,7 +239,7 @@ void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
     insert_var_into(g_currentFrame.identification, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //identifier?
     insert_var_into(g_currentFrame.seqNum, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //sequence number
     insert_var_into(g_currentFrame.payload, icmpReqSeg, l_emptyPointer, strlen(g_currentFrame.payload));
-    uint16_t checksum = calcChecksum(icmpReqSeg, segLen);
+    uint16_t checksum = calc_checksum(icmpReqSeg, segLen);
     icmpReqSeg[2] = checksum & 0x00FF;
     icmpReqSeg[3] = checksum >> 8;
     return;
@@ -271,7 +271,7 @@ void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
     
     udpSegment[4] = (strlen(g_currentFrame.payload) + dnsLen + 8) >> 24;
     udpSegment[5] = (strlen(g_currentFrame.payload) + dnsLen + 8) & 0x000000FF;
-    uint16_t checksum = calcChecksum(udpSegment, udpSegmentLen);
+    uint16_t checksum = calc_checksum(udpSegment, udpSegmentLen);
     udpSegment[6] = checksum & 0x00FF;
     udpSegment[7] = checksum >> 8;
     return;
@@ -295,7 +295,7 @@ void insert_ip_header(char packet[], char transportSegment[], uint16_t transport
     insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
     insert_var_into(packet, ipHeader, 0, 20); //make header by itself for checksum
     insert_var_into(transportSegment, packet, l_emptyPointer, transportSegLen);
-    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum
+    uint16_t checkSum = calc_checksum(ipHeader, 20); //calc checksum
     packet[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
     packet[11] = checkSum >> 8;
     return;
@@ -386,7 +386,7 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
 	
     	segLen = 8 + strlen(g_currentFrame.payload);
     	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-    	insert_udp_header(segment, segLen);
+    	insert_udp_header(segment, segLen, 0);
     	
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
@@ -405,13 +405,13 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     break;
 	networkID = 0;
 	
-    	segmentLen = 40 + strlen(g_currentFrame.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	insert_udp_header(segment, segmentLen, 1);
+    	segLen = 40 + strlen(g_currentFrame.payload);
+    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
+    	insert_udp_header(segment, segLen, 1);
     	
-    	packetLen = 20 + segmentLen;
-        packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
-        insert_ip_header(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
+    	packetLen = 20 + segLen;
+        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
+        insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
     	
     break;
     default :
