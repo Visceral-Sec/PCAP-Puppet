@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+//g_currentFrame holds the data for each packet. Every time a packet is read the data of g_currentFrame is replaced
+//Not all of the properties in packetStruct are used in each file
 struct packetStruct
 {
     char sMac[6];
@@ -19,7 +21,7 @@ struct packetStruct
 };
 struct packetStruct g_currentFrame;
 
-//for testing mainly
+//For testing mainly
 void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 {
     for (uint16_t x = 0; x < pcapLen; x++)
@@ -29,8 +31,8 @@ void read_pcap_out(char pcapOut[], uint16_t pcapLen)
     return;
 }
 
-// the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
-// it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
+// The below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
+// It has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
 uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
@@ -38,7 +40,7 @@ uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsi
     uint32_t acc = 0xffff; // Initialise the accumulator
     for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
     {
-        uint16_t word; // a word being 16-bits
+        uint16_t word; // A word being 16-bits
         memcpy(&word, payload + i, 2);
         acc += ntohs(word);
         if (acc > 0xffff)
@@ -59,7 +61,7 @@ uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsi
     return htons(~acc); // Return the checksum in network byte order.
 }
 
-//takes array and inserts it into the desired position in a chosen array
+//Takes array and inserts it into the desired position in a chosen array
 void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint16_t bytesToWrite)
 {
     for (uint16_t x = 0; x < bytesToWrite; x++)
@@ -69,7 +71,7 @@ void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint1
     return;
 }
 
-//parse payload from python frontend
+//Parse payload from python frontend
 uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
     uint16_t l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
@@ -92,7 +94,8 @@ uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two d
     return returnParam;
 }
 
-//converts the incoming payload into the correct formats for writing
+//data_parse takes the data retrived by read_data from Data.txt, which is in a format legible to humans, and writes it to g_currentFrame.
+//In g_currentFrame an address is stored in a string such that the ascii of each character represents a point of the address. 
 void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[], char identification[], char seqNum[])
 {   
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in g_currentFrame.sMac
