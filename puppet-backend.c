@@ -203,31 +203,32 @@ void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
     return;
 }
 
-
+//Writes a dns segment that can be a standard request or response
+//If type is one, it writes a standard request. If type is two a standard response
 void dns_req_construct(char dnsSegment[], int type)
 {
     uint16_t l_emptyPointer = 0;
-    insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
-    dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
+    insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//Identification remains static throughout interaction
+    dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//Flags for standard request
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //How many questions
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //How many answers
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
-    dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload); insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
+    dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload);//How long the query is
+    insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//The query
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
     
     if(type == 2)
     {
-    	dnsSegment[2] = 0x85;
-    	dnsSegment[3] = 0x80;
-    	dnsSegment[7] = 0x01;
+    	dnsSegment[2] = 0x85; dnsSegment[3] = 0x80;//Overwriting the flags for a standard response
+    	dnsSegment[7] = 0x01;//OverWriting the number of answers
     	
     	dnsSegment[l_emptyPointer++] = 0xc0; dnsSegment[l_emptyPointer++] = 0x0c; //Name?
-	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
-	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //Host
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //Class
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x04; //IP length
-	insert_var_into(g_currentFrame.target, dnsSegment, l_emptyPointer, 4);
+	insert_var_into(g_currentFrame.target, dnsSegment, l_emptyPointer, 4);//Queried machine's IP address
     }
 }
 
