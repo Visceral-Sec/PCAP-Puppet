@@ -277,120 +277,6 @@ void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
     return;
 }
 
-
-void initialiseSeqAck(char seqNum[4], char ackNum[4])
-{
-    uint32_t randSeqNum1 = rand();
-    uint32_t randSeqNum2 = rand();
-    uint32_t randAckNum1 = rand();
-    uint32_t randAckNum2 = rand();
-    
-    seqNum[0] = randSeqNum1 >> 24;
-    seqNum[1] = randSeqNum1 & 0x000000FF;
-    seqNum[2] = randSeqNum2 >> 24;
-    seqNum[3] = randSeqNum2 & 0x000000FF;
-    
-    ackNum[0] = randAckNum1 >> 24;
-    ackNum[1] = randAckNum1 & 0x000000FF;
-    ackNum[2] = randAckNum2 >> 24;
-    ackNum[3] = randAckNum2 & 0x000000FF;
-}
-
-void tcp_syn_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
-{
-    uint16_t l_emptyPointer = 0;
-    initialiseSeqAck(seqNum, ackNum);
-    
-    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0xa0;
-    tcpSegment[l_emptyPointer++] = 0x02; //tcp flags
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
-    
-    tcpSegment[l_emptyPointer++] = 0x02; tcpSegment[l_emptyPointer++] = 0x04;//options
-    tcpSegment[l_emptyPointer++] = 0x05; tcpSegment[l_emptyPointer++] = 0xb4;
-    tcpSegment[l_emptyPointer++] = 0x04; tcpSegment[l_emptyPointer++] = 0x02;
-    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
-    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x03;
-    tcpSegment[l_emptyPointer++] = 0x03; tcpSegment[l_emptyPointer++] = 0x04;
-    return;
-}
-
-void tcp_synack_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
-{
-    uint16_t l_emptyPointer = 0;
-    seqNum[3]++;
-    
-    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(ackNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
-    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
-    tcpSegment[l_emptyPointer++] = 0xa0;
-    tcpSegment[l_emptyPointer++] = 0x12; //tcp flags
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
-    
-    tcpSegment[l_emptyPointer++] = 0x02; tcpSegment[l_emptyPointer++] = 0x04;//options
-    tcpSegment[l_emptyPointer++] = 0x05; tcpSegment[l_emptyPointer++] = 0xb4;
-    tcpSegment[l_emptyPointer++] = 0x04; tcpSegment[l_emptyPointer++] = 0x02;
-    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
-    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x03;
-    tcpSegment[l_emptyPointer++] = 0x03; tcpSegment[l_emptyPointer++] = 0x04;
-    return;
-}
-
-void tcp_ack_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
-{
-    uint16_t l_emptyPointer = 0;
-    ackNum[3]++;
-    
-    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
-    insert_var_into(ackNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
-    tcpSegment[l_emptyPointer++] = 0x80;
-    tcpSegment[l_emptyPointer++] = 0x10; //tcp flags
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
-    
-    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x01;//options
-    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
-    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
-    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
-}
-
-void tcp_construct(char tcpSegment[], uint16_t type)
-{
-    static char seqNum[4];
-    static char ackNum[4];
-    
-    switch(type)
-    {
-    case 1: tcp_syn_construct(tcpSegment, seqNum, ackNum); break;
-    
-    case 2: tcp_synack_construct(tcpSegment, seqNum, ackNum); break;
-    
-    case 3: tcp_ack_construct(tcpSegment, seqNum, ackNum); break;
-    }
-}
-
-
 //slaps an IP header into the array
 void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int packetType)
 {
@@ -426,7 +312,7 @@ void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPa
     return;
 }
 
-void arp_req_construct(char arpSegment[])
+void arp_construct(char arpSegment[], char type)
 {
     uint16_t l_emptyPointer = 0;
     char placeholderArr[6] = {0,0,0,0,0,0};
@@ -435,7 +321,7 @@ void arp_req_construct(char arpSegment[])
     arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
     arpSegment[l_emptyPointer++] = 0x06;//Hardware size
     arpSegment[l_emptyPointer++] = 0x04;//packetType size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = type;//Request
     insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
     insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
     insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
@@ -443,28 +329,12 @@ void arp_req_construct(char arpSegment[])
     return;
 }
 
-void arp_res_construct(char arpSegment[])
-{
-    uint16_t l_emptyPointer = 0;
-    
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
-    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
-    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//protocol size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x02;//Reply
-    insert_var_into(g_currentFrame.dMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
-    insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
-    insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
-    return;
-}
 
 //construct all of the arrays into one frame array - needs more work
 uint16_t construct_packet(char bigArr[2048], char packetType[2])
 {
     uint16_t segLen;
     char *segment;
-    
     uint16_t packetLen;
     char *packet;
     
@@ -496,39 +366,36 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	
     break;
 	case 'u':
-	networkID = 0;
-	
+	    networkID = 0;
+    	
     	segLen = 8 + strlen(g_currentFrame.payload);
-    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
+    	segment = (char *)calloc(segLen, 1); //reserves 1 bytes on the heap
     	insert_udp_header(segment, segLen, 0);
     	
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
         insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
-    	
-    break;
-	case 't':
-	
-    	segmentLen = 32;
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	tcp_construct(segment, 3);
-    	
-    	packetLen = 20 + segmentLen;
-        packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
-        insert_ip_header(packet, segment, segmentLen, packetLen, 6); 
-    	
     break;
 	case 'a':
-	networkID = 6;
-	
-    	segment = (char *)calloc(1, 1);
-	
+	    networkID = 6;
+	    segment = calloc(1,1);
     	packetLen = 28;
-    	packet = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-    	arp_req_construct(segment);
-    	
+    	packet = (char *)calloc(packetLen, 1); //reserves (8 + length of payload) bytes on the heap
+        switch (packetType[1])
+        {
+            case 'r':
+                arp_construct(packet, 1);
+                break;
+            case 'a':
+                g_currentFrame.seqNum[1]++;
+                arp_construct(packet, 2);
+                break;
+            default:
+                printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
+                exit(1);
+            break;
+    	}
     break;
-	case 'd':
 	networkID = 0;
 	
     	segLen = 40 + strlen(g_currentFrame.payload);
@@ -538,6 +405,7 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	packetLen = 20 + segLen;
         packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
         insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
+        free(segment);
     	
     break;
     default :
@@ -557,8 +425,8 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     
     insert_var_into(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(segment); //free up the reserved space on the heap
-    free(packet);
+    free(segment);
+    free(packet);//free up the reserved space on the heap
     free(etherFrame);
     free(pcap);
 
@@ -583,11 +451,11 @@ void assemble_packet(char packetType[2], FILE *fpWrite)
 void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer)
 {
     uint16_t x = 0;
-    while (dataStream[(*linePointer)] != 0x0d)
+    while (dataStream[(*linePointer)] != '\n')
     {
         arrOut[x++] = dataStream[(*linePointer)++];
     }
-    (*linePointer) += 2;
+    (*linePointer) += 1;
     return; //return to one after the CRLF (Data.txt appears to be CRLF)
 }
 
@@ -621,6 +489,18 @@ int read_data(char sMac[], char dMac[], char target[], char source[], char sPort
             break;
         case 'a':
             packetType[0] = 'a';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
             break;
         case '\0':
             return 1;

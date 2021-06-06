@@ -6,10 +6,8 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Code Synposis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Libraries Used For Calling the C Backend
-import ctypes
 import os
-from typing import NewType  
-from ctypes import *
+import random
 
 #Libraries Used for the GUI
 from tkinter import *
@@ -38,12 +36,12 @@ master.resizable(False, False) #Prevents the GUI from being resizable
 path = "Project"
 
 #Path to the C backend: (Looks for "PcapPuppet_BackEnd")
-#Compiled Using "Gcc - shared Puppet_BackEnd.C -o puppet_backend.exe "
-backend_file = "puppet_backend.exe"
+#Compiled Using "Gcc - shared puppet-backend.C -o puppet-backend "
+backend_file = "puppet-backend"
 #Pcap Puppet BackEnd
 
-#Makes the C library callable
-puppet_backend = ctypes.CDLL(backend_file)
+#call the c compiled executable
+puppet_backend = "./puppet-backend"
 
 #Frame for Pcap Settings
 sConfig_Frame= Frame(master)
@@ -467,60 +465,66 @@ class PcapConfig:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def returnHexNums():
+    hexString = "0123456789abcdef"
+    return str(random.choice(hexString))+str(random.choice(hexString))+"."+str(random.choice(hexString))+str(random.choice(hexString))
+
 #This Function is called right at the End of the Program. It writes as the information stored in the classes above to a data.txt to be used by the Backend to generate the pcap
 def pcapWrite():
+    
     #The library to write to files is very similar to that of C file.io library
     pcap_path = os.path.join("Data.txt")
     f = open(pcap_path, "w")
-
-    f.write("meta\n") 
-    f.write(PcapConfig.wiresharkVER + "\r\n")
     #More meta information can be added here
-    f.write("end\n")
-    f.write("packet data\n")
 
     if Config.ARP[1] == 1:
-        f.write("ar\r\n")
-        # add icmp data etc here
-        f.write(arpConfig.senderip + "\r\n")
-        f.write(arpConfig.targetip + "\r\n")
-        f.write(arpConfig.sendermac + "\r\n")
-        f.write(arpConfig.targetmac+ "\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write("ar\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write(arpConfig.senderip + "\r\n")
-        f.write(arpConfig.targetip + "\r\n")
-        f.write(arpConfig.sendermac + "\r\n")
-        f.write(arpConfig.targetmac+ "\r\n")
-        f.write("\r\n")
+        f.write("ar\n")
+        # add icmp arp etc here
+        f.write(arpConfig.sendermac + "\n")
+        f.write("00:00:00:00:00:00"+ "\n")
+        f.write(arpConfig.senderip + "\n")
+        f.write(arpConfig.targetip + "\n")
+        f.write("00.00\n")
+        f.write("00.00\n")
+        f.write("placeholder\n")
+        f.write("00\n")
+        f.write("00\n")
+        f.write("aa\n")
+        f.write(arpConfig.targetmac + "\n")
+        f.write(arpConfig.sendermac + "\n")
+        f.write(arpConfig.targetip + "\n")
+        f.write(arpConfig.senderip + "\n")
+        f.write("00\n")
+        f.write("00\n")
+        f.write("placeholder\n")
+        f.write("00\n")
+        f.write("00\n")
 
     #if ICMP is selected.
     if Config.ICMP[1] == 1:
-        f.write("ia\r\n")
+        icmpID = returnHexNums()
+        seqNum = returnHexNums()
+        f.write("ir\n") #request
         # add icmp data etc here
-        f.write(icmpConfig.mac + "\r\n")
-        f.write(icmpConfig.dmac + "\r\n")
-        f.write(icmpConfig.ip + "\r\n")
-        f.write(icmpConfig.dip + "\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write(icmpConfig.Text + "\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write("ia\r\n")
-        f.write(icmpConfig.mac + "\r\n")
-        f.write(icmpConfig.dmac + "\r\n")
-        f.write(icmpConfig.ip + "\r\n")
-        f.write(icmpConfig.dip + "\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write(icmpConfig.Text + "\r\n")
-        f.write("00\r\n")
-        f.write("00\r\n")
-        f.write("\r\n")
+        f.write(icmpConfig.mac + "\n")
+        f.write(icmpConfig.dmac + "\n")
+        f.write(icmpConfig.ip + "\n")
+        f.write(icmpConfig.dip + "\n")
+        f.write("00.00\n")
+        f.write("00.00\n")
+        f.write(icmpConfig.Text)
+        f.write(icmpID + "\n")
+        f.write(seqNum + "\n")
+        f.write("ia\n") #reply to request
+        f.write(icmpConfig.dmac + "\n")
+        f.write(icmpConfig.mac + "\n")
+        f.write(icmpConfig.dip + "\n")
+        f.write(icmpConfig.ip + "\n")
+        f.write("00.00\n")
+        f.write("00.00\n")
+        f.write(icmpConfig.Text)
+        f.write(icmpID + "\n")
+        f.write(seqNum + "\n")
 
     # Unsupported Functions: (Functional on FrontEnd, Backend does not support them)
     # CRTL K CRTL C  To comment
@@ -740,7 +744,7 @@ def pcapWrite():
     #     f.write("0\r\n")
     #     f.write("\r\n")
 
-    f.write("End")
+    f.write("\0")
 
 #Location Configuration is a dynamic function used for placing Protocol Information in the right places when called by the GUI. 
 def LocationConfig():
@@ -1495,6 +1499,7 @@ def layer3_Displayer(l):
                 icmpConfig.mac = mac
                 icmpConfig.dip = dip
                 icmpConfig.dmac = dmac
+                print(icmpConfig.dmac)
                 icmpConfig.Text = icmpText.get(1.0,255.0)
                 Config.ICMP[1] = 1
                 History_Displayer()
@@ -2672,7 +2677,7 @@ def History_Displayer():
             PopupIP = Label(PopupLabel, text=("Source IP: " + icmpConfig.ip))
             PopupDIP = Label(PopupLabel, text=("Destination IP: " + icmpConfig.dip))
             Popupmac = Label(PopupLabel, text=("Source Mac: " + icmpConfig.mac))
-            Popupdmac = Label(PopupLabel, text=("Destination Mac: " + icmpConfig.mac))
+            Popupdmac = Label(PopupLabel, text=("Destination Mac: " + icmpConfig.dmac))
             Popuptext = Label(PopupLabel, text=("ICMP Ping Data: " + icmpConfig.Text))
             Popupsize = Label(PopupLabel, text=("You have Selected " + icmpConfig.size + "ICMP Packet(s)"))
             PopupIP.pack()
@@ -3538,7 +3543,7 @@ def createPcap():
                 PcapStatusLabel = Label(error_Popup, text="The Pcap Creation was successful, find your generated pcap at /placeholder ")
                 PcapStatusLabel.pack()
                 pcapWrite() #Writes to Data.txt
-                puppet_backend.main() #Calls the BackEnd
+                os.system(puppet_backend)
 
 # This loops all the layers buttons. Done to save time and add modular programming capability.
 
