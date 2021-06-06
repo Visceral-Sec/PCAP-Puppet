@@ -284,7 +284,7 @@ void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
     return;
 }
 
-//The following code until line 400 enables the production of a tcp handshake, however, is not supported by the rest of the program due to lack of time
+//The following code until line 400 successfully enables the production of a tcp handshake, however, is not supported by the rest of the program due to lack of time
 void initialiseSeqAck(char seqNum[4], char ackNum[4])
 {
     uint32_t randSeqNum1 = rand();
@@ -397,42 +397,8 @@ void tcp_construct(char tcpSegment[], uint16_t type)
     }
 }
 
-
-//slaps an IP header into the array
-void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int packetType)
-{
-    char ipHeader[20];
-    uint16_t l_emptyPointer = 0;
-    packet[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
-    packet[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    packet[l_emptyPointer++] = packetLen >> 8; //takes upper 8 bits
-    packet[l_emptyPointer++] = packetLen & 0x00FF; //takes lower 8 bits
-    packet[l_emptyPointer++] = 0x1b; packet[l_emptyPointer++] = 0xd1; //idenfitication???????????
-    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //flags and fragment offset
-    packet[l_emptyPointer++] = 0x80; //ttl of 128
-    packet[l_emptyPointer++] = packetType; //what type of networking proto?
-    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //checksum
-    insert_var_into(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insert_var_into :(
-    insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
-    insert_var_into(packet, ipHeader, 0, 20); //make header by itself for checksum
-    insert_var_into(transportSegment, packet, l_emptyPointer, transportSegLen);
-    uint16_t checkSum = calc_checksum(ipHeader, 20); //calc checksum
-    packet[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
-    packet[11] = checkSum >> 8;
-    return;
-}
-
-//constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPacketLen, uint16_t networkID)
-{
-    uint16_t l_emptyPointer = 0;
-    insert_var_into(g_currentFrame.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    insert_var_into(g_currentFrame.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = networkID; //etherversion? ¿IPv4? can't seem to condense it into one line
-    insert_var_into(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
-    return;
-}
-
+//Constructs an arp segment for an arp request or response
+//If type is 1 it produces a request, if type is 2 a response
 void arp_construct(char arpSegment[], char type)
 {
     uint16_t l_emptyPointer = 0;
@@ -441,68 +407,121 @@ void arp_construct(char arpSegment[], char type)
     arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
     arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
     arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//packetType size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = type;//Request
+    arpSegment[l_emptyPointer++] = 0x04;//PacketType size
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = type;//Request or response
     insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
     insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+	
+	/*This code was written after testing and would have replaced the line under it. A response doesn't have a placeholder instead of a dMac aaddress 
+    if(type == 1)
+    {
+    	insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
+    }
+    else
+    {
+    	insert_var_into(g_currentFrame.dMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
+    }
+	*/
+	
     insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
     insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
     return;
 }
 
 
-//construct all of the arrays into one frame array - needs more work
+//Produces an IP header for a transport segment(udp and icmp)
+void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int packetType)
+{
+    char ipHeader[20];
+    uint16_t l_emptyPointer = 0;
+    packet[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length
+    packet[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    packet[l_emptyPointer++] = packetLen >> 8; 
+    packet[l_emptyPointer++] = packetLen & 0x00FF; //Writes the packet length in little endian
+    packet[l_emptyPointer++] = 0x1b; packet[l_emptyPointer++] = 0xd1; //Idenfitication
+    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //Flags and fragment offset
+    packet[l_emptyPointer++] = 0x80; //Time to live of 128
+    packet[l_emptyPointer++] = packetType; //The type of transport segment
+    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //Checksum placeholder
+    insert_var_into(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; 
+    insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;//IP addresses
+    insert_var_into(packet, ipHeader, 0, 20); //Make header by itself for checksum
+    insert_var_into(transportSegment, packet, l_emptyPointer, transportSegLen);//Adds the IP header to the transport segment
+    uint16_t checkSum = calc_checksum(ipHeader, 20); //Calculates the checksum
+    packet[10] = checkSum & 0x00FF; //Checksum is little endian so insert this way to make it big endian
+    packet[11] = checkSum >> 8;
+    return;
+}
+
+//Constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
+void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPacketLen, uint16_t networkID)
+{
+    uint16_t l_emptyPointer = 0;
+    insert_var_into(g_currentFrame.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;//MAC addresses
+    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = networkID; //etherversion and network type
+    insert_var_into(networkPacket, etherFrame, l_emptyPointer, netPacketLen);//Adds the ethernet header to the network packet
+    return;
+}
+
+
+//Takes all of the arrays from different layers and constructs one frame array for the pcap
 uint16_t construct_packet(char bigArr[2048], char packetType[2])
 {
     uint16_t segLen;
-    char *segment;
-    uint16_t packetLen;
+    char *segment;//For the transport layer
+	
+    uint16_t packetLen;//For the network layer
     char *packet;
     
-    uint16_t networkID = 0;
+    uint16_t networkID = 0;//Used for the ethernet frame construction
     
-    switch(packetType[0])
+    switch(packetType[0])//Determines which protocol function to run and with what parameters
     {
-	case 'i':
-	    networkID = 0;
+	case 'i'://For icmp
+	networkID = 0;
     	segLen = 8 + strlen(g_currentFrame.payload);
-    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-        switch (packetType[1])
+    	segment = (char *)calloc(segLen, 1); //Reserves (8 + length of payload) bytes on the heap
+        switch (packetType[1])//Decides if it's a request or a response
         {
             case 'r':
-                icmp_construct(segment, segLen, 0);
+                icmp_construct(segment, segLen, 0);//Request
             break;
             case 'a':
                 g_currentFrame.seqNum[1]++;
-                icmp_construct(segment, segLen, 8);
+                icmp_construct(segment, segLen, 8);//Response
             break;
             default:
                 puts("malformed input for icmp_construct");
                 exit(1);
             break;
-        }
+        }//Creates a icmp segment
+		    
     	packetLen = 20 + segLen;
-        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
-        insert_ip_header(packet, segment, segLen, packetLen, 1); //builds on top of the icmpseg
+        packet = (char *)calloc(packetLen, 1); //Reserves 20 + packetLen bytes on the heap
+        insert_ip_header(packet, segment, segLen, packetLen, 1); //Takes the icmp segment and uses it to make an IP packet
     	
     break;
-	case 'u':
-	    networkID = 0;
+	case 'u'://For udp
+	networkID = 0;
     	
     	segLen = 8 + strlen(g_currentFrame.payload);
-    	segment = (char *)calloc(segLen, 1); //reserves 1 bytes on the heap
-    	insert_udp_header(segment, segLen, 0);
+    	segment = (char *)calloc(segLen, 1); 
+    	insert_udp_header(segment, segLen, 0);//Makes a udp segment without doing anything with dns
     	
     	packetLen = 20 + segLen;
-        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
-        insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
+        packet = (char *)calloc(packetLen, 1); 
+        insert_ip_header(packet, segment, segLen, packetLen, 17); //Takes the udp segment and uses it to make an IP packet
+		    
     break;
-	case 'a':
-	    networkID = 6;
-	    segment = calloc(1,1);
+	case 'a'://For arp
+	networkID = 6;
+	//arp is a network layer protocol and so doesn't use segment, however, it still needs a value for when it's freed later
+	segment = calloc(1,1);
+		    
     	packetLen = 28;
-    	packet = (char *)calloc(packetLen, 1); //reserves (8 + length of payload) bytes on the heap
-        switch (packetType[1])
+    	packet = (char *)calloc(packetLen, 1);
+        switch (packetType[1])//Decides if it's a request or a response
         {
             case 'r':
                 arp_construct(packet, 1);
@@ -515,16 +534,17 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
                 printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
                 exit(1);
             break;
-    	}
+    	}//Creates an arp packet
+		    
     break;
-    	case 'd':
+    	case 'd'://For dns
 	networkID = 0;
         
-        switch (packetType[1])
+        switch (packetType[1])//Decides if it's a request or a response
         {
             case 'r':
 	    	segLen = 26 + strlen(g_currentFrame.payload);
-	    	segment = (char *)calloc(segLen, 1); 
+	    	segment = (char *)calloc(segLen, 1); //The segment is defined here since the length varies between request and response
     		insert_udp_header(segment, segLen, 1);
                 break;
             case 'a':
@@ -537,11 +557,11 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
                 printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
                 exit(1);
             break;
-    	}
+    	}//Creates a dns segment with a udp header
     	
     	packetLen = 20 + segLen;
-        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
-        insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
+        packet = (char *)calloc(packetLen, 1); 
+        insert_ip_header(packet, segment, segLen, packetLen, 17); 
     	
     break;
     default :
@@ -551,13 +571,13 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     
     char *etherFrame;
     uint16_t etherFrameLen = 14 + packetLen;
-    etherFrame = (char *)calloc(etherFrameLen, 1); //reserves 14 bytes on the heap
-    insert_ether_header(etherFrame, packet, packetLen, networkID); //builds on top of the packet
+    etherFrame = (char *)calloc(etherFrameLen, 1);
+    insert_ether_header(etherFrame, packet, packetLen, networkID);//Takes the network packet and uses it to make an ethernet frame
     
     char *pcap; //header + frame in an array
     uint16_t pcapLen = 16 + etherFrameLen;
-    pcap = (char *)calloc(pcapLen, 1); //reserves 40 + etherFrameLen bytes on the heap
-    header_construct(pcap, etherFrame, etherFrameLen); //builds on top of the packet
+    pcap = (char *)calloc(pcapLen, 1); 
+    header_construct(pcap, etherFrame, etherFrameLen); //Takes the ethernet frame and uses it to make the pcap packet
     
     insert_var_into(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
@@ -569,6 +589,7 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     return pcapLen;
 }
 
+//Creates a pcap packet and writes it to the pcap file
 void assemble_packet(char packetType[2], FILE *fpWrite)
 {
     char bigArr[2048];
@@ -577,14 +598,14 @@ void assemble_packet(char packetType[2], FILE *fpWrite)
     char *pcapOut;
     pcapOut = (char *)calloc(pcapLen, 1);
     insert_var_into(bigArr, pcapOut, 0, pcapLen);
-
-    //read_pcap_out(pcapOut, bigArrLen);
+	
     fwrite(pcapOut, 1, pcapLen, fpWrite);
     
     free(pcapOut);
 }
 
-void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer) //file array in, the array its printing out to and the pointer to the linePointer variable
+//Used to read lines of data from the Data.txt file
+void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer) //File array in, the array its printing out to and the pointer to the linePointer variable
 {
     uint16_t x = 0;
     while (dataStream[(*linePointer)] != '\n')//(*linePointer) accesses the value of linePointer and allows it to be changed outside of scope
@@ -592,68 +613,70 @@ void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer) //f
         arrOut[x++] = dataStream[(*linePointer)++];
     }
     (*linePointer) += 1;
-    return; //return to one after the line feed at the end of the packet
+    return; //Return to one after the line feed at the end of the packet
 }
 
+//Takes data from the Data.txt and puts it in arrays
 int read_data(char sMac[], char dMac[], char target[], char source[], char sPort[], char dPort[], char payload[], char packetType[], char identification[], char seqNum[], char dataStream[], uint16_t* linePointer)
 {
     char proto[2];
-    if (dataStream[(*linePointer)] == '\0')
+	
+    if (dataStream[(*linePointer)] == '\0')//Reached the end of datastream
     {
         return 1;
     }
     copy_data_into(dataStream, proto, linePointer);
-    switch (proto[0]) //checking which proto to use
+    switch (proto[0]) //Checking which protocol to the current packet is
     {
-        case 'i':
+        case 'i'://For icmp
             packetType[0] = 'i';
-            switch (proto[1]) //checking whether to do request or answer
+            switch (proto[1]) //Checking whether to do request or answer
             {
                 case 'r':
-                    packetType[1] = 'r';//request
+                    packetType[1] = 'r';//Request
                 break;
                 case 'a':
-                    packetType[1] = 'a';//answer
+                    packetType[1] = 'a';//Answer
                 break;
-                default://print error if neither and close file and exit badly
+                default://Print an error if neither and close file and exit poorly
                     printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
                     exit(1);
             }
             break;
         case 'u':
-            packetType[0] = 'u';
+            packetType[0] = 'u';//For udp
             break;
-        case 'a':
+        case 'a'://For arp
             packetType[0] = 'a';
-            switch (proto[1]) //checking whether to do request or answer
+            switch (proto[1])
             {
                 case 'r':
-                    packetType[1] = 'r';//request
+                    packetType[1] = 'r';
                 break;
                 case 'a':
-                    packetType[1] = 'a';//answer
+                    packetType[1] = 'a';
                 break;
-                default://print error if neither and close file and exit badly
+                default:
                     printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
                     exit(1);
             }
             break;
-        case 'd':
+        case 'd'://For dns
             packetType[0] = 'd';
-            switch (proto[1]) //checking whether to do request or answer
+            switch (proto[1])
             {
                 case 'r':
-                    packetType[1] = 'r';//request
+                    packetType[1] = 'r';
                 break;
                 case 'a':
-                    packetType[1] = 'a';//answer
+                    packetType[1] = 'a';
                 break;
-                default://print error if neither and close file and exit badly
+                default:
                     printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
                     exit(1);
             }
             break;
-        case '\0':
+        case '\0'://End of dataStream
             return 1;
         default:
             printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
@@ -668,13 +691,13 @@ int read_data(char sMac[], char dMac[], char target[], char source[], char sPort
     copy_data_into(dataStream, payload, linePointer);
     copy_data_into(dataStream, identification, linePointer);
     copy_data_into(dataStream, seqNum, linePointer);
-	return 0;
+    return 0;
 }
 
-
+//assemble_all_packets creates and writes each packet sent from the frontend in Data.txt 
 void assemble_all_packets(FILE *fpWrite)
 {
-	char sMac[17] = "00:00:00:00:00:00";
+    char sMac[17] = "00:00:00:00:00:00";
     char dMac[17] = "00:00:00:00:00:00";
     char target[11] = "00.00.00.00";
     char source[11] = "00.00.00.00";
@@ -690,24 +713,24 @@ void assemble_all_packets(FILE *fpWrite)
     char *dataStream;
     FILE *fpRead;
     fpRead = fopen("Data.txt", "rb");
-    if (fpRead == NULL)
+    if (fpRead == NULL)//If Data.txt can't be found
     {
         puts("Data.txt doesnt exist");
         exit(1);
     }
     fseek(fpRead, 0L, SEEK_END);
-    uint16_t fileLen = ftell(fpRead) + 1; //include 0x0a eof
-    rewind(fpRead); //set file read linePointer to 0
+    uint16_t fileLen = ftell(fpRead) + 1; //Include 0x0a eof
+    rewind(fpRead); //Set file read linePointer to 0
     dataStream = (char *)calloc(fileLen, 1);
-
-    fread(dataStream, sizeof(char), fileLen, fpRead);
+    fread(dataStream, sizeof(char), fileLen, fpRead);//Stores the data from Data.txt in dataStream
     fclose(fpRead);
-    //call (read_data, data_parse, assemble_packet) repeatedly for each packet found
-	while (read_data(sMac, dMac, target, source, sPort, dPort, payload, packetType, identification, seqNum, dataStream, &linePointer) == 0) //if read_data returns 1, loop ends
-	{
-        data_parse(sMac, dMac, target, source, sPort, dPort, payload, identification, seqNum);
+	
+    //Until the end of dataStream, each packet is decoded, created and written
+    while (read_data(sMac, dMac, target, source, sPort, dPort, payload, packetType, identification, seqNum, dataStream, &linePointer) == 0) //If read_data returns 1, loop ends
+    {
+	data_parse(sMac, dMac, target, source, sPort, dPort, payload, identification, seqNum);
 
-        assemble_packet(packetType, fpWrite);
+	assemble_packet(packetType, fpWrite);
     }
     free(dataStream);
     return;
@@ -719,7 +742,9 @@ int main()
     time_t t;
     srand((unsigned) time(&t));
     FILE *fpWrite;
-    fpWrite = fopen("generated-packets.pcapng","wb");
+    fpWrite = fopen("generated-packets.pcapng","wb");//Creates the pcap file
+
+    //Creates and writes the file header and then all packets for the file
     pcap_header_construct(fpWrite);
 
     assemble_all_packets(fpWrite);
