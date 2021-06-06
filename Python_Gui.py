@@ -102,6 +102,7 @@ StartupProtocol2 = Label(StartupLabel, text="ARP")
 StartupProtocol3 = Label(StartupLabel, text="DNS")
 StartupWelcome.pack()
 StartupHelp.pack()
+StartupSupported.pack()
 StartupProtocol1.pack()
 StartupProtocol2.pack()
 StartupProtocol3.pack()
@@ -919,8 +920,8 @@ def ErrorReset():   # This function resets every error, (This is used to prevent
     Config.HTTPS[0] = 0
     #DNS
     Config.DNS[0] = 0
-    dnsConfig.diperror[0] = 0
-    dnsConfig.diperror[1] = 0
+    dnsConfig.dipError[0] = 0
+    dnsConfig.dipError[1] = 0
 
 
 def CMPErrorReset():     # This resets each compare error (This is to prevent previous protocol errors effecting other checks)
@@ -2888,7 +2889,7 @@ def History_Displayer():
             PopupSubnet.pack()
         dhcpHistoryButton = Button(dhcpHistory, text = "INFO", width=3, height=0, command=dhcpDisplay)
         dhcpHistoryButton.place(x=227, y=1)
-        dhcpSpinboxLabel = Label(TrafficConfigFrame, text="DHCP:")
+        dhcpSpinboxLabel = Label(TrafficConfigFrame, text="DHCP")
         dhcpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         dhcpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
         
@@ -3217,77 +3218,77 @@ def createPcap():
             ospfConfig.maskError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(ospfConfig.sourcerouterError)
-            ospfConfig.sourcerouterError[0] = IPErrors[0]
-            ospfConfig.sourcerouterError[1] = IPErrors[1]
+            ospfConfig.sourcerouterError[0] = IPErrors.error[0]
+            ospfConfig.sourcerouterError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(ospfConfig.backuprouterError)
-            ospfConfig.backuprouterError[0] = IPErrors[0]
-            ospfConfig.backuprouterError[1] = IPErrors[1]
+            ospfConfig.backuprouterError[0] = IPErrors.error[0]
+            ospfConfig.backuprouterError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if  Config.UDP[1] == 1:
             IP_checker(udpConfig.ip)
-            udpConfig.ipError[0] = IPErrors[0]
-            udpConfig.ipError[1] = IPErrors[1]
+            udpConfig.ipError[0] = IPErrors.error[0]
+            udpConfig.ipError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(udpConfig.dip)
-            udpConfig.dipError[0] = IPErrors[0]
-            udpConfig.dipError[1] = IPErrors[1]
+            udpConfig.dipError[0] = IPErrors.error[0]
+            udpConfig.dipError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if  Config.TCP[1] == 1:
             IP_checker(tcpConfig.ip)
-            tcpConfig.ipError[0] = IPErrors[0]
-            tcpConfig.ipError[1] = IPErrors[1]
+            tcpConfig.ipError[0] = IPErrors.error[0]
+            tcpConfig.ipError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(tcpConfig.dip)
-            tcpConfig.dipError[0] = IPErrors[0]
-            tcpConfig.dipError[1] = IPErrors[1]
+            tcpConfig.dipError[0] = IPErrors.error[0]
+            tcpConfig.dipError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if Config.SOCKS[1] == 1:
             IP_checker(socksConfig.DIP)
-            socksConfig.ipError[0] = IPErrors[0]
-            socksConfig.ipError[1] = IPErrors[1]
+            socksConfig.ipError[0] = IPErrors.error[0]
+            socksConfig.ipError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if Config.DHCP[1] == 1:
             IP_checker(dhcpConfig.dip)
-            dhcpConfig.dipError[0] = IPErrors[0]
-            dhcpConfig.dipError[1] = IPErrors[1]
+            dhcpConfig.dipError[0] = IPErrors.error[0]
+            dhcpConfig.dipError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(dhcpConfig.ReqIP)
-            dhcpConfig.reqError[0] = IPErrors[0]
-            dhcpConfig.reqError[1] = IPErrors[1]
+            dhcpConfig.reqError[0] = IPErrors.error[0]
+            dhcpConfig.reqError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(dhcpConfig.DomainIP)
-            dhcpConfig.domainError[0] = IPErrors[0]
-            dhcpConfig.domainError[1] = IPErrors[1]
+            dhcpConfig.domainError[0] = IPErrors.error[0]
+            dhcpConfig.domainError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(dhcpConfig.RouterIP)
-            dhcpConfig.RouterError[0] = IPErrors[0]
-            dhcpConfig.RouterError[1] = IPErrors[1]
+            dhcpConfig.RouterError[0] = IPErrors.error[0]
+            dhcpConfig.RouterError[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(dhcpConfig.SubnetMask)
-            dhcpConfig.maskError[0] = IPErrors[0]
-            dhcpConfig.maskError[1] = IPErrors[1]
+            dhcpConfig.maskError[0] = IPErrors.error[0]
+            dhcpConfig.maskError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         #Still WIP Ftp
         if Config.FTP[1] == 1:
             IP_checker(ftpConfig.ip)
-            ftpConfig.iperror[0] = IPErrors[0]
-            ftpConfig.iperror[1] = IPErrors[1]
+            ftpConfig.iperror[0] = IPErrors.error[0]
+            ftpConfig.iperror[1] = IPErrors.error[1]
             CMPErrorReset()
             IP_checker(ftpConfig.dip)
-            ftpConfig.diperror[0] = IPErrors[0]
-            ftpConfig.diperror[1] = IPErrors[1]
+            ftpConfig.diperror[0] = IPErrors.error[0]
+            ftpConfig.diperror[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if Config.DNS[1] == 1:
             IP_checker(dnsConfig.dip)
-            dnsConfig.dipError[0] = IPErrors[0]
-            dnsConfig.dipError[1] = IPErrors[1]
+            dnsConfig.dipError[0] = IPErrors.error[0]
+            dnsConfig.dipError[1] = IPErrors.error[1]
             CMPErrorReset
         
         #After All The Errors Have been loaded correctly, they are then tested.
