@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-struct packet
+struct packetStruct
 {
     char sMac[6];
     char dMac[6];
@@ -14,13 +14,15 @@ struct packet
     char sPort[2];
     char dPort[2];
     char payload[100];
+    char identification[2];
+    char seqNum[2];
 };
-struct packet PingReq;
+struct packetStruct g_currentFrame;
 
 //for testing mainly
-void read_pcap_out(char pcapOut[], short pcapLen)
+void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 {
-    for (short x = 0; x < pcapLen; x++)
+    for (uint16_t x = 0; x < pcapLen; x++)
     {
         printf("%c", pcapOut[x]);
     }
@@ -30,24 +32,24 @@ void read_pcap_out(char pcapOut[], short pcapLen)
 // the below function is from http://www.microhowto.info/howto/calculate_an_internet_protocol_checksum_in_c.html (author: Dr Graham D Shaw; accessed: 18/05/2021 - this needs to be cited properly) to create a C function to calc an rfc 1071 checksum
 // it has been reformatted and altered to keep with the style of the other code (and so that it works in our context)
 
-uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigned short
+uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
-    char* data = (char*)vdata; //Cast the data pointer to one that can be indexed.
+    char* payload = (char*)vdata; //Cast the payload pointer to one that can be indexed.
     uint32_t acc = 0xffff; // Initialise the accumulator
-    for (size_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
+    for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
     {
         uint16_t word; // a word being 16-bits
-        memcpy(&word, data + i, 2);
+        memcpy(&word, payload + i, 2);
         acc += ntohs(word);
         if (acc > 0xffff)
         {
             acc -= 0xffff;
         }
     }
-    if (length&1) // Handle any partial block at the end of the data.
+    if (length&1) // Handle any partial block at the end of the payload.
     {
         uint16_t word = 0;
-        memcpy(&word, data + length - 1, 1);
+        memcpy(&word, payload + length - 1, 1);
         acc += ntohs(word);
         if (acc > 0xffff)
         {
@@ -58,24 +60,24 @@ uint16_t calcChecksum(void* vdata, size_t length) //uint16_t is a 16-bit unsigne
 }
 
 //takes array and inserts it into the desired position in a chosen array
-void insertVarInto(char arrIn[], char arrOut[], short l_emptyPointer, short bytesToWrite)
+void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint16_t bytesToWrite)
 {
-    for (short x = 0; x < bytesToWrite; x++)
+    for (uint16_t x = 0; x < bytesToWrite; x++)
     {
         arrOut[l_emptyPointer++] = arrIn[x];
     }
     return;
 }
 
-//parse data from python frontend
-short * condenseChar(char currentParam[], short paramSize)//Turns a two digit string into a number
+//parse payload from python frontend
+uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
-    short l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
-    static short returnParam[/*paramSize - 3 - (paramSize - 7)/2*/10];
-    for(short i = 0; i < paramSize; i += 3) //robert's magic to convert to suitable short arrays
+    uint16_t l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
+    static uint16_t returnParam[/*paramSize - 3 - (paramSize - 7)/2*/10];
+    for(uint16_t i = 0; i < paramSize; i += 3) //robert's magic to convert to suitable uint16_t arrays
     {
-        short digit1 = currentParam[i] - 48;
-        short digit2 = currentParam[i + 1] - 48;
+        uint16_t digit1 = currentParam[i] - 48;
+        uint16_t digit2 = currentParam[i + 1] - 48;
         if(digit1 > 9)
         {
             digit1 -= 39;
@@ -84,61 +86,68 @@ short * condenseChar(char currentParam[], short paramSize)//Turns a two digit st
         {
             digit2 -= 39;
         }
-        returnParam[l_emptyPointer++] = digit1*16 + digit2; //incriment endPointer before assignment
+        returnParam[l_emptyPointer++] = digit1*16 + digit2; //incriment endPointer after assignment
     }
     
     return returnParam;
 }
 
-//converts the incoming data into the correct formats for writing
-void dataParse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[])
+//converts the incoming payload into the correct formats for writing
+void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[], char identification[], char seqNum[])
 {   
-    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in PingReq.sMac
-    for(short i = 0; i < 6; i++)
+    //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in g_currentFrame.sMac
+    for(uint16_t i = 0; i < 6; i++)
     {
-    	PingReq.sMac[i] = condenseChar(sMac, 17)[i];
+    	g_currentFrame.sMac[i] = condense_char(sMac, 17)[i];
     }
-    for(short i = 0; i < 6; i++)
+    for(uint16_t i = 0; i < 6; i++)
     {
-    	PingReq.dMac[i] = condenseChar(dMac, 17)[i];
+    	g_currentFrame.dMac[i] = condense_char(dMac, 17)[i];
     }
-    for(short i = 0; i < 4; i++)
+    for(uint16_t i = 0; i < 4; i++)
     {
-    	PingReq.target[i] = condenseChar(target, 11)[i];
+    	g_currentFrame.target[i] = condense_char(target, 11)[i];
     }
-    for(short i = 0; i < 4; i++)
+    for(uint16_t i = 0; i < 4; i++)
     {
-    	PingReq.source[i] = condenseChar(source, 11)[i];
+    	g_currentFrame.source[i] = condense_char(source, 11)[i];
     }
-    for(short i = 0; i < 2; i++)
+    for(uint16_t i = 0; i < 2; i++)
     {
-    	PingReq.sPort[i] = condenseChar(sPort, 5)[i];
+    	g_currentFrame.sPort[i] = condense_char(sPort, 5)[i];
     }
-    for(short i = 0; i < 2; i++)
+    for(uint16_t i = 0; i < 2; i++)
     {
-    	PingReq.dPort[i] = condenseChar(dPort, 5)[i];
+    	g_currentFrame.dPort[i] = condense_char(dPort, 5)[i];
+    }
+    for(uint16_t i = 0; i < 2; i++)
+    {
+    	g_currentFrame.identification[i] = condense_char(identification, 5)[i];
+    }
+    for(uint16_t i = 0; i < 2; i++)
+    {
+    	g_currentFrame.seqNum[i] = condense_char(seqNum, 5)[i];
     }
     
-    strcpy(PingReq.payload, data);
+    strcpy(g_currentFrame.payload, payload);
     return;
 }
 
 //is run once at the start of the program so that it is only at the top of the file
-void pcapHeaderConstruct(FILE *fp)
+void pcap_header_construct(FILE *fpWrite)
 {
 	int pcapHeaderLen = 24;
-    	char pcapHeader[] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
+    	char pcapHeader[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
 	
-    	fwrite(pcapHeader, 1, pcapHeaderLen, fp);
+    	fwrite(pcapHeader, 1, pcapHeaderLen, fpWrite);
     	return;
 }
 
-
-//returns num^pow as a long short
-long power(short num, short pow)
+//returns num^pow as a long uint16_t
+long power(uint16_t num, uint16_t pow)
 {
 	long result = 1;
-	for(short i = 0; i < pow; i++)
+	for(uint16_t i = 0; i < pow; i++)
 	{
 		result *= num;
 	}
@@ -146,20 +155,19 @@ long power(short num, short pow)
 	return(result);
 }
 
-
 //adds on to pcap epoch in hex and little endian
-void epoch(char pcap[], short l_emptyPointer)
+void epoch(char pcap[], uint16_t l_emptyPointer)
 {
     long seconds;
     seconds = time(NULL);
     
     long divisor = power(16, 9);
-    char hex[4];
-    short temp;
+    char hex[5];
+    uint16_t temp;
     
-    for(short i = 9; i >= 0; i--)
+    for(int i = 9; i >= 0; i--)// i needs to be an int for some reason
     {
-    	short result = seconds/divisor;
+    	uint16_t result = seconds/divisor;
     	if(i % 2 == 1)
     	{
     		temp = result;
@@ -172,329 +180,543 @@ void epoch(char pcap[], short l_emptyPointer)
     	divisor /= 16;
     }
     
-    insertVarInto(hex, pcap, l_emptyPointer, 4);
+    insert_var_into(hex, pcap, l_emptyPointer, 4);
     
     return;
 }
 
 //is functional and dynamic for a single packet but needs some work for multiple
-void headerConstruct(char pcap[], char etherFrame[], short etherFrameLen)
+void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 {
     //is only written at the start of a pcap
-    short l_emptyPointer = 0;
+    uint16_t l_emptyPointer = 0;
 	
     //is after every packet 
     epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
     pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
     pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
-    insertVarInto(etherFrame, pcap, 16, etherFrameLen);
+    insert_var_into(etherFrame, pcap, 16, etherFrameLen);
     return;
+}
+
+void dns_req_construct(char dnsSegment[], int type)
+{
+    uint16_t l_emptyPointer = 0;
+    insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
+    dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
+    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
+    dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload); insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+    
+    if(type == 2)
+    {
+    	dnsSegment[2] = 0x85;
+    	dnsSegment[3] = 0x80;
+    	dnsSegment[7] = 0x01;
+    	
+    	dnsSegment[l_emptyPointer++] = 0xc0; dnsSegment[l_emptyPointer++] = 0x0c; //Name?
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x04; //IP length
+	insert_var_into(g_currentFrame.target, dnsSegment, l_emptyPointer, 4);
+    }
 }
 
 //slaps icmp segment into the frame
-void icmpReqConstruct(char icmpReqSegment[], short seqNum, short segmentLen)
+void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
 {
-    short l_emptyPointer = 0;
-    icmpReqSegment[l_emptyPointer++] = 0x08;//icmp ping request
-    icmpReqSegment[l_emptyPointer++] = 0x00;//code is 0
-    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x00;//icmp checksum, this is a placeholder for later in the function
-    icmpReqSegment[l_emptyPointer++] = 0x00; icmpReqSegment[l_emptyPointer++] = 0x01;//identifier?
-    icmpReqSegment[l_emptyPointer++] = seqNum >> 8;
-    icmpReqSegment[l_emptyPointer++] = seqNum & 0x00FF;
-    insertVarInto(PingReq.payload, icmpReqSegment, l_emptyPointer, strlen(PingReq.payload));
-    uint16_t checksum = calcChecksum(icmpReqSegment, segmentLen);
-    icmpReqSegment[2] = checksum & 0x00FF;
-    icmpReqSegment[3] = checksum >> 8;
+    uint16_t l_emptyPointer = 0;
+    icmpReqSeg[l_emptyPointer++] = type;//icmp ping request
+    icmpReqSeg[l_emptyPointer++] = 0x00;//code is 0
+    icmpReqSeg[l_emptyPointer++] = 0x00; icmpReqSeg[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
+    insert_var_into(g_currentFrame.identification, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //identifier?
+    insert_var_into(g_currentFrame.seqNum, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //sequence number
+    insert_var_into(g_currentFrame.payload, icmpReqSeg, l_emptyPointer, strlen(g_currentFrame.payload));
+    uint16_t checksum = calc_checksum(icmpReqSeg, segLen);
+    icmpReqSeg[2] = checksum & 0x00FF;
+    icmpReqSeg[3] = checksum >> 8;
     return;
 }
 
-/*
-//creates a transport layer tcp header
-void tcpConstruct(char tcpSegment[])
+void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
 {
-    short l_emptyPointer = 0;
-    insertVarInto(PingReq.sPort, tcpSegment, l_emptyPointer, 2);
-    insertVarInto(PingReq.dPort, tcpSegment, l_emptyPointer, 2);
-    insertVarInto(seqNum, tcpSegment, l_emptyPointer, 4); //seq num
-    insertVarInto(AckNum, tcpSegment, l_emptyPointer, 4); //ack num
-    tcpSegment[l_emptyPointer++] = flags; //tcp flags - probably easier to impliment once parsing is done
-    insertVarInto(windowSize, tcpSegment, l_emptyPointer, 2);
-    insertVarInto(checkSum, tcpSegment, l_emptyPointer, 2);
+    uint16_t dnsLen = 0;
+    uint16_t l_emptyPointer = 0;
+    insert_var_into(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//length, this is a placeholder for later in the function
+    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
+    insert_var_into(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
+    
+    if(dns != 0)
+    {
+	char *dnsSegment;
+	    
+	dnsLen = 2 + 16 * dns;
+	uint16_t dnsSegmentLen;
+	dnsSegmentLen = dnsLen + strlen(g_currentFrame.payload);
+	dnsSegment = (char *)malloc(sizeof(char) * dnsSegmentLen); //reserves (8 + length of payload) bytes on the heap
+	dns_req_construct(dnsSegment, dns);
+	    
+	insert_var_into(dnsSegment, udpSegment, l_emptyPointer, dnsSegmentLen);
+	free(dnsSegment);
+    }
+    
+    udpSegment[4] = (strlen(g_currentFrame.payload) + dnsLen + 8) >> 24;
+    udpSegment[5] = (strlen(g_currentFrame.payload) + dnsLen + 8) & 0x000000FF;
+    uint16_t checksum = calc_checksum(udpSegment, udpSegmentLen);
+    udpSegment[6] = checksum & 0x00FF;
+    udpSegment[7] = checksum >> 8;
+    return;
+}
+
+
+void initialiseSeqAck(char seqNum[4], char ackNum[4])
+{
+    uint32_t randSeqNum1 = rand();
+    uint32_t randSeqNum2 = rand();
+    uint32_t randAckNum1 = rand();
+    uint32_t randAckNum2 = rand();
+    
+    seqNum[0] = randSeqNum1 >> 24;
+    seqNum[1] = randSeqNum1 & 0x000000FF;
+    seqNum[2] = randSeqNum2 >> 24;
+    seqNum[3] = randSeqNum2 & 0x000000FF;
+    
+    ackNum[0] = randAckNum1 >> 24;
+    ackNum[1] = randAckNum1 & 0x000000FF;
+    ackNum[2] = randAckNum2 >> 24;
+    ackNum[3] = randAckNum2 & 0x000000FF;
+}
+
+void tcp_syn_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
+{
+    uint16_t l_emptyPointer = 0;
+    initialiseSeqAck(seqNum, ackNum);
+    
+    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0xa0;
+    tcpSegment[l_emptyPointer++] = 0x02; //tcp flags
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
     tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
-    //then a bunch of options that are scary
-    return;
-}*/
-
-/*
-void udpConstruct(char udpSegment[])
-{
-    short l_emptyPointer = 0;
-    insertVarInto(PingReq.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insertVarInto(PingReq.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
     
-    if(8 + strlen(PingReq.payload) < 256)
-    {
-    	udpSegment[l_emptyPointer++] = 0x00;
-    	udpSegment[l_emptyPointer++] = 8 + strlen(PingReq.payload);
-    }
-    else
-    {
-    	udpSegment[l_emptyPointer++] = 8 + strlen(PingReq.payload); l_emptyPointer++;
-    }
+    tcpSegment[l_emptyPointer++] = 0x02; tcpSegment[l_emptyPointer++] = 0x04;//options
+    tcpSegment[l_emptyPointer++] = 0x05; tcpSegment[l_emptyPointer++] = 0xb4;
+    tcpSegment[l_emptyPointer++] = 0x04; tcpSegment[l_emptyPointer++] = 0x02;
+    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
+    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x03;
+    tcpSegment[l_emptyPointer++] = 0x03; tcpSegment[l_emptyPointer++] = 0x04;
+    return;
+}
+
+void tcp_synack_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
+{
+    uint16_t l_emptyPointer = 0;
+    seqNum[3]++;
     
-    //insertVarInto(checkSum, udpSegment, l_emptyPointer, 2);
-    insertVarInto(PingReq.payload, udpSegment, l_emptyPointer, strlen(PingReq.payload));
+    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(ackNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
+    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
+    tcpSegment[l_emptyPointer++] = 0xa0;
+    tcpSegment[l_emptyPointer++] = 0x12; //tcp flags
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
+    
+    tcpSegment[l_emptyPointer++] = 0x02; tcpSegment[l_emptyPointer++] = 0x04;//options
+    tcpSegment[l_emptyPointer++] = 0x05; tcpSegment[l_emptyPointer++] = 0xb4;
+    tcpSegment[l_emptyPointer++] = 0x04; tcpSegment[l_emptyPointer++] = 0x02;
+    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
+    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x03;
+    tcpSegment[l_emptyPointer++] = 0x03; tcpSegment[l_emptyPointer++] = 0x04;
     return;
-}*/
+}
 
-/*
-void arpConstruct(char arpSegment[])
+void tcp_ack_construct(char tcpSegment[], char seqNum[4], char ackNum[4])
 {
-    short l_emptyPointer = 0;
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
-    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
-    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
-    arpSegment[l_emptyPointer++] = 0x04;//protocol size
-    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Request
-    insertVarInto(PingReq.sMac, arpSegment, l_emptyPointer, 6);
-    insertVarInto(PingReq.source, arpSegment, l_emptyPointer, 4);
-    insertVarInto(0x000000000000, arpSegment, l_emptyPointer, 6);
-    insertVarInto(PingReq.target, arpSegment, l_emptyPointer, 4);
-    return;
-}*/
+    uint16_t l_emptyPointer = 0;
+    ackNum[3]++;
+    
+    insert_var_into(g_currentFrame.sPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(g_currentFrame.dPort, tcpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
+    insert_var_into(seqNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //seq num
+    insert_var_into(ackNum, tcpSegment, l_emptyPointer, 4); l_emptyPointer += 4; //ack num
+    tcpSegment[l_emptyPointer++] = 0x80;
+    tcpSegment[l_emptyPointer++] = 0x10; //tcp flags
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xf0;//window size?
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//checksum
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;//Urgent pointer?
+    
+    tcpSegment[l_emptyPointer++] = 0x01; tcpSegment[l_emptyPointer++] = 0x01;//options
+    tcpSegment[l_emptyPointer++] = 0x08; tcpSegment[l_emptyPointer++] = 0x0a;
+    tcpSegment[l_emptyPointer++] = 0xfa; tcpSegment[l_emptyPointer++] = 0xe0;
+    tcpSegment[l_emptyPointer++] = 0x62; tcpSegment[l_emptyPointer++] = 0x49;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+    tcpSegment[l_emptyPointer++] = 0x00; tcpSegment[l_emptyPointer++] = 0x00;
+}
 
-/*
-void dnsConstruct(char dnsSegment[])
+void tcp_construct(char tcpSegment[], uint16_t type)
 {
-    short l_emptyPointer = 0;
-    insertVarInto(TransactionID, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
-    insertVarInto(flags, dnsSegment, l_emptyPointer, 2);//0100 for standard query, 8580 for standard query response
-    insertVarInto(0x0001, dnsSegment, l_emptyPointer, 2);//questions
-    insertVarInto(0x0000, dnsSegment, l_emptyPointer, 2);//answers, would be 0x0001 for a response
-    insertVarInto(0x00000000, dnsSegment, l_emptyPointer, 2);//RRses and stuff
-    insertVarInto(query, dnsSegment, l_emptyPointer, strlen(query));//the query response repeats the query's data in its own data section
-    return;
-}*/
+    static char seqNum[4];
+    static char ackNum[4];
+    
+    switch(type)
+    {
+    case 1: tcp_syn_construct(tcpSegment, seqNum, ackNum); break;
+    
+    case 2: tcp_synack_construct(tcpSegment, seqNum, ackNum); break;
+    
+    case 3: tcp_ack_construct(tcpSegment, seqNum, ackNum); break;
+    }
+}
+
 
 //slaps an IP header into the array
-void ipConstruct(char ipPacket[], char ipHeader[20], char transportSegment[], short transportSegLen, short ipPacketLen)
+void insert_ip_header(char packet[], char transportSegment[], uint16_t transportSegLen, uint16_t packetLen, int packetType)
 {
-    short l_emptyPointer = 0;
-    ipPacket[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
-    ipPacket[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
-    ipPacket[l_emptyPointer++] = ipPacketLen >> 8; //takes upper 8 bits
-    ipPacket[l_emptyPointer++] = ipPacketLen & 0x00FF; //takes lower 8 bits
-    ipPacket[l_emptyPointer++] = 0x1b; ipPacket[l_emptyPointer++] = 0xd1; //idenfitication???????????
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //flags and fragment offset
-    ipPacket[l_emptyPointer++] = 0x80; //ttl of 128
-    ipPacket[l_emptyPointer++] = 0x01; //icmp is 01
-    ipPacket[l_emptyPointer++] = 0x00; ipPacket[l_emptyPointer++] = 0x00; //checksum
-    insertVarInto(PingReq.source, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insertVarInto :(
-    insertVarInto(PingReq.target, ipPacket, l_emptyPointer, 4); l_emptyPointer += 4;
-    insertVarInto(ipPacket, ipHeader, 0, 20); //make header by itself for checksum
-    insertVarInto(transportSegment, ipPacket, l_emptyPointer, transportSegLen);
-    uint16_t checkSum = calcChecksum(ipHeader, 20); //calc checksum (it doesnt work -_-)
-    ipPacket[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
-    ipPacket[11] = checkSum >> 8;
+    char ipHeader[20];
+    uint16_t l_emptyPointer = 0;
+    packet[l_emptyPointer++] = 0x45; //0b0100 version 4 IP + 0101 IP header length (means 20??? but represents 5)
+    packet[l_emptyPointer++] = 0x00; //0b000000 Default differenteiated services codepoint + 00 non ECN-capable transport
+    packet[l_emptyPointer++] = packetLen >> 8; //takes upper 8 bits
+    packet[l_emptyPointer++] = packetLen & 0x00FF; //takes lower 8 bits
+    packet[l_emptyPointer++] = 0x1b; packet[l_emptyPointer++] = 0xd1; //idenfitication???????????
+    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //flags and fragment offset
+    packet[l_emptyPointer++] = 0x80; //ttl of 128
+    packet[l_emptyPointer++] = packetType; //what type of networking proto?
+    packet[l_emptyPointer++] = 0x00; packet[l_emptyPointer++] = 0x00; //checksum
+    insert_var_into(g_currentFrame.source, packet, l_emptyPointer, 4); l_emptyPointer += 4; //not being incrimented by insert_var_into :(
+    insert_var_into(g_currentFrame.target, packet, l_emptyPointer, 4); l_emptyPointer += 4;
+    insert_var_into(packet, ipHeader, 0, 20); //make header by itself for checksum
+    insert_var_into(transportSegment, packet, l_emptyPointer, transportSegLen);
+    uint16_t checkSum = calc_checksum(ipHeader, 20); //calc checksum
+    packet[10] = checkSum & 0x00FF; //checksum is little endian so insert this way to make big endian
+    packet[11] = checkSum >> 8;
     return;
 }
 
 //constructs an ethernet header {dMac,sMac,IPv4} -> array of 14 bytes
-void etherConstruct(char etherFrame[], char networkPacket[], short netPacketLen)
+void insert_ether_header(char etherFrame[], char networkPacket[], uint16_t netPacketLen, uint16_t networkID)
 {
-    short l_emptyPointer = 0;
-    insertVarInto(PingReq.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    insertVarInto(PingReq.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
-    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = 0x00; //etherversion? ¿IPv4? can't seem to condense it into one line
-    insertVarInto(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
+    uint16_t l_emptyPointer = 0;
+    insert_var_into(g_currentFrame.dMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.sMac, etherFrame, l_emptyPointer, 6); l_emptyPointer += 6;
+    etherFrame[l_emptyPointer++] = 0x08; etherFrame[l_emptyPointer++] = networkID; //etherversion? ¿IPv4? can't seem to condense it into one line
+    insert_var_into(networkPacket, etherFrame, l_emptyPointer, netPacketLen);
+    return;
+}
+
+void arp_construct(char arpSegment[], char type)
+{
+    uint16_t l_emptyPointer = 0;
+    char placeholderArr[6] = {0,0,0,0,0,0};
+    
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
+    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
+    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
+    arpSegment[l_emptyPointer++] = 0x04;//packetType size
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = type;//Request
+    insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+    insert_var_into(placeholderArr, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
+    insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
     return;
 }
 
 
 //construct all of the arrays into one frame array - needs more work
-short constructPacket(char bigArr[512], char protocol)
+uint16_t construct_packet(char bigArr[2048], char packetType[2])
 {
-
-    short segmentLen;
+    uint16_t segLen;
     char *segment;
+    uint16_t packetLen;
+    char *packet;
     
-    switch(protocol)
+    uint16_t networkID = 0;
+    
+    switch(packetType[0])
     {
 	case 'i':
-	
-    	segmentLen = 8 + strlen(PingReq.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	icmpReqConstruct(segment, 0, segmentLen);
+	    networkID = 0;
+    	segLen = 8 + strlen(g_currentFrame.payload);
+    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
+        switch (packetType[1])
+        {
+            case 'r':
+                icmp_construct(segment, segLen, 0);
+            break;
+            case 'a':
+                g_currentFrame.seqNum[1]++;
+                icmp_construct(segment, segLen, 8);
+            break;
+            default:
+                puts("malformed input for icmp_construct");
+                exit(1);
+            break;
+        }
+    	packetLen = 20 + segLen;
+        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
+        insert_ip_header(packet, segment, segLen, packetLen, 1); //builds on top of the icmpseg
     	
-    	break;
-    /*	
+    break;
 	case 'u':
-	
-    	segmentLen = 6 + strlen(PingReq.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	udpConstruct(segment);
+	    networkID = 0;
     	
-    	break;
+    	segLen = 8 + strlen(g_currentFrame.payload);
+    	segment = (char *)calloc(segLen, 1); //reserves 1 bytes on the heap
+    	insert_udp_header(segment, segLen, 0);
     	
-    	
-	case 't':
-	
-    	segmentLen = 6 + strlen(PingReq.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	tcpConstruct(segment);
-    	
-    	break;
-    	
+    	packetLen = 20 + segLen;
+        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
+        insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
+    break;
 	case 'a':
-	
-    	segmentLen = 6 + strlen(PingReq.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	arpConstruct(segment);
+	    networkID = 6;
+	    segment = calloc(1,1);
+    	packetLen = 28;
+    	packet = (char *)calloc(packetLen, 1); //reserves (8 + length of payload) bytes on the heap
+        switch (packetType[1])
+        {
+            case 'r':
+                arp_construct(packet, 1);
+                break;
+            case 'a':
+                g_currentFrame.seqNum[1]++;
+                arp_construct(packet, 2);
+                break;
+            default:
+                printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
+                exit(1);
+            break;
+    	}
+    break;
+    	case 'd':
+	networkID = 0;
+        
+        switch (packetType[1])
+        {
+            case 'r':
+	    	segLen = 26 + strlen(g_currentFrame.payload);
+	    	segment = (char *)calloc(segLen, 1); 
+    		insert_udp_header(segment, segLen, 1);
+                break;
+            case 'a':
+	    	segLen = 42 + strlen(g_currentFrame.payload);
+	    	segment = (char *)calloc(segLen, 1); 
+    		insert_udp_header(segment, segLen, 2);
+                break;
+            default:
+	    	segment = (char *)calloc(1, 1); 
+                printf("malformed input for arp_construct: %c,%c", packetType[0], packetType[1]);
+                exit(1);
+            break;
+    	}
     	
-    	break;
+    	packetLen = 20 + segLen;
+        packet = (char *)calloc(packetLen, 1); //reserves 20 + segLen bytes onthe heap
+        insert_ip_header(packet, segment, segLen, packetLen, 17); //builds on top of the icmpseg
     	
-	case 'd':
-	
-    	segmentLen = 6 + strlen(PingReq.payload);
-    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
-    	dnsConstruct(segment);
-    	
-    	break;
-    	
-    */
+    break;
     default :
-
-        puts("a valid protocol hasn't been passed");
+        printf("Malformed passed data, proto param incorrect: %c%c\n", packetType[0], packetType[1]); //if not recognised then error out badly
+        exit(1);
     }
     
-    char ipHeader[20];
-    char *ipPacket;
-    short ipPacketLen = 20 + segmentLen;
-    ipPacket = (char *)malloc(sizeof(char) * (ipPacketLen)); //reserves 20 + segmentLen bytes onthe heap
-    ipConstruct(ipPacket, ipHeader, segment, segmentLen, ipPacketLen); //builds on top of the icmpseg
-    //read_pcap_out(ipPacket, ipPacketLen); //use this for testing
-    
     char *etherFrame;
-    short etherFrameLen = 14 + ipPacketLen;
-    etherFrame = (char *)malloc(sizeof(char) * (etherFrameLen)); //reserves 14 bytes on the heap
-    etherConstruct(etherFrame, ipPacket, ipPacketLen); //builds on top of the ipPacket
+    uint16_t etherFrameLen = 14 + packetLen;
+    etherFrame = (char *)calloc(etherFrameLen, 1); //reserves 14 bytes on the heap
+    insert_ether_header(etherFrame, packet, packetLen, networkID); //builds on top of the packet
     
     char *pcap; //header + frame in an array
-    short pcapLen = 16 + etherFrameLen;
-    pcap = (char *)malloc(sizeof(char) * (pcapLen)); //reserves 40 + etherFrameLen bytes on the heap
-    headerConstruct(pcap, etherFrame, etherFrameLen); //builds on top of the ipPacket
+    uint16_t pcapLen = 16 + etherFrameLen;
+    pcap = (char *)calloc(pcapLen, 1); //reserves 40 + etherFrameLen bytes on the heap
+    header_construct(pcap, etherFrame, etherFrameLen); //builds on top of the packet
     
-    insertVarInto(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
+    insert_var_into(pcap, bigArr, 0, pcapLen); //insert each of the parts of the frame into the bigArr
 
-    free(segment); //free up the reserved space on the heap
-    free(ipPacket);
+    free(segment);
+    free(packet);//free up the reserved space on the heap
     free(etherFrame);
     free(pcap);
 
     return pcapLen;
 }
 
-
-void assemblePacket(char protocol, FILE *fp)
+void assemble_packet(char packetType[2], FILE *fpWrite)
 {
-    char bigArr[1024];
-    short pcapLen = constructPacket(bigArr, protocol);
+    char bigArr[2048];
+    uint16_t pcapLen = construct_packet(bigArr, packetType);
 
     char *pcapOut;
-    pcapOut = (char *)malloc(sizeof(char) * pcapLen);
-    insertVarInto(bigArr, pcapOut, 0, pcapLen);
+    pcapOut = (char *)calloc(pcapLen, 1);
+    insert_var_into(bigArr, pcapOut, 0, pcapLen);
 
     //read_pcap_out(pcapOut, bigArrLen);
-    fwrite(pcapOut, 1, pcapLen, fp);
+    fwrite(pcapOut, 1, pcapLen, fpWrite);
     
     free(pcapOut);
 }
 
-
-int readData(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char data[65507], int loopCounter)
+void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer)
 {
-	int len;
-	int line = 0;
-	char currentLine[1000]; //variable holds current line in textfile
-	int fileEnd = 0;
-	
-	FILE *fptr; //Declaring a pointer
-    	fptr = fopen("Data.txt", "r"); //read
-	if (fptr == NULL) { //check to see if file exists
-		printf("Unable to open file");
-		exit(1);
-	}
-	
-	//while (fscanf(fptr, "%s", currentLine) != EOF) { //EOF = End of file
-	fscanf(fptr, "%s", currentLine);
-	line = 0;
-	if (strcmp(currentLine, "icmp8") == 0) {
-		while (fgets(currentLine, sizeof(currentLine), fptr) != NULL && line < 8 + 9 * loopCounter) { //reads the 7 lines under icmp8 
-			//fputs(currentLine, stdout);
-			if (line == 1 + 9 * loopCounter){
-				strcpy(sMac, currentLine);
-			}
-			if (line == 2 + 9 * loopCounter) {
-				strcpy(dMac, currentLine);
-			}
-			if (line == 3 + 9 * loopCounter) {
-				strcpy(target, currentLine);
-			}
-			if (line == 4 + 9 * loopCounter) {
-				strcpy(source, currentLine);
-			}
-			if (line == 5 + 9 * loopCounter) {
-				strcpy(sPort, currentLine);
-			}
-			if (line == 6 + 9 * loopCounter) {
-				strcpy(dPort, currentLine);
-			}
-			if (line == 7 + 9 * loopCounter) {
-				strcpy(data, currentLine);
-			}
-			line += 1;
-		}
-	}
-		//run dataparse with each set of variables?
-	//}
-	
-	if(fgets(currentLine, sizeof(currentLine), fptr) == NULL)
-	{
-		fileEnd = 1;
-	}
-	
-	fclose(fptr);
-	
-	return(fileEnd);
+    uint16_t x = 0;
+    while (dataStream[(*linePointer)] != '\n')
+    {
+        arrOut[x++] = dataStream[(*linePointer)++];
+    }
+    (*linePointer) += 1;
+    return; //return to one after the CRLF (Data.txt appears to be CRLF)
+}
+
+int read_data(char sMac[], char dMac[], char target[], char source[], char sPort[], char dPort[], char payload[], char packetType[], char identification[], char seqNum[], char dataStream[], uint16_t* linePointer)
+{
+    char proto[2];
+    if (dataStream[(*linePointer)] == '\0')
+    {
+        return 1;
+    }
+    copy_data_into(dataStream, proto, linePointer);
+    switch (proto[0]) //checking which proto to use
+    {
+        case 'i':
+            packetType[0] = 'i';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
+            break;
+        case 'u':
+            packetType[0] = 'u';
+            break;
+        case 'a':
+            packetType[0] = 'a';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
+            break;
+        case 'd':
+            packetType[0] = 'd';
+            switch (proto[1]) //checking whether to do request or answer
+            {
+                case 'r':
+                    packetType[1] = 'r';//request
+                break;
+                case 'a':
+                    packetType[1] = 'a';//answer
+                break;
+                default://print error if neither and close file and exit badly
+                    printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+                    exit(1);
+            }
+            break;
+        case '\0':
+            return 1;
+        default:
+            printf("Malformed passed data, proto param incorrect: %c%c\n", proto[0], proto[1]);
+            exit(1);
+    }
+    copy_data_into(dataStream, sMac, linePointer);
+    copy_data_into(dataStream, dMac, linePointer);
+    copy_data_into(dataStream, target, linePointer);
+    copy_data_into(dataStream, source, linePointer);
+    copy_data_into(dataStream, sPort, linePointer);
+    copy_data_into(dataStream, dPort, linePointer);
+    copy_data_into(dataStream, payload, linePointer);
+    copy_data_into(dataStream, identification, linePointer);
+    copy_data_into(dataStream, seqNum, linePointer);
+	return 0;
 }
 
 
-void assembleAllPackets(FILE *fp)
+void assemble_all_packets(FILE *fpWrite)
 {
-	char sMac[17] = "00:00:00:00:00:00"; char dMac[17] = "00:00:00:00:00:00"; char target[11] = "00.00.00.00"; char source[11] = "00.00.00.00"; char sPort[5] = "00.00"; char dPort[5] = "00.00"; char data[65507] = "default"; char protocol = 'i';
+	char sMac[17] = "00:00:00:00:00:00";
+    char dMac[17] = "00:00:00:00:00:00";
+    char target[11] = "00.00.00.00";
+    char source[11] = "00.00.00.00";
+    char sPort[5] = "00.00";
+    char dPort[5] = "00.00";
+    char payload[1024] = "default";
+    char packetType[2] = {'0','0'};
+    char identification[5] = {"00.00"};
+    char seqNum[5] = {"00.00"};
+    uint16_t linePointer = 0;
 	
-	int fileEnd = 0;
-	for(int i = 0; fileEnd == 0; i++)
-	{
-		fileEnd = readData(sMac, dMac, target, source, sPort, dPort, data, i);
-		
-	    	dataParse(sMac, dMac, target, source, sPort, dPort, data);
 
-	    	assemblePacket(protocol, fp);
-    	}
+    char *dataStream;
+    FILE *fpRead;
+    fpRead = fopen("Data.txt", "rb");
+    if (fpRead == NULL)
+    {
+        puts("Data.txt doesnt exist");
+        exit(1);
+    }
+    fseek(fpRead, 0L, SEEK_END);
+    uint16_t fileLen = ftell(fpRead) + 1; //include 0x0a eof
+    rewind(fpRead); //set file read linePointer to 0
+    dataStream = (char *)calloc(fileLen, 1);
+
+    fread(dataStream, sizeof(char), fileLen, fpRead);
+    fclose(fpRead);
+    //call (read_data, data_parse, assemble_packet) repeatedly for each packet found
+	while (read_data(sMac, dMac, target, source, sPort, dPort, payload, packetType, identification, seqNum, dataStream, &linePointer) == 0) //if read_data returns 1, loop ends
+	{
+        data_parse(sMac, dMac, target, source, sPort, dPort, payload, identification, seqNum);
+
+        assemble_packet(packetType, fpWrite);
+    }
+    free(dataStream);
+    return;
 }
 
 
 int main()
 {
-    FILE *fp;
-    fp = fopen("pingReq.pcapng","wb");
-    pcapHeaderConstruct(fp);
+    time_t t;
+    srand((unsigned) time(&t));
+    FILE *fpWrite;
+    fpWrite = fopen("generated-packets.pcapng","wb");
+    pcap_header_construct(fpWrite);
 
-    assembleAllPackets(fp);
+    assemble_all_packets(fpWrite);
     
-    fclose(fp);
+    fclose(fpWrite);
 
     return 0;
 }
