@@ -1054,9 +1054,11 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
 
         #Same methodology for each protocol, The button at the bottom saves each input into the class
         def Ethdone():
+            Config.Ethernet[1] = 1
             colon = ":"
             ethernetConfig.dmac = dmac1.get() + colon + dmac2.get() + colon + dmac3.get() + colon + dmac4.get() + colon + dmac5.get() + colon + dmac6.get()
             ethernetConfig.smac = mac1.get() + colon + mac2.get() + colon + mac3.get() + colon + mac4.get() + colon + mac5.get() + colon + mac6.get()
+            History_Displayer()
         ethb = Button(layer2_Frame, text = "✓", command=Ethdone)
         ethb.place(x=175, y=475, width=100) 
     
@@ -1495,6 +1497,7 @@ def layer3_Displayer(l):
                 icmpConfig.dmac = dmac
                 icmpConfig.Text = icmpText.get(1.0,255.0)
                 Config.ICMP[1] = 1
+                History_Displayer()
         icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
         icmpb.place(x=175, y=475, width=100) # postioning on the button
 
@@ -1562,7 +1565,8 @@ def layer3_Displayer(l):
             ospfConfig.TIL = ipConfig.TIL
             #ICMP
             icmpConfig.dip = ipConfig.destinationIp
-            icmpConfig.ip = ipConfig.sourceip
+            icmpConfig.ip = ipConfig.sourceIp
+            History_Displayer()
         ipb = Button(layer3_Frame, text = "✓", command=IPdone)
         ipb.place(x=175, y=475, width=100) 
         
@@ -1595,7 +1599,7 @@ def layer3_Displayer(l):
             Config.RIP[1] = 1
             dot = "."
             ripConfig.ResponseIP = ripRepip1.get() + dot + ripRepip2.get() + ripRepip3.get() + dot + ripRepip4.get() 
-            ripConfig.ripver = ripCommandvar.get()
+            ripConfig.RipVer = ripCommandvar.get()
             History_Displayer()
         ripb = Button(layer3_Frame, text = "✓", command=ripdone,)
         ripb.place(x=175, y=475, width=100) # postioning on the button
@@ -1846,7 +1850,7 @@ def layer4_Displayer(l):
             tcpConfig.dip = tcpdip1.get() + dot + tcpdip2.get() + dot + tcpdip3.get() + dot + tcpdip4.get()
             #Setting other protocols:
             #netBios
-
+            History_Displayer()
             netbiosConfig.port = tcpConfig.port
             netbiosConfig.dip = tcpConfig.dip
             netbiosConfig.ip = tcpConfig.ip
@@ -2581,8 +2585,8 @@ def layer7_Displayer(l):
             dot = "."
             Config.DNS[1] = 1
             dnsConfig.dip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get()
-            dnsConfig.Type = DNSType.get()
-            dnsConfig.Class = DNSClass.get()
+            dnsConfig.Type = DNSTypeVar.get()
+            dnsConfig.Class = DNSClassVar.get()
             dnsConfig.Cport= DNSCommunicationPort.get()
             dnsConfig.AnswerIP = Ansip1.get() + dot + Ansip2.get() + dot + Ansip3.get() + dot + Ansip4.get()
             dnsConfig.TIL = DNSTime.get()
@@ -2596,7 +2600,6 @@ def layer7_Displayer(l):
 # History Displayer uses the size class described earlier, It postions everything dynamically depending on the location of previously placed protocols, it also defines spinboxes and the info tab for each protocol
 
 def History_Displayer():
-    #Layer 7 Spinboxes
     icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size ,width=4,)
     arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
     ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
@@ -2609,12 +2612,15 @@ def History_Displayer():
     biosSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4,)
     ospfSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
     ripSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    dnsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
     #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
-    #Layer 6
     tlsLabelTick = Label(TrafficConfigFrame, text="✓")
     socksLabelTick = Label(TrafficConfigFrame, text="✓")
     wifiLabelTick = Label(TrafficConfigFrame, text="✓")
     ipLabelTick = Label(TrafficConfigFrame, text="✓")
+    ethLabelTick = Label(TrafficConfigFrame, text="✓")
+    tcpLabelTick = Label(TrafficConfigFrame, text="✓")
+    udpLabelTick = Label(TrafficConfigFrame, text="✓")
     
     #Loads the spinbox sizes into the right protocols size class value (If statement works fine)
     def TrafficSize_Loader():
@@ -2770,8 +2776,8 @@ def History_Displayer():
         httpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         httpSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
     
-    if Config.HTTP[1] == 1 and Config.HTTP[2] == 0:
-        Config.HTTP[2] = 1
+    if Config.HTTPS[1] == 1 and Config.HTTPS[2] == 0:
+        Config.HTTPS[2] = 1
         httpsHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
         httpsHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
         LocationConfig()
@@ -2781,7 +2787,7 @@ def History_Displayer():
         def httpsDisplay(): #Info Button displays all of the currently chosen configuration
             Popup = Toplevel()
             Popup.title("Current HTTPS Configuration")
-            PopupLabel = LabelFrame(Popup, text="HTTP Configuration", width=250, height=250)
+            PopupLabel = LabelFrame(Popup, text="HTTPS Configuration", width=250, height=250)
             PopupLabel.pack()
             Popupurl = Label(PopupLabel, text=("URL: " + httpsConfig.URL))
             Popupagent = Label(PopupLabel, text=("User Agent: " + httpsConfig.UserAgent))
@@ -2816,8 +2822,8 @@ def History_Displayer():
             PopupLabel = LabelFrame(Popup, text="IRC Configuration", width=250, height=250)
             PopupLabel.pack()
             PopupName = Label(PopupLabel, text=("User Name: " + ircConfig.Name))
-            PopupMessage = Label(PopupLabel, text=("IRC Message" + ircConfig.message))
-            PopupCommand = Label(PopupLabel, text=("IRC Commadn" + ircConfig.command))
+            PopupMessage = Label(PopupLabel, text=("IRC Message: " + ircConfig.message))
+            PopupCommand = Label(PopupLabel, text=("IRC Command: " + ircConfig.command))
             PopupName.pack()
             PopupMessage.pack()
             PopupCommand.pack()
@@ -2906,8 +2912,8 @@ def History_Displayer():
             Popup.title("Current TLS Configuration")
             PopupLabel = LabelFrame(Popup, text="TLS Configuration", width=250, height=250)
             PopupLabel.pack()
-            PopupCERT = Label(PopupLabel, text=("TLS Cert" + tlsConfig.cert))
-            PopupSuite = Label(PopupLabel, text=("TLS Cipher Suite" + tlsConfig.CipherSuite))
+            PopupCERT = Label(PopupLabel, text=("TLS Cert: " + tlsConfig.cert))
+            PopupSuite = Label(PopupLabel, text=("TLS Cipher Suite: \n" + tlsConfig.CipherSuite))
             PopupCERT.pack()
             PopupSuite.pack()
         tlsHistoryButton = Button(tlsHistory, text = "INFO", width=3, height=0, command=tlsDisplay)
@@ -3034,6 +3040,29 @@ def History_Displayer():
         wifiSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         wifiLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
 
+    if Config.Ethernet[1] == 1 and Config.Ethernet[2] == 0:
+        Config.Ethernet[2] = 1
+        ethHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        ethHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        ethHistoryLabel = Label(ethHistory, text = "Ethernet", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        ethHistoryLabel.place(x=0, y=0)
+        def EthDisplay():
+            Popup = Toplevel()
+            Popup.title("Current Ethernet Configuration")
+            PopupLabel = LabelFrame(Popup, text="Ethernet ", width=250, height=250)
+            EthDestinationMac = Label(PopupLabel, text="Ethernet Destination Mac: " + ethernetConfig.dmac)
+            EthSourceMac = Label(PopupLabel, text="Ethernet Source Mac: " + ethernetConfig.smac)
+            PopupLabel.pack()
+            EthDestinationMac.pack()
+            EthSourceMac.pack()
+
+        ethHistoryButton = Button(ethHistory, text = "INFO", width=3, height=0, command=EthDisplay)
+        ethHistoryButton.place(x=227, y=1)
+        ethSpinboxLabel = Label(TrafficConfigFrame, text="Eth:")
+        ethSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        ethLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+
     if Config.OSPF[1] == 1 and Config.OSPF[2] == 0:
         Config.OSPF[2] = 1
         ospfHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
@@ -3068,12 +3097,13 @@ def History_Displayer():
         LocationConfig()
         ripHistoryLabel = Label(ripHistory, text = "RIP", font=("Arial", 16), borderwidth=1,  relief="solid",)
         ripHistoryLabel.place(x=0, y=0)
-        def ripDisplay():      
+        def ripDisplay():  
             Popup = Toplevel()
             Popup.title("Current RIP Configuration")
             PopupLabel = LabelFrame(Popup, text="RIP configuration", width=250, height=250)
             PopupRIPRes = Label(PopupLabel, text="RIP Response IP: " + ripConfig.ResponseIP)
             PopupRIPVer = Label(PopupLabel, text="RIP Ver: " + ripConfig.RipVer)
+            PopupLabel.pack()
             PopupRIPRes.pack()
             PopupRIPVer.pack()
         ripHistoryButton = Button(ripHistory, text = "INFO", width=3, height=0, command=ripDisplay)
@@ -3097,6 +3127,7 @@ def History_Displayer():
             PopupsrcIP = Label(PopupLabel, text="Default Source IP Address: " + ipConfig.sourceIp)
             PopupdesIP = Label(PopupLabel, text="Default Destination IP Address: " + ipConfig.destinationIp)
             PopupTIL = Label(PopupLabel, text="Default TIL: " + ipConfig.TIL)
+            PopupLabel.pack()
             PopupsrcIP.pack()
             PopupdesIP.pack()
             PopupTIL.pack()
@@ -3107,6 +3138,96 @@ def History_Displayer():
         ipSpinboxLabel = Label(TrafficConfigFrame, text="IP:")
         ipSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ipLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+
+    if Config.TCP[1] == 1 and Config.TCP[2] == 0:
+        Config.TCP[2] = 1
+        tcpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        tcpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        tcpHistoryLabel = Label(tcpHistory, text = "IP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        tcpHistoryLabel.place(x=0, y=0)
+        def tcpDisplay():      
+            Popup = Toplevel()
+            Popup.title("Current TCP Configuration")
+            PopupLabel = LabelFrame(Popup, text="TCP Configuration", width=250, height=250)
+            PopupPort = Label(PopupLabel, text="TCP Source Port: " + tcpConfig.port)
+            Popupdport = Label(PopupLabel, text="TCP Destination port: " + tcpConfig.dport)
+            Popupip = Label(PopupLabel, text="TCP Source Ip address: " + tcpConfig.ip)
+            Popupdip = Label(PopupLabel, text="TCP Destination Ip address: " + tcpConfig.dip)
+            PopupWindow = Label(PopupLabel, text="TCP Windowing Size: " + tcpConfig.window)
+            PopupPadding = Label(PopupLabel, text="TCP Padding Size: " + tcpConfig.padding)
+            PopupLabel.pack()
+            PopupPort.pack()
+            Popupdport.pack()
+            Popupip.pack()
+            Popupdip.pack()
+            PopupWindow.pack()
+            PopupPadding.pack()
+        tcpHistoryButton = Button(tcpHistory, text = "INFO", width=3, height=0, command=tcpDisplay)
+        tcpHistoryButton.place(x=227, y=1)
+        tcpSpinboxLabel = Label(TrafficConfigFrame, text="TCP:")
+        tcpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        tcpLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+
+    if Config.UDP[1] == 1 and Config.UDP[2] == 0:
+        Config.UDP[2] = 1
+        udpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        udpHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        udpHistoryLabel = Label(udpHistory, text = "UDP", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        udpHistoryLabel.place(x=0, y=0)
+        def udpDisplay():      
+            Popup = Toplevel()
+            Popup.title("Current UDP Configuration")
+            PopupLabel = LabelFrame(Popup, text="UDP Configuration", width=250, height=250)
+            PopupPort = Label(PopupLabel, text="UDP Source Port: " + udpConfig.port)
+            Popupdport = Label(PopupLabel, text="UDP Destination port: " + udpConfig.dport)
+            Popupip = Label(PopupLabel, text="UDP Source Ip address: " + udpConfig.ip)
+            Popupdip = Label(PopupLabel, text="UDP Destination Ip address: " + udpConfig.dip)
+            PopupLabel.pack()
+            PopupPort.pack()
+            Popupdport.pack()
+            Popupip.pack()
+            Popupdip.pack()
+        udpHistoryButton = Button(udpHistory, text = "INFO", width=3, height=0, command=udpDisplay)
+        udpHistoryButton.place(x=227, y=1)
+        udpSpinboxLabel = Label(TrafficConfigFrame, text="UDP:")
+        udpSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        udpLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+
+    if Config.DNS[1] == 1 and Config.DNS[2] == 0:
+        Config.DNS[2] = 1
+        dnsHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
+        dnsHistory.place(x=0, y=(((LocationConfiguration.size - 1) * 30) + 1))
+        LocationConfig()
+        dnsHistoryLabel = Label(dnsHistory, text = "DNS", font=("Arial", 16), borderwidth=1,  relief="solid",)
+        dnsHistoryLabel.place(x=0, y=0)
+        def dnsDisplay():      
+            Popup = Toplevel()
+            Popup.title("Current DNS Configuration")
+            PopupLabel = LabelFrame(Popup, text="DNS Configuration", width=250, height=250)
+            PopupPort = Label(PopupLabel, text="DNS Source Port: " + dnsConfig.port)
+            Popupdport = Label(PopupLabel, text="DNS Destination port: " + dnsConfig.dport)
+            Popupip = Label(PopupLabel, text="DNS Source Ip address: " + dnsConfig.ip)
+            Popupdip = Label(PopupLabel, text="DNS Destination Ip address: " + dnsConfig.dip)
+            Popupclass = Label(PopupLabel, text="DNS Class: " + dnsConfig.Class)
+            Popupcommand = Label(PopupLabel, text="DNS Type: " + dnsConfig.Type)
+            PopupresponseIp = Label(PopupLabel, text="DNS Response IP: " + dnsConfig.AnswerIP)
+            PopupresponseURL = Label(PopupLabel, text="DNS Response URL: " + dnsConfig.AnswerName)
+            PopupLabel.pack()
+            PopupPort.pack()
+            Popupdport.pack()
+            Popupip.pack()
+            Popupclass.pack()
+            Popupcommand.pack()
+            PopupresponseIp.pack()
+            PopupresponseURL.pack()
+            Popupdip.pack()
+        dnsHistoryButton = Button(dnsHistory, text = "INFO", width=3, height=0, command=dnsDisplay)
+        dnsHistoryButton.place(x=227, y=1)
+        dnsSpinboxLabel = Label(TrafficConfigFrame, text="DNS:")
+        dnsSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
+        dnsSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
 
 #Function on the "create Pcap button", checks for errors, then calls the main writing function (PcapWrite())
 #This function is called by the "Create Pcap" button
@@ -3207,12 +3328,14 @@ def createPcap():
             CMPErrorReset()
 
         if Config.RIP[1] == 1:
+            CMPErrorReset()
             IP_checker(ripConfig.ResponseIP) #calls the ip parse function
             ripConfig.ipError[0] = IPErrors.error[0]
             ripConfig.ipError[1] = IPErrors.error[1]
             CMPErrorReset()
 
         if Config.OSPF[1] == 1:
+            CMPErrorReset()
             IP_checker(ospfConfig.mask)
             ospfConfig.maskError[0] = IPErrors.error[0]
             ospfConfig.maskError[1] = IPErrors.error[1]
