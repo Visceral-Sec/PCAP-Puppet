@@ -476,7 +476,6 @@ def pcapWrite():
     pcap_path = os.path.join("Data.txt")
     f = open(pcap_path, "w")
     #More meta information can be added here
-
     if Config.ARP[1] == 1:
         f.write("ar\n")
         # add icmp arp etc here
@@ -525,7 +524,20 @@ def pcapWrite():
         f.write(icmpConfig.Text)
         f.write(icmpID + "\n")
         f.write(seqNum + "\n")
-
+    if Config.UDP[1] == 1:
+        udpID = returnHexNums()
+        seqNum = returnHexNums()
+        f.write("u\n") #udp data
+        # add icmp data etc here
+        f.write("44:44:44:44:44:44" + "\n")
+        f.write("55:55:55:55:55:55" + "\n")
+        f.write(udpConfig.ip + "\n")
+        f.write(udpConfig.dip + "\n")
+        f.write(udpConfig.port + "\n")
+        f.write(udpConfig.dport + "\n")
+        f.write("THIS IS THE UDP DATA, WE HAVENT GOT IT IN THE GUI YET \n")
+        f.write(udpID + "\n")
+        f.write(seqNum + "\n")
     # Unsupported Functions: (Functional on FrontEnd, Backend does not support them)
     # CRTL K CRTL C  To comment
     # CRTL K CRTL U  to uncomment  
@@ -731,18 +743,18 @@ def pcapWrite():
     #     f.write("0\r\n")
     #     f.write("\r\n")
     
-    # if Config.DNS[1] == 1:
-    #     f.write("DNS\r\n")
-    #     f.write(dnsConfig.dip + "\r\n")
-   #       f.write(dnsConfig.ip + "\r\n")
-    #     f.write(dnsConfig.Cport + "\r\n")
-    #     f.write(dnsConfig.Type + "\r\n")
-    #     f.write(dnsConfig.Class + "\r\n")
-    #     f.write(dnsConfig.AnswerIP + "\r\n")
-    #     f.write(dnsConfig.TIL + "\r\n")
-    #     f.write(dnsConfig.AnswerName + "\r\n")
-    #     f.write("0\r\n")
-    #     f.write("\r\n")
+    if Config.DNS[1] == 1:
+        f.write("DNS\r\n")
+        f.write(dnsConfig.dip + "\r\n")
+        f.write(dnsConfig.ip + "\r\n")
+        f.write(dnsConfig.Cport + "\r\n")
+        f.write(dnsConfig.Type + "\r\n")
+        f.write(dnsConfig.Class + "\r\n")
+        f.write(dnsConfig.AnswerIP + "\r\n")
+        f.write(dnsConfig.TIL + "\r\n")
+        f.write(dnsConfig.AnswerName + "\r\n")
+        f.write("0\r\n")
+        f.write("\r\n")
 
     f.write("\0")
 
