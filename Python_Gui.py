@@ -1728,23 +1728,23 @@ def layer4_Displayer(l):
         udpSPort = Entry(layer4_Frame, width=4) #Octect 4 of the ip 
 
         UDPIPLabel.place(x=1,y=70)
-        udpip1.place(x=105,y=70)     
-        udpip2.place(x=135,y=70)
-        udpip3.place(x=165,y=70)
-        udpip4.place(x=195,y=70)
-        udpdot1.place(x=125,y=70)
-        udpdot2.place(x=155,y=70)
-        udpdot3.place(x=185,y=70)
+        udpip1.place(x=135,y=70)     
+        udpip2.place(x=165,y=70)
+        udpip3.place(x=195,y=70)
+        udpip4.place(x=225,y=70)
+        udpdot1.place(x=155,y=70)
+        udpdot2.place(x=185,y=70)
+        udpdot3.place(x=215,y=70)
 
-        UDPDIPLabel.place(x=1,y=135)
-        udpdip1.place(x=4,y=155)     
-        udpdip2.place(x=34,y=155)
-        udpdip3.place(x=64,y=155)
-        udpdip4.place(x=94,y=155)
+        UDPDIPLabel.place(x=1,y=140)
+        udpdip1.place(x=4,y=165)     
+        udpdip2.place(x=34,y=165)
+        udpdip3.place(x=64,y=165)
+        udpdip4.place(x=94,y=165)
 
-        udpddot1.place(x=20,y=155)
-        udpddot2.place(x=50,y=155)
-        udpddot3.place(x=80,y=155)
+        udpddot1.place(x=20,y=165)
+        udpddot2.place(x=50,y=165)
+        udpddot3.place(x=80,y=165)
 
         #Source Label
         UDPSPortLabel.place(x=1,y=40)
@@ -1752,7 +1752,7 @@ def layer4_Displayer(l):
         UDPPortLabel.place(x=1,y=98)
 
         #Source port
-        udpSPort.place(x=70,y=40)
+        udpSPort.place(x=90,y=40)
         #Destination Port
         udpPort.place(x=4,y=118)
 
@@ -1816,13 +1816,13 @@ def layer4_Displayer(l):
         tcpSPort = Entry(layer4_Frame, width=4) #Octect 4 of the ip 
 
         tcpIPLabel.place(x=1,y=70)
-        tcpip1.place(x=105,y=70)     
-        tcpip2.place(x=135,y=70)
-        tcpip3.place(x=165,y=70)
-        tcpip4.place(x=195,y=70)
-        tcpdot1.place(x=125,y=70)
-        tcpdot2.place(x=155,y=70)
-        tcpdot3.place(x=185,y=70)
+        tcpip1.place(x=135,y=70)     
+        tcpip2.place(x=165,y=70)
+        tcpip3.place(x=195,y=70)
+        tcpip4.place(x=225,y=70)
+        tcpdot1.place(x=155,y=70)
+        tcpdot2.place(x=185,y=70)
+        tcpdot3.place(x=215,y=70)
 
         tcpDIPLabel.place(x=1,y=135)
         tcpdip1.place(x=4,y=155)     
@@ -1837,12 +1837,12 @@ def layer4_Displayer(l):
         #Source Label
         tcpSPortLabel.place(x=1,y=40)
         #Destination Label
-        tcpPortLabel.place(x=1,y=98)
+        tcpPortLabel.place(x=1,y=90)
 
         #Source port
-        tcpSPort.place(x=70,y=40)
+        tcpSPort.place(x=90,y=40)
         #Destination Port
-        tcpPort.place(x=4,y=118)
+        tcpPort.place(x=4,y=110)
 
         tcpWindowLabel = Label(layer4_Frame, text = "TCP Windowing Size: ")
         tcpWindow = Entry(layer4_Frame, width=4) #Octect 4 of the ip 
@@ -1925,15 +1925,15 @@ def layer5_Displayer(l):
         dot1 = Label(layer5_Frame, text = ".") # Three dots seperating the fields
         dot2 = Label(layer5_Frame, text = ".")
         dot3 = Label(layer5_Frame, text = ".")
-        sockProxyip1.place(x=105,y=55)     
-        sockProxyip2.place(x=135,y=55)
-        sockProxyip3.place(x=165,y=55)
-        sockProxyip4.place(x=195,y=55)
-        dot1.place(x=125,y=55)
-        dot2.place(x=155,y=55)
-        dot3.place(x=185,y=55)
+        sockProxyip1.place(x=135,y=55)     
+        sockProxyip2.place(x=165,y=55)
+        sockProxyip3.place(x=195,y=55)
+        sockProxyip4.place(x=225,y=55)
+        dot1.place(x=155,y=55)
+        dot2.place(x=185,y=55)
+        dot3.place(x=215,y=55)
 
-        sockProxyPortLabel = Label(layer5_Frame, text="SOCKS  Port IP:")
+        sockProxyPortLabel = Label(layer5_Frame, text="SOCKS Port:")
         sockProxyPortLabel.place(x=1,y=85)
         sockProxyPort = Entry(layer5_Frame, width=4)
         sockProxyPort.place(x=90,y=85)
@@ -2125,13 +2125,13 @@ def layer7_Displayer(l):
         dotReq1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
         dotReq2 = Label(layer7_Frame, text = ".")
         dotReq3 = Label(layer7_Frame, text = ".")
-        dhcpReqip1.place(x=115,y=35)     
-        dhcpReqip2.place(x=145,y=35)
-        dhcpReqip3.place(x=175,y=35)
-        dhcpReqip4.place(x=205,y=35)
-        dotReq1.place(x=135,y=35)
-        dotReq2.place(x=165,y=35)
-        dotReq3.place(x=195,y=35)
+        dhcpReqip1.place(x=145,y=30)     
+        dhcpReqip2.place(x=175,y=30)
+        dhcpReqip3.place(x=205,y=30)
+        dhcpReqip4.place(x=235,y=30)
+        dotReq1.place(x=160,y=30)
+        dotReq2.place(x=190,y=30)
+        dotReq3.place(x=220,y=30)
 
         dhcpMessageText = Label(layer7_Frame, text="DHCP Message Type:")
         dhcpMessageVar = StringVar(layer7_Frame)
@@ -2151,7 +2151,7 @@ def layer7_Displayer(l):
         dhcpDomainText.place(x=2,y=160)
         dhcpDomain.place(x=4,y=180)
 
-        dhcpDNSText = Label(layer7_Frame, text="DHCP (Offer) DNS Server IP:")
+        dhcpDNSText = Label(layer7_Frame, text="DHCP DNS Server: ")
         dhcpDNSText.place(x=2,y=205)
         dhcpDomainip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
         dhcpDomainip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
@@ -2174,7 +2174,7 @@ def layer7_Displayer(l):
         dhcpHost.place(x=4,y=250)
 
 
-        dhcpRouterText = Label(layer7_Frame, text="DHCP (Offer) Router IP:")
+        dhcpRouterText = Label(layer7_Frame, text="DHCP Router IP:")
         dhcpRouterText.place(x=2,y=275)
         dhcpRouterip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
         dhcpRouterip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
@@ -2238,46 +2238,46 @@ def layer7_Displayer(l):
         TelCommand1.place(x=4,y=50)
 
         TelCommand2Text = Label(layer7_Frame, text="Telnet Command 2:")
-        TelCommand2Text.place(x=1,y=65)
+        TelCommand2Text.place(x=1,y=75)
         TelCommand2 = Entry(layer7_Frame, width=30)
-        TelCommand2.place(x=4,y=90)
+        TelCommand2.place(x=4,y=100)
       
         TelCommand3Text = Label(layer7_Frame, text="Telnet Command 3:")
-        TelCommand3Text.place(x=1,y=105)
+        TelCommand3Text.place(x=1,y=125)
         TelCommand3 = Entry(layer7_Frame, width=30)
-        TelCommand3.place(x=4,y=130)
+        TelCommand3.place(x=4,y=150)
 
         TelCommand4Text = Label(layer7_Frame, text="Telnet Command 4:")
-        TelCommand4Text.place(x=1,y=145)
+        TelCommand4Text.place(x=1,y=175)
         TelCommand4 = Entry(layer7_Frame, width=30)
-        TelCommand4.place(x=4,y=170)
+        TelCommand4.place(x=4,y=200)
 
         TelCommand5Text = Label(layer7_Frame, text="Telnet Command 5:")
-        TelCommand5Text.place(x=1,y=185)
+        TelCommand5Text.place(x=1,y=225)
         TelCommand5 = Entry(layer7_Frame, width=30)
-        TelCommand5.place(x=4,y=210)
+        TelCommand5.place(x=4,y=250)
 
         TelnetCommandText = Label(layer7_Frame, text="Telnet Commands:")
         TelnetCommandVar = StringVar(layer7_Frame)
         TelnetCommandVar.set("COMMAND:")
         TelnetCommand = OptionMenu(layer7_Frame, TelnetCommandVar, "SE","NOP","DM","BRK","IP","AO","AYT","EC","GA","SB","WILL","WONT","DO","DON'T","IAC")
-        TelnetCommand.place(x=4,y=250)
-        TelnetCommandText.place(x=4,y=230)
+        TelnetCommand.place(x=4,y=300)
+        TelnetCommandText.place(x=4,y=275)
         
 
         TelnetOperationText = Label(layer7_Frame, text="Telnet Operation :")
         TelnetOperationVar = StringVar(layer7_Frame)
         TelnetOperationVar.set("Operation:")
         TelnetOperation = OptionMenu(layer7_Frame, TelnetOperationVar, "WILL", "DO","WONT","DONT")
-        TelnetOperation.place(x=4,y=300)
-        TelnetOperationText.place(x=4,y=280)
+        TelnetOperation.place(x=4,y=350)
+        TelnetOperationText.place(x=4,y=330)
         
         TelnetOperationOptionText = Label(layer7_Frame, text="Telnet Operation Option :")
         TelnetOperationOptionVar = StringVar(layer7_Frame)
         TelnetOperationOptionVar.set("Operation Option")
         TelnetOperationOption = OptionMenu(layer7_Frame, TelnetOperationOptionVar, "Echo", "Suppress go ahead","status","Timing Mark","Terminal Type", "Window Size","Terminal Speed","Remote Flow Control","Linemode","Environmental Variables")
-        TelnetOperationOption.place(x=4,y=350)
-        TelnetOperationOptionText.place(x=4,y=330)
+        TelnetOperationOption.place(x=4,y=400)
+        TelnetOperationOptionText.place(x=4,y=380)
 
         def telnetdone():
             Config.TELNET[1] = 1
@@ -2296,7 +2296,7 @@ def layer7_Displayer(l):
     if l == "IRC":
         IRCCommandVar = StringVar(layer7_Frame)
         IRCCommandVar.set("COMMAND:")
-        IRCCommandText = Label(layer7_Frame, text="IRC Command (WIP): ") 
+        IRCCommandText = Label(layer7_Frame, text="IRC Command: ") 
         IRCCommand = OptionMenu(layer7_Frame, IRCCommandVar, "ADMIN", "AWAY", "CNOTICE", "CPRIVMSG", "CONNECT", "DIE" ,"ENCAP", "ERROR", "HELP","INFO", "INVITE", "JOIN", "KICK", "KILL", "KNOCK", "LINKS","LIST","LUSERS","MODE","MOTD","NAMES","NAMESX","OPER","PART","PASS","PING","PONG","PRIVMSG","QUIT","REHASH","RESTART","RULES","SERVER","SERVICE","SERVLIST","SQUERY","SQUIT","SETNAME","SILENCE","STATS","SUMMON","TOPIC","TRACE","UHNAMES","USER","VERISON","WALLOPS","WATCH","WHO","WHOIS","WHOWAS")
         IRCCommand.place(x=120,y=5)
         IRCCommandText.place(x=2,y=10)
@@ -2308,9 +2308,9 @@ def layer7_Displayer(l):
 
 
         IRCUserText = Label(layer7_Frame, text="IRC User Name:")
-        IRCUserText.place(x=2,y=140)
+        IRCUserText.place(x=2,y=160)
         IRCUser = Entry(layer7_Frame, width=30)
-        IRCUser.place(x=4,y=160)
+        IRCUser.place(x=4,y=180)
 
         def ircdone():
             Config.IRC[1] = 1
@@ -2333,35 +2333,35 @@ def layer7_Displayer(l):
         dot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
         dot2 = Label(layer7_Frame, text = ".")
         dot3 = Label(layer7_Frame, text = ".")
-        ip1.place(x=105,y=5)     
-        ip2.place(x=135,y=5)
-        ip3.place(x=165,y=5)
-        ip4.place(x=195,y=5)
-        dot1.place(x=125,y=5)
-        dot2.place(x=155,y=5)
-        dot3.place(x=185,y=5)
+        ip1.place(x=125,y=5)     
+        ip2.place(x=155,y=5)
+        ip3.place(x=185,y=5)
+        ip4.place(x=215,y=5)
+        dot1.place(x=145,y=5)
+        dot2.place(x=175,y=5)
+        dot3.place(x=205,y=5)
         # Source Port Placement
         sourcePortText = Label(layer7_Frame, text = "FTP Source Port:")
         sourcePort = Entry(layer7_Frame, width=6)
         sourcePortText.place(x=2, y=30)
-        sourcePort.place(x=100,y=30)
+        sourcePort.place(x=125,y=30)
         # Source Ip
-        ipsrctext = Label(layer7_Frame, text = "FTP Destination IP:")
+        ipsrctext = Label(layer7_Frame, text = "FTP Source IP:")
         ipsrctext.place(x=2,y=55)
         ipsrc1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
         ipsrc2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
         ipsrc3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
         ipsrc4 = Entry(layer7_Frame, width=2) #Octect 4 of the ip 
-        ipsrc1.place(x=105,y=55)     
-        ipsrc2.place(x=135,y=55)
-        ipsrc3.place(x=165,y=55)
-        ipsrc4.place(x=195,y=55)
+        ipsrc1.place(x=135,y=55)     
+        ipsrc2.place(x=165,y=55)
+        ipsrc3.place(x=195,y=55)
+        ipsrc4.place(x=225,y=55)
         dotsrc1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
         dotsrc2 = Label(layer7_Frame, text = ".")
         dotsrc3 = Label(layer7_Frame, text = ".")
-        dotsrc1.place(x=125,y=60)
-        dotsrc2.place(x=155,y=60)
-        dotsrc3.place(x=185,y=60)
+        dotsrc1.place(x=155,y=60)
+        dotsrc2.place(x=185,y=60)
+        dotsrc3.place(x=215,y=60)
 
         #Radio button (ftp protocol ver)
         ftptext = Label(layer7_Frame, text = "FTP Protocol Verison:")
@@ -2372,13 +2372,13 @@ def layer7_Displayer(l):
         tftpFile = Entry(layer7_Frame, width=30)
         varftp = IntVar()
         def uftpcmd():
-            uftptext.place(x=30, y=150)
-            uftpFile.place(x=34, y=170)
+            uftptext.place(x=1, y=150)
+            uftpFile.place(x=4, y=170)
             ftpConfig.type[1] = 0
             ftpConfig.type[0] = 1
         def tftpcmd():
-            tftptext.place(x=30, y=150)
-            tftpFile.place(x=34, y=170)
+            tftptext.place(x=1, y=150)
+            tftpFile.place(x=4, y=170)
             ftpConfig.type[1] = 1
             ftpConfig.type[0] = 0
 
@@ -2419,7 +2419,7 @@ def layer7_Displayer(l):
         #Target Website
         httptext = Label(layer7_Frame, text = "Host URL:")
         httptext.place(x=2,y=4)
-        websiteEntry = Entry(layer7_Frame, width=30)
+        websiteEntry = Entry(layer7_Frame, width=25)
         websiteEntry.place(x=80,y=4)
         #User Agent
         httpAgenttext = Label(layer7_Frame, text = "User-Agent:")
@@ -2446,18 +2446,18 @@ def layer7_Displayer(l):
             PostDataEntry.place(x=2,y=200)
         def GET():
             text = Label(layer7_Frame, text = "GET Request Paramaters")
-            text.place(x=80, y= 270)
+            text.place(x=80, y= 290)
             geturi = Label(layer7_Frame, text = "GET Request URI:")
-            geturi.place(x=2, y=290)
-            GetUriEntry.place(x=2, y=320)
+            geturi.place(x=2, y=320)
+            GetUriEntry.place(x=2, y=340)
             referertext = Label(layer7_Frame, text = "Referrer:")
-            referertext.place(x=2, y = 355)
-            referer.place(x=2, y = 380)
+            referertext.place(x=2, y = 365)
+            referer.place(x=2, y = 385)
 
         postButton = Radiobutton(layer7_Frame, text = "POST Request", variable=postVar, command=POST)
         getButton = Radiobutton(layer7_Frame, text = "GET Request", variable=getVar, command=GET)
-        postButton.place(x=40, y=60)
-        getButton.place(x=140, y=60)
+        postButton.place(x=20, y=60)
+        getButton.place(x=160, y=60)
         def httpdone():
             Config.HTTP[1] = 1
             httpConfig.URL = websiteEntry.get()
@@ -2474,7 +2474,7 @@ def layer7_Displayer(l):
     if l == "HTTPS":
         HTTPStext = Label(layer7_Frame, text = "Host URL:")
         HTTPStext.place(x=2,y=4)
-        HTTPSwebsiteEntry = Entry(layer7_Frame, width=30)
+        HTTPSwebsiteEntry = Entry(layer7_Frame, width=20)
         HTTPSwebsiteEntry.place(x=80,y=4)
         #User Agent
         HTTPSAgenttext = Label(layer7_Frame, text = "User-Agent:")
@@ -2497,26 +2497,26 @@ def layer7_Displayer(l):
             PosturiLabel.place(x=2,y=115)
             HTTPSPosturiEntry.place(x=2,y=140)
             PostDataLabel = Label(layer7_Frame, text = "POST Request Data:")
-            PostDataLabel.place(x=2,y=175)
-            HTTPSPostDataEntry.place(x=2,y=200)
+            PostDataLabel.place(x=2,y=180)
+            HTTPSPostDataEntry.place(x=2,y=210)
         def GET():
             text = Label(layer7_Frame, text = "GET Request Paramaters")
-            text.place(x=80, y= 270)
+            text.place(x=80, y= 290)
             geturi = Label(layer7_Frame, text = "GET Request URI:")
-            geturi.place(x=2, y=290)
-            HTTPSGetUriEntry.place(x=2, y=320)
+            geturi.place(x=2, y=320)
+            HTTPSGetUriEntry.place(x=2, y=340)
             referertext = Label(layer7_Frame, text = "Referrer:")
-            referertext.place(x=2, y = 355)
-            HTTPSreferer.place(x=2, y = 380)
+            referertext.place(x=2, y = 380)
+            HTTPSreferer.place(x=2, y = 400)
 
         HTTPSpostButton = Radiobutton(layer7_Frame, text = "POST Request", variable=HTTPSpostVar, command=POST)
         HTTPSgetButton = Radiobutton(layer7_Frame, text = "GET Request", variable=HTTPSgetVar, command=GET)
-        HTTPSpostButton.place(x=40, y=60)
-        HTTPSgetButton.place(x=140, y=60)
+        HTTPSpostButton.place(x=20, y=60)
+        HTTPSgetButton.place(x=160, y=60)
         SSLEntry = Text(layer7_Frame, height=2, width=34)
         SSLEntryLabel = Label(layer7_Frame, text = "SSL Key (WIP)")
-        SSLEntryLabel.place(x=2, y=420)
-        SSLEntry.place(x=2,y=442)
+        SSLEntryLabel.place(x=2, y=440)
+        SSLEntry.place(x=2,y=462)
         def httpsdone():
             Config.HTTP[1] = 1
             httpsConfig.URL = HTTPSwebsiteEntry.get()
@@ -2529,7 +2529,7 @@ def layer7_Displayer(l):
             History_Displayer()
 
         HTTPSb = Button(layer7_Frame, text = "✓", command=httpsdone)
-        HTTPSb.place(x=175, y=480, width=100) 
+        HTTPSb.place(x=175, y=510, width=100) 
     if l == "DNS":
         DNStext = Label(layer7_Frame, text = "Query URL:")
         iptext = Label(layer7_Frame, text = "DNS Destination Server IP:")
@@ -2541,41 +2541,43 @@ def layer7_Displayer(l):
         dot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
         dot2 = Label(layer7_Frame, text = ".")
         dot3 = Label(layer7_Frame, text = ".")
-        ip1.place(x=145,y=5)     
-        ip2.place(x=175,y=5)
-        ip3.place(x=205,y=5)
-        ip4.place(x=235,y=5)
-        dot1.place(x=165,y=5)
-        dot2.place(x=195,y=5)
-        dot3.place(x=225,y=5)
+        ip1.place(x=5,y=25)     
+        ip2.place(x=35,y=25)
+        ip3.place(x=65,y=25)
+        ip4.place(x=95,y=25)
+        
+        dot1.place(x=20,y=25)
+        dot2.place(x=50,y=25)
+        dot3.place(x=80,y=25)
         DNSCommunicationPortText = Label(layer7_Frame, text= "DNS Communication Port:")
-        DNSCommunicationPortText.place(x=2, y=30)
+        DNSCommunicationPortText.place(x=2, y=45)
         DNSCommunicationPort = Entry(layer7_Frame, width=3)
-        DNSCommunicationPort.place(x=150,y=30)
-        DNStext.place(x=2,y=50)
+        DNSCommunicationPort.place(x=175,y=45)
+        
+        DNStext.place(x=2,y=65)
         DNSQuery = Text(layer7_Frame, height=1, width=33)
-        DNSQuery.place(x=4,y=70)
+        DNSQuery.place(x=4,y=85)
 
         DNSTypeVar = StringVar(layer7_Frame)
         DNSTypeVar.set("Type")
         DNSTypeText = Label(layer7_Frame, text="DNS Query Type: ") 
         DNSType = OptionMenu(layer7_Frame, DNSTypeVar, "A", "AAAA", "ALIAS", "CNAME", "MX", "NS" ,"SOA", "SRV", "TXT")
-        DNSTypeText.place(x=2, y=95)
-        DNSType.place(x=100,y=90)
+        DNSTypeText.place(x=2, y=105)
+        DNSType.place(x=125,y=105)
         DNSNameText = Label(layer7_Frame, text= "DNS Answer Name:")
         DNSName = Entry(layer7_Frame, width=33)
-        DNSNameText.place(x=2, y=120)
-        DNSName.place(x=2,y=140)
+        DNSNameText.place(x=2, y=135)
+        DNSName.place(x=2,y=155)
 
         DNSClassText = Label(layer7_Frame, text= "DNS Class:")
-        DNSClassText.place(x=2,y=175)
+        DNSClassText.place(x=2,y=180)
         DNSClassVar = StringVar(layer7_Frame)
         DNSClassVar.set("Class (IN Default)")
         DNSClass = OptionMenu(layer7_Frame, DNSClassVar, "IN", "CS", "CH", "HS")
-        DNSClass.place(x=70,y=170)
+        DNSClass.place(x=85,y=175)
 
         DNSClassText = Label(layer7_Frame, text= "DNS Answer Address:")
-        DNSClassText.place(x=2,y=215)
+        DNSClassText.place(x=2,y=225)
         Ansip1 = Entry(layer7_Frame, width=2) #Octect 1 of the IP
         Ansip2 = Entry(layer7_Frame, width=2) #Octect 2 of the ip 
         Ansip3 = Entry(layer7_Frame, width=2) #Octect 3 of the ip 
@@ -2583,18 +2585,18 @@ def layer7_Displayer(l):
         Ansdot1 = Label(layer7_Frame, text = ".") # Three dots seperating the fields
         Ansdot2 = Label(layer7_Frame, text = ".")
         Ansdot3 = Label(layer7_Frame, text = ".")
-        Ansip1.place(x=125,y=215)     
-        Ansip2.place(x=155,y=215)
-        Ansip3.place(x=185,y=215)
-        Ansip4.place(x=215,y=215)
-        Ansdot1.place(x=145,y=215)
-        Ansdot2.place(x=175,y=215)
-        Ansdot3.place(x=205,y=215)
+        Ansip1.place(x=155,y=225)     
+        Ansip2.place(x=185,y=225)
+        Ansip3.place(x=215,y=225)
+        Ansip4.place(x=245,y=225)
+        Ansdot1.place(x=175,y=225)
+        Ansdot2.place(x=205,y=225)
+        Ansdot3.place(x=235,y=225)
         
         DNSTimeText = Label(layer7_Frame, text= "DNS Answer Time to Live: ")
-        DNSTimeText.place(x=2,y=245)
+        DNSTimeText.place(x=2,y=255)
         DNSTime = Entry(layer7_Frame, width=5)
-        DNSTime.place(x=145,y=245)
+        DNSTime.place(x=185,y=255)
 
         def dnsdone():
             dot = "."
