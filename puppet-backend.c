@@ -584,15 +584,15 @@ void assemble_packet(char packetType[2], FILE *fpWrite)
     free(pcapOut);
 }
 
-void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer)
+void copy_data_into(char dataStream[], char arrOut[], uint16_t* linePointer) //file array in, the array its printing out to and the pointer to the linePointer variable
 {
     uint16_t x = 0;
-    while (dataStream[(*linePointer)] != '\n')
+    while (dataStream[(*linePointer)] != '\n')//(*linePointer) accesses the value of linePointer and allows it to be changed outside of scope
     {
         arrOut[x++] = dataStream[(*linePointer)++];
     }
     (*linePointer) += 1;
-    return; //return to one after the CRLF (Data.txt appears to be CRLF)
+    return; //return to one after the line feed at the end of the packet
 }
 
 int read_data(char sMac[], char dMac[], char target[], char source[], char sPort[], char dPort[], char payload[], char packetType[], char identification[], char seqNum[], char dataStream[], uint16_t* linePointer)
