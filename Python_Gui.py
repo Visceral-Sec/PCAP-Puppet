@@ -1,26 +1,49 @@
-import os
-from tkinter import *  # Importing tkinter
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    PCAP_PUPPET GUI    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Code Synposis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Libraries Used For Calling the C Backend
+import ctypes
+import os
+from typing import NewType  
+from ctypes import *
 
+#Libraries Used for the GUI
+from tkinter import *
+import tkinter
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Code Synposis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   Pcap Puppet GUI uses the Tkinter Library for creating the GUI.    
+# 
+#   Pcap_Puppet GUI follows a set metholodogy for each Protocol:
+#  
+#   Protocol is Chosen --> Input is Taken --> Protocol Information is Displayed/stored in specific Classes --> Input Checked For Errors  --> Input is written into data.txt/Backend is called
+#                      
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Frames/Master ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+#Pcap_Puppet GUI Guidance (Good Youtube Tutorial for those wanting to help with GUI)
 #https://www.youtube.com/watch?v=YXPyB4XeYLA
 
 #Tkinter works a bit like HTML, but instead of objects etc we have widgets
 
 master = Tk() #This is the root of the entire gui
 master.geometry('779x582') # sets default size
-master.title("PCAP PUPPET")
-#master.resizable(width=False, height=False) # prevents the size from being adjusted
+master.title("PCAP PUPPET") #Setting the Title
+master.resizable(False, False) #Prevents the GUI from being resizable
 
 #change this depending on path
 path = "Project"
+
+#Path to the C backend: (Looks for "PcapPuppet_BackEnd")
+#Compiled Using "Gcc - shared Puppet_BackEnd.C -o puppet_backend.exe "
+backend_file = "puppet_backend.exe"
+#Pcap Puppet BackEnd
+
+#Makes the C library callable
+puppet_backend = ctypes.CDLL(backend_file)
 
 #Frame for Pcap Settings
 sConfig_Frame= Frame(master)
@@ -29,7 +52,6 @@ sConfig_Frame.place(x=510, y = 40)
 #Frame for Pcap History
 cConfig_Frame= Frame(master)
 cConfig_Frame.place(x=510, y = 250)
-
 
 #Frame for layer configuraiton
 lconfig_Frame = Frame(master)
@@ -49,8 +71,6 @@ pConfig_Frame.grid(row = (0), column = 1, sticky = W)
 pCreate_Frame = Frame(master)
 pCreate_Frame.place(x=515, y = 445)
 
-#
-
 
 #Frame for Pcap History/Current Traffic Configuraiton
 cConfigLabel = LabelFrame(master, text = "", width=268, height=195)
@@ -64,6 +84,28 @@ TrafficConfigFrame.place(x = 618, y = 66)
 
 TrafficSizeFrame = LabelFrame(master, text = "", width=108, height=174)
 TrafficSizeFrame.place(x = 511, y = 66)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Start_Window ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Popup window for the GUI 
+
+Startup = Toplevel(master)
+Startup.title("Pcap Puppet Introduction")
+Startup.resizable(False, False)
+StartupLabel = LabelFrame(Startup, text="", width=250, height=250)
+StartupLabel.pack()
+StartupWelcome = Label(StartupLabel, text="Welcome to Pcap_Puppet!")
+StartupHelp = Label(StartupLabel, text="If this is the first time you've used Pcap_Puppet please refer to PcapPuppetIntroduction.pdf for guidance")
+StartupSupported = Label(StartupLabel, text="Our currently support Protocols are: ")
+StartupProtocol1 = Label(StartupLabel, text="ICMP")
+StartupProtocol2 = Label(StartupLabel, text="ARP")
+StartupProtocol3 = Label(StartupLabel, text="DNS")
+StartupWelcome.pack()
+StartupHelp.pack()
+StartupProtocol1.pack()
+StartupProtocol2.pack()
+StartupProtocol3.pack()
+
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Labels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,52 +122,68 @@ tConfiguration.grid(row = 0, column = 1, sticky = W)
 tPcapConfig = Label(tConfig_Frame, text = "PCAP SETTINGS", font=("Arial", 25), borderwidth=1,  relief="solid",)
 tPcapConfig.grid(row = 0, column = 2, sticky = W)
 
-#History
+#Current Traffic Label
 CurrentTraffic = Label(master, text = "Current Traffic", font=("Arial", 16), borderwidth=1,  relief="solid", width=22)
 CurrentTraffic.place(x = 510, y = 240)
 
-
+#Current Traffic Configuration Label
 TrafficConfiguration = Label(master, text = "Traffic  Configuration", font=("Arial", 13), borderwidth=1,  relief="solid",)
 TrafficConfiguration.place(x = 617, y = 43)
 
-
 #Pcap Specific Settings
-
 TrafficConfiguration = Label(master, text = " Traffic Size   ", font=("Arial", 13), borderwidth=1,  relief="solid",)
 TrafficConfiguration.place(x = 510, y = 43)
 
-SizeEntry = Entry(TrafficSizeFrame, width=4)
-SizeEntry.place(x=70, y=5)
+#Pcap Size Entry:
+SizeEntry = Entry(TrafficSizeFrame, width=10)
+SizeEntry.place(x=4, y=30)
 
-SizeEntryLabel = Label(TrafficSizeFrame,text="Traffic Size:")
+#Pcap Max Packet Size
+SizeEntryLabel = Label(TrafficSizeFrame,text="Max Packet Size:")
 SizeEntryLabel.place(x=1, y=5)
 
-#### Code to be organised once Matthew is finished so I can combine it (cba to do pull requests)
+#Wireshark Label 
+WireSharkLabel = Label(TrafficSizeFrame,text="Wireshark Version:")
+WireSharkLabel.place(x=1, y=50)
 
-class LocationConfiguration:
-        size = 1
-    
+#Wiresharkvar
+wiresharkVar = StringVar(TrafficSizeFrame)
+wiresharkVar.set("3.4.5")
+wiresharkOption = OptionMenu(TrafficSizeFrame, wiresharkVar,"3.4.5")
+wiresharkOption.place(x=1, y=70)
 
-####
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Classes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# This all classes. Currently, Classes are used for holding user inputs as well as potential errors.
-# Classes are used because they have a wider scope than the function they are in, so they are used for returning values.
+# Classes are used for holding user inputs as well as potential errors.
+# Classes are pivotal to Pcap_Puppet. They can be used in Tkinter to return values in functions. 
+# Functions used in Tkinter are unable to return Values, therefore we need to make classes to store and load values through.
 
 #Layer 2 Classes
+
 class ethernetConfig:
     dmac = ""
     smac = ""
+    smacerror = [0,0,0,0]
+    dmacerror = [0,0,0,0]
+    size = ""
+
 class wifiConfig:
     reciver = ""
     transmitter = ""
     destination = ""
     source = ""
     bss = ""
+    bssErrors = [0,0,0,0]
+    reciverErrors = [0,0,0,0]
+    transmitterErrors = [0,0,0,0]
+    destinationErrors = [0,0,0,0]
+    sourceErrors = [0,0,0,0]
     phy = ""
     mcs = ""
     Freq = ""
     DataR = ""
     Channel = ""
+    size = ""
+
 class arpConfig:
     sendermac = ""
     targetmac = ""
@@ -135,13 +193,16 @@ class arpConfig:
     dmacerror = [0,0,0,0]
     iperror = [0,0]
     diperror = [0,0]
-    size = [0]
+    size = ""
 
 #Layer 3 Classes
 class ipConfig:
     destinationIp = ""
     sourceIp = ""
     TIL = ""
+    iperror = [0,0]
+    diperror = [0,0]
+    size = ""
 class icmpConfig:
     icmptext = ""
     ip = ""
@@ -152,22 +213,30 @@ class icmpConfig:
     dmacerror = [0,0,0,0]
     iperror = [0,0]
     diperror = [0,0]
-    size = [0]
+    size = ""
     Text = ""
 class ripConfig:
     ResponseIP = ""
+    ip = ""
+    port = ""
+    dport = ""
+    dip = ""
+    port = ""
     RipVer = ""
-    size = [0]
+    size = ""
+    ipError = [0,0]
 class ospfConfig:
     sourcerouter = ""
     backuprouter = ""
-    message = ""
     mask = ""
+    sourcerouterError = [0,0]
+    backuprouterError = [0,0]
+    maskError = [0,0]
+    message = ""
     size = ""
-class ipConfig:
-    sourceIp = ""
-    destinationIp = ""
+    dip = ""
     TIL = ""
+
 
 #Layer 4 UDP/TCP
 class udpConfig:
@@ -175,6 +244,9 @@ class udpConfig:
     dport = ""
     ip = ""
     dip = ""
+    ipError = [0,0]
+    dipError = [0,0]
+    size = ""
 class tcpConfig:
     port = ""
     dport = ""
@@ -182,12 +254,15 @@ class tcpConfig:
     dip = ""
     window = ""
     padding = ""
-
+    ipError = [0,0]
+    dipError = [0,0]
+    size = ""
 #Layer 5
 
 class socksConfig:
     Auth = ""
     DIP = ""
+    ipError = [0,0]
     DPort = ""
     ID = ""
     Config = ""
@@ -199,11 +274,22 @@ class netbiosConfig:
     Datagram = ""
     Service = ""
     size  = ""
+    port = ""
+    dport = "187"
+    ip = ""
+    window = ""
+    padding = ""
+    dip = ""
+
 class smbConfig:
     cid = ""
     command = ""
     implementation = ""
     size = ""
+    ip = ""
+    dip = ""
+    sport = ""
+    dport = "137"
 
 #layer 6
 
@@ -213,7 +299,7 @@ class tlsConfig:
     size = ""
 class sshConfig:
     placeholder = ""
-
+    size = ""
 
 #Layer 7
 
@@ -228,6 +314,14 @@ class dhcpConfig:
     RouterIP = ""
     SubnetMask = ""
     size = ""
+    ip = ""
+    dipError = [0,0]
+    reqError = [0,0]
+    domainError = [0,0]
+    RouterError = [0,0]
+    maskError = [0,0]
+    port = "68"
+    sport = "67"
 class telnetConfig:
     Rcomand1 = ""
     Rcomand2 = ""
@@ -238,11 +332,24 @@ class telnetConfig:
     operation = ""
     operationOption = ""
     size = ""
+    dport = ""
+    port = ""
+    ip = ""
+    dip = ""
+    padding = ""
+    window = ""
 class ircConfig:
     command = ""
     message = ""
     Name = ""
     size = ""
+    sport = ""
+    dport = "6666"
+    window = ""
+    padding = ""
+    port = "6667"
+    dip = ""
+    ip = ""
 class ftpConfig:
     ip = ""
     dip = ""
@@ -251,6 +358,12 @@ class ftpConfig:
     file = ""
     size = ""
     type = [0,0]
+    iperror = [0,0]
+    diperror = [0,0]
+    window = ""
+    padding = ""
+    dport = "21"
+    port = "20"
 class httpConfig:
     URL = ""
     UserAgent = ""
@@ -259,6 +372,12 @@ class httpConfig:
     GetReferrer = ""
     PostData = ""
     size = ""
+    ip = ""
+    dip = ""
+    dport = "80"
+    port = ""
+    window = ""
+    padding = ""
 class httpsConfig:
     URL = ""
     UserAgent = ""
@@ -268,6 +387,12 @@ class httpsConfig:
     PostData = ""
     size = ""
     SSLKey = ""
+    ip = ""
+    dip = ""
+    dport = "443"
+    port = ""
+    window = ""
+    padding = ""
 class dnsConfig:
     dip = ""
     Cport = ""
@@ -276,11 +401,17 @@ class dnsConfig:
     AnswerIP = ""
     TIL = ""
     AnswerName = ""
-
-# Misc:
-
-class TrafficSize:
+    dipError = [0,0]
     size = ""
+    ip = ""
+    port = "57"
+    dport = "58"
+
+# Misc Classes:
+
+#Used for Spinboxes
+class TrafficSize:
+    size = 0
 
     #Used for configuring where to put spinboxes (Locations change depending on previous choices (e.g dynamic locations))
 class LocationConfiguration:
@@ -291,16 +422,13 @@ class LocationConfiguration:
         yl = 0
 
 #These Classes exist for error checking purposes and checks if the protocol is being used
-class Config:
-    #Layer 2
     #First Array indicates their is an error
-    # Second array indicates if it's been chosen
+    #Second array indicates if it's been chosen
     # third array value indicates if it's been displayed (to prevent from it display again)
+class Config:
     Ethernet=[0,0,0]
-    TokenRing=[0,0,0]
     Wifi=[0,0,0]
     #Layer 3
-    NAT=[0,0,0]
     ICMP=[0,0,0]
     ARP=[0,0,0]
     RIP=[0,0,0]
@@ -328,57 +456,298 @@ class Config:
     HTTPS=[0,0,0]
     DNS=[0,0,0]
 
+#Error Checking Classes. Thesea are used in the Error checking functions, They exist as seperate classes so that they can be used in error checking functions and then set into other classes (Allows modular use of the error checking function)
 class IPErrors:
     error = [0,0]
 class MACErrors:
     error = [0,0,0,0]
-
 class PcapConfig:
     wiresharkVER = "3.4.5"
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# This contains every function used in the program.
-# layer 3 is now the prefered method. Issues with layer 2 were only solved using a new geometry manage (.place()) which allows for more precise placement.
-#This function writes to a txt doc which the c function will use to create the pcap
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#This Function is called right at the End of the Program. It writes as the information stored in the classes above to a data.txt to be used by the Backend to generate the pcap
 def pcapWrite():
     #The library to write to files is very similar to that of C file.io library
-    pcap_path = os.path.join(path, "PlaceholderPcap.txt")
+    pcap_path = os.path.join("Data.txt")
     f = open(pcap_path, "w")
 
     f.write("meta\n") 
-    f.write(PcapConfig.wiresharkVER + "\n")
-    #add more meta information here
+    f.write(PcapConfig.wiresharkVER + "\r\n")
+    #More meta information can be added here
     f.write("end\n")
-
     f.write("packet data\n")
+
+    if Config.ARP[1] == 1:
+        f.write("ar\r\n")
+        # add icmp data etc here
+        f.write(arpConfig.senderip + "\r\n")
+        f.write(arpConfig.targetip + "\r\n")
+        f.write(arpConfig.sendermac + "\r\n")
+        f.write(arpConfig.targetmac+ "\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write("ar\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write(arpConfig.senderip + "\r\n")
+        f.write(arpConfig.targetip + "\r\n")
+        f.write(arpConfig.sendermac + "\r\n")
+        f.write(arpConfig.targetmac+ "\r\n")
+        f.write("\r\n")
 
     #if ICMP is selected.
     if Config.ICMP[1] == 1:
-        f.write("ICMP\n")
+        f.write("ia\r\n")
         # add icmp data etc here
-        f.write(icmpConfig.ip + "\n")
-        f.write(icmpConfig.mac + "\n")
-        f.write(icmpConfig.dip + "\n")
-        f.write(icmpConfig.dmac + "\n")
-        f.write(icmpConfig.Text +"\n")
-        f.write("end\n")
+        f.write(icmpConfig.mac + "\r\n")
+        f.write(icmpConfig.dmac + "\r\n")
+        f.write(icmpConfig.ip + "\r\n")
+        f.write(icmpConfig.dip + "\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write(icmpConfig.Text + "\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write("ia\r\n")
+        f.write(icmpConfig.mac + "\r\n")
+        f.write(icmpConfig.dmac + "\r\n")
+        f.write(icmpConfig.ip + "\r\n")
+        f.write(icmpConfig.dip + "\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write(icmpConfig.Text + "\r\n")
+        f.write("00\r\n")
+        f.write("00\r\n")
+        f.write("\r\n")
 
-    if Config.ARP[1] == 1:
-        f.write("ARP\n")
-        # add icmp data etc here
-        f.write(arpConfig.senderip + "\n")
-        f.write(arpConfig.targetip + "\n")
-        f.write(arpConfig.sendermac + "\n")
-        f.write(arpConfig.targetmac+ "\n")
-        f.write("end\n")
+    # Unsupported Functions: (Functional on FrontEnd, Backend does not support them)
+    # CRTL K CRTL C  To comment
+    # CRTL K CRTL U  to uncomment  
 
-    f.write("end\n")
+    # if Config.Ethernet[1] == 1:
+    #     f.write("Eth\r\n")
+    #     f.write(ethernetConfig.dmac + "\r\n")
+    #     f.write(ethernetConfig.smac + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
 
+    # if Config.Wifi[1] == 1:
+    #     f.write("Wifi\n")
+    #     f.write(wifiConfig.reciver + "\r\n")
+    #     f.write(wifiConfig.transmitter + "\r\n")
+    #     f.write(wifiConfig.source + "\r\n")
+    #     f.write(wifiConfig.destination + "\r\n")
+    #     f.write(wifiConfig.bss + "\r\n")
+    #     f.write(wifiConfig.phy + "\r\n")
+    #     f.write(wifiConfig.mcs + "\r\n")
+    #     f.write(wifiConfig.Freq + "\r\n")
+    #     f.write(wifiConfig.DataR + "\r\n")
+    #     f.write(wifiConfig.Channel + "\r\n")
+    #     f.write("0\r\n")
+     #   f.write("\r\n")
+
+    # if Config.RIP[1] == 1:
+    #     f.write("RIP\n")
+    #     # add icmp data etc here
+    #     f.write(ripConfig.ResponseIP + "\r\n")
+    #     f.write(ripConfig.RipVer + "\r\n")
+    #      f.write(ripConfig.ip + "\r\n")
+    #      f.write(ripConfig.dip + "\r\n")
+    #      f.write(ripConfig.port + "\r\n")
+    #      f.write(ripConfig.dport + "\r\n")
+    #     f.write(ripConfig.size + "\r\n")
+    #     f.write("00\n")
+    #     f.write("0\r\n")
+    
+    # if Config.OSPF[1] == 1:
+    #     f.write("OSPF\n")
+    #     # add icmp data etc here
+    #     f.write(ospfConfig.sourcerouter + "\r\n")
+    #     f.write(ospfConfig.backuprouter + "\r\n")
+    #     f.write(ospfConfig.dip + "\r\n")
+    #     f.write(ospfConfig.TIL + "\r\n")
+    #     f.write(ospfConfig.mask + "\r\n")
+    #     f.write(ospfConfig.message + "\r\n")
+    #     f.write(ospfConfig.size + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+    
+    # if Config.SOCKS[1] == 1:
+    #     f.write("SOCKS\n")
+    #     # add icmp data etc here
+    #     f.write(socksConfig.DIP + "\r\n")
+    #     f.write(socksConfig.DPort + "\r\n")
+    #     f.write(socksConfig.ID + "\r\n")
+    #     f.write(socksConfig.Config + "\r\n")
+    #     f.write(socksConfig.Auth + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.NetBIOS[1] == 1:
+    #     f.write("NetBIOS\n")
+    #     # add icmp data etc here
+    #     f.write(netbiosConfig.Name + "\r\n")
+    #     f.write(netbiosConfig.gName + "\r\n")
+    #     f.write(netbiosConfig.Session + "\r\n")
+    #     f.write(netbiosConfig.Datagram + "\r\n")
+    #     f.write(netbiosConfig.Service + "\r\n")
+    #     f.write(netbiosConfig.Size + "\r\n")
+    #     f.write(netbiosConfig.port + "\r\n")
+    #     f.write(netbiosConfig.dport + "\r\n")
+    #     f.write(netbiosConfig.ip + "\r\n")
+    #     f.write(netbiosConfig.window + "\r\n")
+    #     f.write(netbiosConfig.padding + "\r\n")
+    #     f.write(netbiosConfig.dip + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.SMB[1] == 1:
+    #     f.write("SMB\n")
+    #     f.write(smbConfig.cid + "\r\n")
+    #     f.write(smbConfig.command + "\r\n")
+    #     f.write(smbConfig.implementation + "\r\n")
+    #     f.write(smbConfig.dip + "\r\n")
+    #     f.write(smbConfig.ip + "\r\n")
+    #     f.write(smbConfig.sport + "\r\n")
+    #     f.write(smbConfig.dport + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.TLS[1] == 1:
+    #     f.write("TLS\n")
+    #     f.write(tlsConfig.cert + "\r\n")
+    #     f.write(tlsConfig.CipherSuite + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.SSH[1] == 1:
+    #     f.write("SSH\n")
+    #     f.write(sshConfig.placeholder + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.DHCP[1] == 1:
+    #     f.write("DHCP\n")
+    #     f.write(dhcpConfig.dip + "\r\n")
+    #     f.write(dhcpConfig.ip + "\r\n")
+    #     f.write(dhcpConfig.ReqIP + "\r\n")
+    #     f.write(dhcpConfig.mType + "\r\n")
+    #     f.write(dhcpConfig.Lease + "\r\n")
+    #     f.write(dhcpConfig.DomainName + "\r\n")
+    #     f.write(dhcpConfig.DomainIP + "\r\n")
+    #     f.write(dhcpConfig.Host + "\r\n")
+    #     f.write(dhcpConfig.RouterIP + "\r\n")
+    #     f.write(dhcpConfig.SubnetMask + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.TELNET[1] == 1:
+    #     f.write("Telnet\n")
+    #     f.write(telnetConfig.Rcomand1 + "\r\n")
+    #     f.write(telnetConfig.Rcomand2 + "\r\n")
+    #     f.write(telnetConfig.Rcomand3 + "\r\n")
+    #     f.write(telnetConfig.Rcomand4 + "\r\n")
+    #     f.write(telnetConfig.Rcomand5 + "\r\n")
+    #     f.write(telnetConfig.command + "\r\n")
+    #     f.write(telnetConfig.operation + "\r\n")
+    #     f.write(telnetConfig.operationOption + "\r\n")
+    #     f.write(telnetConfig.dport + "\r\n")
+    #     f.write(telnetConfig.port + "\r\n")
+    #     f.write(telnetConfig.window + "\r\n")
+    #     f.write(telnetConfig.padding + "\r\n")
+    #     f.write(telnetConfig.dip + "\r\n")
+    #     f.write(telnetConfig.ip + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.FTP[1] == 1:
+    #     f.write("FTP\n")
+    #     f.write(ftpConfig.ip + "\r\n")
+    #     f.write(ftpConfig.dip + "\r\n")
+    #     f.write(ftpConfig.port + "\r\n")
+    #     f.write(ftpConfig.data + "\r\n")
+    #     f.write(ftpConfig.file + "\r\n")
+    #     f.write(ftpConfig.data + "\r\n")
+    #     f.write(ftpConfig.window + "\r\n")
+    #     f.write(ftpConfig.padding + "\r\n")
+    #     f.write(ftpconfig.size + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+    
+    # if Config.IRC[1] == 1:
+    #     f.write("IRC\n")
+    #     f.write(ircConfig.command + "\r\n")
+    #     f.write(ircConfig.message + "\r\n")
+    #     f.write(ircConfig.Name + "\r\n")
+    #     f.write(ircConfig.window + "\r\n")
+    #     f.write(ircConfig.padding + "\r\n")
+    #     f.write(ircConfig.dip + "\r\n")
+    #     f.write(ircConfig.ip + "\r\n")
+    #     f.write(ircConfig.size + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    # if Config.HTTP[1] == 1:
+    #     f.write("HTTP\n")
+    #     f.write(httpConfig.URL + "\r\n")
+    #     f.write(httpConfig.UserAgent + "\r\n")
+    #     f.write(httpConfig.PostUri + "\r\n")
+    #     f.write(httpConfig.GetUri + "\r\n")
+    #     f.write(httpConfig.GetReferrer + "\r\n")
+    #     f.write(httpConfig.PostData + "\r\n")
+    #     f.write(httpConfig.size + "\r\n")
+    #     f.write(httpConfig.ip + "\r\n")
+    #     f.write(httpConfig.dip + "\r\n")
+    #     f.write(httpConfig.window + "\r\n")
+    #     f.write(httpConfig.padding + "\r\n")
+    #     f.write(httpConfig.port + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+    
+    # if Config.HTTPS[1] == 1:
+    #     f.write("HTTPS\r\n")
+    #     f.write(httpsConfig.URL + "\r\n")
+    #     f.write(httpsConfig.UserAgent + "\r\n")
+    #     f.write(httpsConfig.PostUri + "\r\n")
+    #     f.write(httpsConfig.GetUri + "\r\n")
+    #     f.write(httpsConfig.GetReferrer + "\r\n")
+    #     f.write(httpsConfig.PostData + "\r\n")
+    #     f.write(httpsConfig.size + "\r\n")
+    #     f.write(httpsConfig.SSLKey + "\r\n")
+    #     f.write(httpsConfig.ip + "\r\n")
+    #     f.write(httpsConfig.dip + "\r\n")
+    #     f.write(httpsConfig.window + "\r\n")
+    #     f.write(httpsConfig.padding + "\r\n")
+    #     f.write(httpsConfig.port + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+    
+    # if Config.DNS[1] == 1:
+    #     f.write("DNS\r\n")
+    #     f.write(dnsConfig.dip + "\r\n")
+   #       f.write(dnsConfig.ip + "\r\n")
+    #     f.write(dnsConfig.Cport + "\r\n")
+    #     f.write(dnsConfig.Type + "\r\n")
+    #     f.write(dnsConfig.Class + "\r\n")
+    #     f.write(dnsConfig.AnswerIP + "\r\n")
+    #     f.write(dnsConfig.TIL + "\r\n")
+    #     f.write(dnsConfig.AnswerName + "\r\n")
+    #     f.write("0\r\n")
+    #     f.write("\r\n")
+
+    f.write("End")
+
+#Location Configuration is a dynamic function used for placing Protocol Information in the right places when called by the GUI. 
 def LocationConfig():
     placed = 0 
-    print(LocationConfiguration.size)
+    #XY are used for placing the Spin/Tick boxes
     LocationConfiguration.x = 0 
-    LocationConfiguration.y = 0
+    LocationConfiguration.y = 0 
+    #XlYl are used for placing the Spin/Tick Labels
     LocationConfiguration.xl = 0
     LocationConfiguration.yl = 0
     if (LocationConfiguration.size % 2) != 0 or LocationConfiguration.size == 1:
@@ -442,7 +811,7 @@ def LocationConfig():
                 placed = 1
 
 
-def ErrorReset():   # This function resets every error, (This is used to prevent from previous errors displaying)  
+def ErrorReset():   # This function resets every error, (This is used to prevent from previous errors displaying) 
     IPErrors.error[0] = 0
     IPErrors.error[1] = 0
     MACErrors.error[0] = 0
@@ -450,7 +819,37 @@ def ErrorReset():   # This function resets every error, (This is used to prevent
     MACErrors.error[2] = 0
     MACErrors.error[3] = 0
 
+    #Ethernet Errors
+    Config.Ethernet[0] = 0
+    for x in range(0,3):
+        ethernetConfig.dmacerror[x] = 0
+        ethernetConfig.smacerror[x] = 0
 
+    #Wifi Errors
+    Config.Wifi[0] = 0
+    for x in range(0,3):
+        wifiConfig.bssErrors[x] = 0
+        wifiConfig.reciverErrors[x] = 0
+        wifiConfig.transmitterErrors[x] = 0
+        wifiConfig.destinationErrors[x] = 0
+        wifiConfig.sourceErrors[x] = 0
+
+    #Arp Errors
+    Config.ARP[0] = 0
+    for x in range(0,3):
+        arpConfig.macerror[x] = 0
+        arpConfig.dmacerror[x] = 0
+    arpConfig.iperror[0] = 0
+    arpConfig.diperror[1] = 0
+    arpConfig.iperror[0] = 0
+    arpConfig.diperror[1] = 0
+
+    #Ip Errors
+    Config.IP[0] = 0
+    ipConfig.iperror[0] = 0
+    ipConfig.iperror[1] = 0
+    ipConfig.diperror[0] = 0
+    ipConfig.diperror[1] = 0
 
     #ICMP Errors
     Config.ICMP[0] = 0
@@ -461,17 +860,70 @@ def ErrorReset():   # This function resets every error, (This is used to prevent
     icmpConfig.iperror[0] = 0
     icmpConfig.iperror[1] = 0 
     
-    #ARP Errors
-    #ICMP Errors
-    Config.ARP[0] = 0
-    arpConfig.macerror[0] = 0
-    arpConfig.macerror[1] = 0
-    arpConfig.macerror[2] = 0
-    icmpConfig.macerror[3] = 0
-    icmpConfig.iperror[0] = 0
-    icmpConfig.iperror[1] = 0
+    #rip Error
+    Config.RIP[0] = 0
+    ripConfig.ipError[0] = 0
+    ripConfig.ipError[1] = 0
 
-def CMPErrorRest():     # This resets each compare error (This is to prevent previous protocol errors effecting other checks)
+    #ospf
+    Config.OSPF[0] = 0
+    for x in range(0,1):
+        ospfConfig.sourcerouterError[x] = 0
+        ospfConfig.backuprouterError[x] = 0
+        ospfConfig.maskError[x] = 0
+    
+    #UDP
+    Config.UDP[0] = 0
+    udpConfig.ipError[0] = 0
+    udpConfig.ipError[1] = 0
+    udpConfig.dipError[0] = 0
+    udpConfig.dipError[1] = 0
+
+    #TCP
+    Config.TCP[0] = 0
+    tcpConfig.ipError[0] = 0
+    tcpConfig.ipError[1] = 0
+    tcpConfig.dipError[0] = 0
+    tcpConfig.dipError[1] = 0 
+
+    #socks
+    Config.SOCKS[0] = 0
+    socksConfig.ipError[0] = 0
+    socksConfig.ipError[1] = 0
+    #Netbios
+    Config.NetBIOS[0] = 0
+    #smb
+    Config.SMB[0] = 0
+    #tls
+    Config.TLS[0] = 0
+    #dhcp
+    Config.DHCP[0] = 0
+    for x in range(0,1):
+        dhcpConfig.dipError[x] = 0
+        dhcpConfig.reqError[x] = 0
+        dhcpConfig.maskError[x] = 0
+        dhcpConfig.RouterError[x] = 0
+        dhcpConfig.domainError[x] = 0
+    #Telnet
+    Config.TELNET[0] = 0
+    #irc
+    Config.IRC[0] = 0
+    #ftp
+    Config.FTP[0] = 0
+    for x in range(0,1):
+        ftpConfig.diperror[x] = 0
+        ftpConfig.iperror[x] = 0
+    #http
+    Config.HTTP[0] = 0
+    #https
+    Config.HTTPS[0] = 0
+    #DNS
+    Config.DNS[0] = 0
+    dnsConfig.diperror[0] = 0
+    dnsConfig.diperror[1] = 0
+
+
+def CMPErrorReset():     # This resets each compare error (This is to prevent previous protocol errors effecting other checks)
     IPErrors.error[0] = 0
     IPErrors.error[1] = 0
     MACErrors.error[0] = 0
@@ -505,7 +957,7 @@ def IP_checker(IP): # Coded by Matt
     else:
         IPErrors.error[1] = 2 #Ip doesn't have enough octects
         return
-    print('Legit IP given')
+
 
 
 #Loads the overall size of the traffic (The entry box)
@@ -521,28 +973,26 @@ def MAC_checker(MAC): # Coded by Matt
     acceptable_placesforcolon = [2, 5, 8, 11, 14]
     MAC = MAC.lower()
     if len(MAC) != 17: #Num of chars in MAC address is 17
-        print('Incorrect MAC length')
         MACErrors.error[0] = 1
     if MAC[2] != ':' or MAC[5] != ':' or MAC[8] != ':' or MAC[11] != ':' or MAC[14] != ':': #If no colon at specific points
-        print('Not enough colons')
         MACErrors.error[1] = 2
     for i in range(len(MAC)):
         if MAC[i] == ':' and i not in acceptable_placesforcolon: #Colon not used to identify address, only chars and digits
-            print('Colon(s) not at an acceptable place(s)')
             MACErrors.error[2] = 3
     for i in range(len(MAC)):
         if MAC[i] not in acceptable_chars: #Only letters numbers and colons excepted
-            print('Mac address contains unacceptable characters')
             MACErrors.error[3] = 4
     return(0) # Edited to allow for easier user parsing
 
 
-# Layer 2 Display function. (Needs to be updated as of 15/05/2021)
+# The Follow Functions apply to the buttons on the left side of the GUI. Each Displayer function refers to one of the buttons of the left in ascending order
+
+#Layer 2 Button Displayer
 def layer2_Displayer(l): # The purpose of this functions is that every layer menu option will call one of this funcitons followed with the selection option. In this case that is L.
     layer2_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529) # This then prints the label heading as the name of the chosen protocol + the option
     layer2_Frame.place(x=217, y=0)# Postioning
 
-    # currently the only options we have is the ip entry setting. (That is why they are all protcol + labled_IP)
+    # Ethernet Configuration
     if l == "Ethernet":
         EthDestinationLabel =  Label(layer2_Frame, text = "Ethernet Destination Mac Address:")
         dmac1 = Entry(layer2_Frame, width=4)
@@ -601,6 +1051,7 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
         colon4.place(x=155,y=61)
         colon5.place(x=195,y=61)
 
+        #Same methodology for each protocol, The button at the bottom saves each input into the class
         def Ethdone():
             colon = ":"
             ethernetConfig.dmac = dmac1.get() + colon + dmac2.get() + colon + dmac3.get() + colon + dmac4.get() + colon + dmac5.get() + colon + dmac6.get()
@@ -608,6 +1059,7 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
         ethb = Button(layer2_Frame, text = "✓", command=Ethdone)
         ethb.place(x=175, y=475, width=100) 
     
+
     if l == "WIFI (IEEE 802.11)":
         WifiPhyLabel = Label(layer2_Frame, text = "PHY Type: ")
         WifiPhyvar = StringVar(layer2_Frame)
@@ -908,6 +1360,7 @@ def layer2_Displayer(l): # The purpose of this functions is that every layer men
         arpb = Button(layer2_Frame, text = "✓", command=arpdone)
         arpb.place(x=175, y=475, width=100) # postioning on the button
 
+#layer 3 
 def layer3_Displayer(l):
     #Defining the tkinter type
     layer3_Frame = LabelFrame(lconfig_Frame, text = l + " Configuration", width=284, height=529)    # Using .place geomotry manager under the label frame in order to position correctly
@@ -1027,21 +1480,20 @@ def layer3_Displayer(l):
         icmpText.place(x=5, y=140)
         icmpPingData.place(x=5, y=120)
         def icmpdone():
-            icmpConfig.ip = ""
-            icmpConfig.mac = ""
-            colon = ":"
-            dot = "."
-            ip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get() # concatating all of the octects
-            mac = mac1.get() + colon + mac2.get() + colon + mac3.get() + colon + mac4.get() + colon + mac5.get() + colon + mac6.get()
-            dip = ip5.get() + dot + ip6.get() + dot + ip7.get() + dot + ip8.get()
-            dmac = mac7.get() + colon + mac8.get() + colon + mac9.get() + colon + mac10.get() + colon + mac11.get() + colon + mac12.get()
-            icmpConfig.ip = ip
-            icmpConfig.mac = mac
-            icmpConfig.dip = dip
-            icmpConfig.dmac = dmac
-            icmpConfig.Text = icmpText.get(1.0,255.0)
-            Config.ICMP[1] = 1
-            History_Displayer()
+                icmpConfig.ip = ""
+                icmpConfig.mac = ""
+                colon = ":"
+                dot = "."
+                ip = ip1.get() + dot + ip2.get() + dot + ip3.get() + dot + ip4.get() # concatating all of the octects
+                mac = mac1.get() + colon + mac2.get() + colon + mac3.get() + colon + mac4.get() + colon + mac5.get() + colon + mac6.get()
+                dip = ip5.get() + dot + ip6.get() + dot + ip7.get() + dot + ip8.get()
+                dmac = mac7.get() + colon + mac8.get() + colon + mac9.get() + colon + mac10.get() + colon + mac11.get() + colon + mac12.get()
+                icmpConfig.ip = ip
+                icmpConfig.mac = mac
+                icmpConfig.dip = dip
+                icmpConfig.dmac = dmac
+                icmpConfig.Text = icmpText.get(1.0,255.0)
+                Config.ICMP[1] = 1
         icmpb = Button(layer3_Frame, text = "✓", command=icmpdone,)
         icmpb.place(x=175, y=475, width=100) # postioning on the button
 
@@ -1102,6 +1554,14 @@ def layer3_Displayer(l):
             ipConfig.destinationIp = IPdip1.get() + dot + IPdip2.get() + dot + IPdip3.get() + dot + IPdip4.get()
             ipConfig.sourceIp = IPip1.get() + dot + IPip2.get() + dot + IPip3.get() + dot + IPip4.get()
             ipConfig.TIL = IPTILEntry.get()
+            #Setting other Protocols:
+            #ospf
+            ospfConfig.dip = ipConfig.destinationIp
+            ospfConfig.sourcerouter = ipConfig.sourceIp
+            ospfConfig.TIL = ipConfig.TIL
+            #ICMP
+            icmpConfig.dip = ipConfig.destinationIp
+            icmpConfig.ip = ipConfig.sourceip
         ipb = Button(layer3_Frame, text = "✓", command=IPdone)
         ipb.place(x=175, y=475, width=100) 
         
@@ -1283,6 +1743,22 @@ def layer4_Displayer(l):
             udpConfig.dport = udpPort.get()
             udpConfig.ip = udpip1.get() + dot + udpip2.get() + dot + udpip3.get() + dot + udpip4.get()
             udpConfig.dip = udpdip1.get() + dot + udpdip2.get() + dot + udpdip3.get() + dot + udpdip4.get()
+            History_Displayer()
+            #Setting UDP Protocol:
+            #RIP
+            ripConfig.ip = udpConfig.ip
+            ripConfig.port = udpConfig.port
+            ripConfig.dport = udpConfig.dport
+            #smb
+            smbConfig.sport = udpConfig.port
+            smbConfig.ip = udpConfig.ip
+            smbConfig.dip = udpConfig.dip
+            #dhcp
+            dhcpConfig.dip = udpConfig.dip
+            dhcpConfig.ip = udpConfig.ip
+            #dns
+            dnsConfig.ip = udpConfig.ip
+            dnsConfig.dip = udpConfig.dip
         udpb = Button(layer4_Frame, text = "✓", command=udpdone)
         udpb.place(x=175, y=475, width=100) 
 
@@ -1367,6 +1843,44 @@ def layer4_Displayer(l):
             tcpConfig.window = tcpWindow.get()
             tcpConfig.padding= tcppadding.get()
             tcpConfig.dip = tcpdip1.get() + dot + tcpdip2.get() + dot + tcpdip3.get() + dot + tcpdip4.get()
+            #Setting other protocols:
+            #netBios
+
+            netbiosConfig.port = tcpConfig.port
+            netbiosConfig.dip = tcpConfig.dip
+            netbiosConfig.ip = tcpConfig.ip
+            netbiosConfig.window = tcpConfig.window
+            netbiosConfig.padding = tcpConfig.padding
+            #telnet
+            telnetConfig.dport = tcpConfig.dport
+            telnetConfig.ip = tcpConfig.ip
+            telnetConfig.dip = tcpConfig.dip
+            telnetConfig.window = tcpConfig.window
+            telnetConfig.padding = tcpConfig.padding
+            telnetConfig.port = tcpConfig.port
+            #irc
+            ircConfig.ip = tcpConfig.ip
+            ircConfig.dip = tcpConfig.dip
+            ircConfig.window = tcpConfig.window
+            ircConfig.padding = tcpConfig.padding
+            #ftp    
+            ftpConfig.ip = tcpConfig.ip
+            ftpConfig.dip = tcpConfig.dip
+            ftpConfig.window = tcpConfig.window
+            ftpConfig.padding = tcpConfig.padding
+            #http
+            httpConfig.ip = tcpConfig.ip
+            httpConfig.dip = tcpConfig.dip
+            httpConfig.window = tcpConfig.window
+            httpConfig.padding = tcpConfig.padding
+            httpConfig.port = tcpConfig.port
+            #https
+            httpsConfig.ip = tcpConfig.ip
+            httpsConfig.dip = tcpConfig.dip
+            httpsConfig.window = tcpConfig.window
+            httpsConfig.padding = tcpConfig.padding
+            httpsConfig.port = ""
+
         tcpb = Button(layer4_Frame, text = "✓", command=tcpdone)
         tcpb.place(x=175, y=475, width=100) 
 
@@ -2078,30 +2592,30 @@ def layer7_Displayer(l):
 
 
 
+# History Displayer uses the size class described earlier, It postions everything dynamically depending on the location of previously placed protocols, it also defines spinboxes and the info tab for each protocol
 
-# Sets the History and the Size Configuration
 def History_Displayer():
     #Layer 7 Spinboxes
-    icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    httpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    httpsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    ircSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    telnetSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    dhcpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    smbSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    biosSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    ospfSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
-    ripSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size,width=4)
+    icmpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size ,width=4,)
+    arpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    ftpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    httpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    httpsSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    ircSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4, )
+    telnetSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    dhcpSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    smbSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4, )
+    biosSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4,)
+    ospfSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
+    ripSpinbox = Spinbox(TrafficConfigFrame, from_=0, to= TrafficSize.size , width=4)
     #Loads the specific Sizes. (Has to be within this function otherwise TrafficSize won't load)
     #Layer 6
     tlsLabelTick = Label(TrafficConfigFrame, text="✓")
-    #biosLabelTick = Label(TrafficConfigFrame, text="✓")
     socksLabelTick = Label(TrafficConfigFrame, text="✓")
     wifiLabelTick = Label(TrafficConfigFrame, text="✓")
     ipLabelTick = Label(TrafficConfigFrame, text="✓")
     
+    #Loads the spinbox sizes into the right protocols size class value (If statement works fine)
     def TrafficSize_Loader():
         if Config.ICMP[1] == 1:
             icmpConfig.size = icmpSpinbox.get()
@@ -2130,11 +2644,12 @@ def History_Displayer():
         if Config.RIP[1] == 1:
             ripConfig.size  = ripSpinbox.get()
 
-
+    #Button that calls the function above
     TrafficSizeButton = Button(TrafficConfigFrame, text = "✓", command=TrafficSize_Loader)
     TrafficSizeButton.place(x=127,y=140)
 
-    #Displays ICMP configuration
+    #Next If Statements checks if the Protocol is being used and if so has it already been displayed. If A protocol hits the critera then it is displayed on the gui and a info button is given  which allows a user to check what the protocol configuration has been set to
+
     if Config.ICMP[1] == 1 and Config.ICMP[2] == 0:
         Config.ICMP[2] = 1
         icmpHistory = LabelFrame(cConfigLabel, text="", width=262,height=30, borderwidth=1, relief=SOLID)
@@ -2152,12 +2667,13 @@ def History_Displayer():
             Popupmac = Label(PopupLabel, text=("Source Mac: " + icmpConfig.mac))
             Popupdmac = Label(PopupLabel, text=("Destination Mac: " + icmpConfig.mac))
             Popuptext = Label(PopupLabel, text=("ICMP Ping Data: " + icmpConfig.Text))
+            Popupsize = Label(PopupLabel, text=("You have Selected " + icmpConfig.size + "ICMP Packet(s)"))
             PopupIP.pack()
             PopupDIP.pack()
             Popupmac.pack()
             Popupdmac.pack()
             Popuptext.pack()
-
+            Popupsize.pack()
         icmpHistoryButton = Button(icmpHistory, text = "INFO", width=3, height=0, command=ICMPDisplay)
         icmpHistoryButton.place(x=227, y=1)
         icmpSpinboxLabel = Label(TrafficConfigFrame, text="ICMP:")
@@ -2322,14 +2838,14 @@ def History_Displayer():
             Popup.title("Current Telnet Configuration")
             PopupLabel = LabelFrame(Popup, text="Telnet Configuration", width=250, height=250)
             PopupLabel.pack()
-            PopupRcommand1 = Label(PopupLabel, text=("Remote Command 1" + telnetConfig.Rcomand1))
-            PopupRcommand2 = Label(PopupLabel, text=("Remote Command 2" + telnetConfig.Rcomand2))
-            PopupRcommand3 = Label(PopupLabel, text=("Remote Command 3" + telnetConfig.Rcomand3))
-            PopupRcommand4 = Label(PopupLabel, text=("Remote Command 4" + telnetConfig.Rcomand4))
-            PopupRcommand5 = Label(PopupLabel, text=("Remote Command 5" + telnetConfig.Rcomand5))
-            Popupcommand = Label(PopupLabel, text=("Remote Command 5" + telnetConfig.command))
-            Popupoperation = Label(PopupLabel, text=("Remote Command 5" + telnetConfig.operation))
-            Popupoperationoption = Label(PopupLabel, text=("Remote Command 5" + telnetConfig.operationOption))
+            PopupRcommand1 = Label(PopupLabel, text=("Remote Command 1: " + telnetConfig.Rcomand1))
+            PopupRcommand2 = Label(PopupLabel, text=("Remote Command 2: " + telnetConfig.Rcomand2))
+            PopupRcommand3 = Label(PopupLabel, text=("Remote Command 3: " + telnetConfig.Rcomand3))
+            PopupRcommand4 = Label(PopupLabel, text=("Remote Command 4: " + telnetConfig.Rcomand4))
+            PopupRcommand5 = Label(PopupLabel, text=("Remote Command 5: " + telnetConfig.Rcomand5))
+            Popupcommand = Label(PopupLabel, text=("Remote Command 5: " + telnetConfig.command))
+            Popupoperation = Label(PopupLabel, text=("Remote Command 5: " + telnetConfig.operation))
+            Popupoperationoption = Label(PopupLabel, text=("Remote Command 5: " + telnetConfig.operationOption))
             PopupRcommand1.pack()
             PopupRcommand2.pack()
             PopupRcommand3.pack()
@@ -2419,7 +2935,7 @@ def History_Displayer():
             PopupSMBimp.pack()
         smbHistoryButton = Button(smbHistory, text = "INFO", width=3, height=0, command=smbDisplay)
         smbHistoryButton.place(x=227, y=1)
-        smbSpinboxLabel = Label(TrafficConfigFrame, text="TLS:")
+        smbSpinboxLabel = Label(TrafficConfigFrame, text="SMB:")
         smbSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         smbSpinbox.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
 
@@ -2436,10 +2952,10 @@ def History_Displayer():
             PopupLabel = LabelFrame(Popup, text="NetBios Configuration", width=250, height=250)
             PopupLabel.pack()
             PopupbiosName = Label(PopupLabel, text=("NetBios Service Name: " + netbiosConfig.Name))
-            PopupbiosGname = Label(PopupLabel, text=("NetBios Group Service Name:" + netbiosConfig.gName))
-            PopupSession = Label(PopupLabel, text=("NetBios Session Configuration" + netbiosConfig.Session))
-            PopupDatagram = Label(PopupLabel, text=("NetBios Datagram Configuration" + netbiosConfig.Datagram))
-            PopupService = Label(PopupLabel, text=("NetBios Service" + netbiosConfig.Service))
+            PopupbiosGname = Label(PopupLabel, text=("NetBios Group Service Name: "  + netbiosConfig.gName))
+            PopupSession = Label(PopupLabel, text=("NetBios Session Configuration: " + netbiosConfig.Session))
+            PopupDatagram = Label(PopupLabel, text=("NetBios Datagram Configuration: " + netbiosConfig.Datagram))
+            PopupService = Label(PopupLabel, text=("NetBios Service: " + netbiosConfig.Service))
             PopupbiosName.pack()
             PopupbiosGname.pack()
             PopupSession.pack()
@@ -2559,7 +3075,7 @@ def History_Displayer():
             PopupRIPVer = Label(PopupLabel, text="RIP Ver: " + ripConfig.RipVer)
             PopupRIPRes.pack()
             PopupRIPVer.pack()
-        ripHistoryButton = Button(ospfHistory, text = "INFO", width=3, height=0, command=ripDisplay)
+        ripHistoryButton = Button(ripHistory, text = "INFO", width=3, height=0, command=ripDisplay)
         ripHistoryButton.place(x=227, y=1)
         ripSpinboxLabel = Label(TrafficConfigFrame, text="RIP:")
         ripSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
@@ -2590,102 +3106,327 @@ def History_Displayer():
         ipSpinboxLabel = Label(TrafficConfigFrame, text="IP:")
         ipSpinboxLabel.place(x=LocationConfiguration.xl, y=LocationConfiguration.yl)
         ipLabelTick.place(x=LocationConfiguration.x, y=LocationConfiguration.y)
+
 #Function on the "create Pcap button", checks for errors, then calls the main writing function (PcapWrite())
+#This function is called by the "Create Pcap" button
 def createPcap():
-    ErrorReset()   # clears all previous error checks from previous creations
-    #Checker functions (This will be ran on pretty much every protocol, (Don't know how to make this more effective))
-    # As tkinter doesn't like values being returned we have to use a place holder class to hold errors. This gets reset after each compare. (This allows for multiple protocols to use the error checking functions)
-    if Config.ICMP[1] == 1:
-        IP_checker(icmpConfig.ip) #calls the ip parse function
-        icmpConfig.iperror[0] = IPErrors.error[0]
-        icmpConfig.iperror[1] = IPErrors.error[1]
-        IP_checker(icmpConfig.dip)
-        icmpConfig.diperror[0] = IPErrors.error[0]
-        icmpConfig.diperror[1] = IPErrors.error[1]
-        MAC_checker(icmpConfig.mac) #calls the mac parse function
-        icmpConfig.macerror[0] = MACErrors.error[0]
-        icmpConfig.macerror[1] = MACErrors.error[1]
-        icmpConfig.macerror[2] = MACErrors.error[2]
-        icmpConfig.macerror[3] = MACErrors.error[3]
-        MAC_checker(icmpConfig.dmac) #calls the mac parse function
-        icmpConfig.dmacerror[0] = MACErrors.error[0]
-        icmpConfig.dmacerror[1] = MACErrors.error[1]
-        icmpConfig.dmacerror[2] = MACErrors.error[2]
-        icmpConfig.dmacerror[3] = MACErrors.error[3]
-        CMPErrorRest()
+        ErrorReset()   # clears all previous error checks from previous creations (Defined above)
 
+        #Checker functions (This will be ran on pretty much every protocol) 
+        # As tkinter doesn't like values being returned we have to use a place holder class to hold errors. This gets reset after each compare. (This allows for multiple protocols to use the error checking functions)
+        #
+        # Protocol calls ErrorChecker functions --> ErrorHolderClass contains Errors from Errorchecker functions --> Calling Protocol Loads it's Error values to be the same as ErrorHolder Class --> Reset ErrorHolderClass --> Repeat
+        if Config.Ethernet[1] == 1:
+            MAC_checker(ethernetConfig.smac) #calls the mac parse function
+            ethernetConfig.smacerror[0] = MACErrors.error[0]
+            ethernetConfig.smacerror[1] = MACErrors.error[1]
+            ethernetConfig.smacerror[2] = MACErrors.error[2]
+            ethernetConfig.smacerror[3] = MACErrors.error[3]
+            CMPErrorReset()
+            MAC_checker(ethernetConfig.dmac) #calls the mac parse function
+            ethernetConfig.dmacerror[0] = MACErrors.error[0]
+            ethernetConfig.dmacerror[1] = MACErrors.error[1]
+            ethernetConfig.dmacerror[2] = MACErrors.error[2]
+            ethernetConfig.dmacerror[3] = MACErrors.error[3]
+            CMPErrorReset()
+        
+        #Wifi Error Checking
+        if Config.Wifi[1] == 1:
+            #Checks if the reciver mac is acceptable
+            MAC_checker(wifiConfig.reciver) #calls the mac parse function
+            for x in range (3):
+                wifiConfig.recieverErrors[x] = MACErrors.error[x]
+            CMPErrorReset()
 
-    if Config.ARP[1] == 1:
-        IP_checker(arpConfig.senderip) #calls the ip parse function
-        arpConfig.iperror[0] = IPErrors.error[0]
-        arpConfig.iperror[1] = IPErrors.error[1]
-        MAC_checker(arpConfig.sendermac) #calls the mac parse function
-        arpConfig.macerror[0] = MACErrors.error[0]
-        arpConfig.macerror[1] = MACErrors.error[1]
-        arpConfig.macerror[2] = MACErrors.error[2]
-        arpConfig.macerror[3] = MACErrors.error[3]
-        CMPErrorRest()
-        IP_checker(arpConfig.targetip) #calls the ip parse function
-        arpConfig.iperror[0] = IPErrors.error[0]
-        arpConfig.iperror[1] = IPErrors.error[1]
-        MAC_checker(arpConfig.targetmac) #calls the mac parse function
-        arpConfig.macerror[0] = MACErrors.error[0]
-        arpConfig.macerror[1] = MACErrors.error[1]
-        arpConfig.macerror[2] = MACErrors.error[2]
-        arpConfig.macerror[3] = MACErrors.error[3]
-        CMPErrorRest()
+            #Checks if the transmitter mac is acceptable
+            MAC_checker(wifiConfig.transmitter)
+            for x in range (3):
+                wifiConfig.transmitterErrors[x] = MACErrors.error[x]
+            CMPErrorReset()
 
+            #Checks if the destination mac is acceptable
+            MAC_checker(wifiConfig.destination)
+            for x in range (3):
+                wifiConfig.destinationErrors[x] = MACErrors.error[x]
+            CMPErrorReset()
 
-    error_Popup = Toplevel()
-    error_Popup.title("Packet Status")
-    #If statement checking if there any issues for the different protocols.
-    #I'll add more of these once Matthew as finished adding some of the different protocols.
+            #Checks if the source mac is acceptable
+            MAC_checker(wifiConfig.source)
+            for x in range (3):
+                wifiConfig.sourceErrors[x] = MACErrors.error[x]
+            CMPErrorReset()
+
+        #arp error checking
+        if Config.ARP[1] == 1:
+            IP_checker(arpConfig.senderip) #calls the ip parse function
+            arpConfig.iperror[0] = IPErrors.error[0]
+            arpConfig.iperror[1] = IPErrors.error[1]
+            MAC_checker(arpConfig.sendermac) #calls the mac parse function
+            for x in range (3):
+                arpConfig.macerror[x] = MACErrors.error[x]
+            CMPErrorReset()
+
+            IP_checker(arpConfig.targetip) #calls the ip parse function
+            arpConfig.diperror[0] = IPErrors.error[0]
+            arpConfig.diperror[1] = IPErrors.error[1]
+            MAC_checker(arpConfig.targetmac) #calls the mac parse function
+            for x in range (3):
+                arpConfig.dmacerror[x] = MACErrors.error[x]
+            CMPErrorReset()
+
+        if Config.IP[1] == 1:
+            IP_checker(ipConfig.destinationIp) #calls the ip parse function
+            ipConfig.iperror[0] = IPErrors.error[0]
+            ipConfig.iperror[1] = IPErrors.error[1]
+
+            IP_checker(ipConfig.sourceIp) #calls the ip parse function
+            ipConfig.diperror[0] = IPErrors.error[0]
+            ipConfig.diperror[1] = IPErrors.error[1]
+            CMPErrorReset()
+        
+        if Config.ICMP[1] == 1:
+            CMPErrorReset()
+            IP_checker(icmpConfig.ip) #calls the ip parse function
+            icmpConfig.iperror[0] = IPErrors.error[0]
+            icmpConfig.iperror[1] = IPErrors.error[1]
+            MAC_checker(icmpConfig.mac) #calls the mac parse function
+            icmpConfig.macerror[0] = MACErrors.error[0]
+            icmpConfig.macerror[1] = MACErrors.error[1]
+            icmpConfig.macerror[2] = MACErrors.error[2]
+            icmpConfig.macerror[3] = MACErrors.error[3]
+            CMPErrorReset()
+            MAC_checker(icmpConfig.dmac) #calls the mac parse function
+            icmpConfig.dmacerror[0] = MACErrors.error[0]
+            icmpConfig.dmacerror[1] = MACErrors.error[1]
+            icmpConfig.dmacerror[2] = MACErrors.error[2]
+            icmpConfig.dmacerror[3] = MACErrors.error[3]
+            IP_checker(icmpConfig.dip)
+            icmpConfig.diperror[0] = IPErrors.error[0]
+            icmpConfig.diperror[1] = IPErrors.error[1]
+            CMPErrorReset()
+
+        if Config.RIP[1] == 1:
+            IP_checker(ripConfig.ResponseIP) #calls the ip parse function
+            ripConfig.ipError[0] = IPErrors.error[0]
+            ripConfig.ipError[1] = IPErrors.error[1]
+            CMPErrorReset()
+
+        if Config.OSPF[1] == 1:
+            IP_checker(ospfConfig.mask)
+            ospfConfig.maskError[0] = IPErrors.error[0]
+            ospfConfig.maskError[1] = IPErrors.error[1]
+            CMPErrorReset()
+            IP_checker(ospfConfig.sourcerouterError)
+            ospfConfig.sourcerouterError[0] = IPErrors[0]
+            ospfConfig.sourcerouterError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(ospfConfig.backuprouterError)
+            ospfConfig.backuprouterError[0] = IPErrors[0]
+            ospfConfig.backuprouterError[1] = IPErrors[1]
+            CMPErrorReset()
+
+        if  Config.UDP[1] == 1:
+            IP_checker(udpConfig.ip)
+            udpConfig.ipError[0] = IPErrors[0]
+            udpConfig.ipError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(udpConfig.dip)
+            udpConfig.dipError[0] = IPErrors[0]
+            udpConfig.dipError[1] = IPErrors[1]
+            CMPErrorReset()
+
+        if  Config.TCP[1] == 1:
+            IP_checker(tcpConfig.ip)
+            tcpConfig.ipError[0] = IPErrors[0]
+            tcpConfig.ipError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(tcpConfig.dip)
+            tcpConfig.dipError[0] = IPErrors[0]
+            tcpConfig.dipError[1] = IPErrors[1]
+            CMPErrorReset()
+
+        if Config.SOCKS[1] == 1:
+            IP_checker(socksConfig.DIP)
+            socksConfig.ipError[0] = IPErrors[0]
+            socksConfig.ipError[1] = IPErrors[1]
+            CMPErrorReset()
+
+        if Config.DHCP[1] == 1:
+            IP_checker(dhcpConfig.dip)
+            dhcpConfig.dipError[0] = IPErrors[0]
+            dhcpConfig.dipError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(dhcpConfig.ReqIP)
+            dhcpConfig.reqError[0] = IPErrors[0]
+            dhcpConfig.reqError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(dhcpConfig.DomainIP)
+            dhcpConfig.domainError[0] = IPErrors[0]
+            dhcpConfig.domainError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(dhcpConfig.RouterIP)
+            dhcpConfig.RouterError[0] = IPErrors[0]
+            dhcpConfig.RouterError[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(dhcpConfig.SubnetMask)
+            dhcpConfig.maskError[0] = IPErrors[0]
+            dhcpConfig.maskError[1] = IPErrors[1]
+            CMPErrorReset()
+
+        #Still WIP Ftp
+        if Config.FTP[1] == 1:
+            IP_checker(ftpConfig.ip)
+            ftpConfig.iperror[0] = IPErrors[0]
+            ftpConfig.iperror[1] = IPErrors[1]
+            CMPErrorReset()
+            IP_checker(ftpConfig.dip)
+            ftpConfig.diperror[0] = IPErrors[0]
+            ftpConfig.diperror[1] = IPErrors[1]
+            CMPErrorReset()
+
+        if Config.DNS[1] == 1:
+            IP_checker(dnsConfig.dip)
+            dnsConfig.dipError[0] = IPErrors[0]
+            dnsConfig.dipError[1] = IPErrors[1]
+            CMPErrorReset
+        
+        #After All The Errors Have been loaded correctly, they are then tested.
+        error_Popup = Toplevel()
+        error_Popup.title("Packet Status")
+
+        #If there is a single Error then config.Protocol first array will be loaded with a 1 meaning that is has an Error
+
+        if ((int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0) or
+        (int(icmpConfig.dmacerror[0]) > 0 or int(icmpConfig.dmacerror[1]) > 0 or  int(icmpConfig.dmacerror[2]) > 0 or int(icmpConfig.dmacerror[3]) > 0 or int(icmpConfig.diperror[0]) > 0 or int(icmpConfig.diperror[1]) > 0)):
+                Config.ICMP[0] = 1
+
+        if ((int(ethernetConfig.smacerror[0]) > 0 or int(ethernetConfig.smacerror[1]) > 0 or  int(ethernetConfig.smacerror[2]) > 0 or int(ethernetConfig.smacerror[3]) > 0)  or
+            (int(ethernetConfig.dmacerror[0]) > 0 or int(ethernetConfig.dmacerror[1]) > 0 or  int(ethernetConfig.dmacerror[2]) > 0 or int(ethernetConfig.dmacerror[3]) > 0)):
+                Config.Ethernet[0] = 1
     
-    #checks if both the dip/ip and mac/dmac are acceptable.
-    if (int(icmpConfig.macerror[0]) > 0 or int(icmpConfig.macerror[1]) > 0 or  int(icmpConfig.macerror[2]) > 0 or int(icmpConfig.macerror[3]) > 0 or int(icmpConfig.iperror[0]) > 0 or int(icmpConfig.iperror[1]) > 0):
-        if (int(icmpConfig.dmacerror[0]) > 0 or int(icmpConfig.dmacerror[1]) > 0 or  int(icmpConfig.dmacerror[2]) > 0 or int(icmpConfig.dmacerror[3]) > 0 or int(icmpConfig.diperror[0]) > 0 or int(icmpConfig.diperror[1]) > 0):
-            Config.ICMP[0] = 1 #This sets the error 
-    
-    #Place holder error follow the same syntax
-
-    if (int(arpConfig.macerror[0]) > 0 or int(arpConfig.macerror[1]) > 0 or  int(arpConfig.macerror[2]) > 0 or int(arpConfig.macerror[3]) > 0 or int(arpConfig.iperror[0]) > 0 or int(arpConfig.iperror[1]) > 0):
-        if (int(icmpConfig.dmacerror[0]) > 0 or int(icmpConfig.dmacerror[1]) > 0 or  int(icmpConfig.dmacerror[2]) > 0 or int(icmpConfig.dmacerror[3]) > 0 or int(icmpConfig.diperror[0]) > 0 or int(icmpConfig.diperror[1]) > 0):
-            Config.ARP[0] = 1 #This sets the error 
+        if ((int(wifiConfig.reciverErrors[0]) > 0 or int(wifiConfig.reciverErrors[1]) > 0 or  int(wifiConfig.reciverErrors[2]) > 0 or int(wifiConfig.reciverErrors[3]) > 0)  or
+            (int(wifiConfig.transmitterErrors[0]) > 0 or int(wifiConfig.transmitterErrors[1]) > 0 or  int(wifiConfig.transmitterErrors[2]) > 0 or int(wifiConfig.transmitterErrors[3]) > 0) or
+            (int(wifiConfig.sourceErrors[0]) > 0 or int(wifiConfig.sourceErrors[1]) > 0 or  int(wifiConfig.sourceErrors[2]) > 0 or int(wifiConfig.sourceErrors[3]) > 0)  or
+            (int(wifiConfig.destinationErrors[0]) > 0 or int(wifiConfig.destinationErrors[1]) > 0 or  int(wifiConfig.destinationErrors[2]) > 0 or int(wifiConfig.destinationErrors[3]) > 0) or 
+            (int(wifiConfig.bssErrors[0]) > 0 or int(wifiConfig.bssErrors[1]) > 0 or  int(wifiConfig.bssErrors[2]) > 0 or int(wifiConfig.bssErrors[3]) > 0)):
+                Config.Wifi[0] = 1
 
 
+        if ((int(arpConfig.macerror[0]) > 0 or int(arpConfig.macerror[1]) > 0 or  int(arpConfig.macerror[2]) > 0 or int(arpConfig.macerror[3]) > 0 or int(arpConfig.iperror[0]) > 0 or int(arpConfig.iperror[1]) > 0) or
+        (int(arpConfig.dmacerror[0]) > 0 or int(arpConfig.dmacerror[1]) > 0 or  int(arpConfig.dmacerror[2]) > 0 or int(arpConfig.dmacerror[3]) > 0 or int(arpConfig.diperror[0]) > 0 or int(arpConfig.diperror[1]) > 0)):
+                Config.ARP[0] = 1
 
-    if Config.ICMP[0] != 0:
-        IcmpErrorLabel = Label(error_Popup, text="ICMP ERROR: There was an error in your ICMP Configuration.")
-        IcmpErrorLabel.pack()
-    if Config.ARP[0] != 0:
-        arpErrorLabel = Label(error_Popup, text="ARP ERROR: There was an error in your ARP Configuration.")
-        arpErrorLabel.pack()
+        if ((int(ipConfig.iperror[0]) > 0 or int(ipConfig.iperror[1]) > 0) or
+        (int(ipConfig.diperror[0]) > 0 or int(ipConfig.diperror[1]) > 0)):
+                Config.IP[0] = 1
+
+        if ((int(ripConfig.ipError[0]) > 0 or int(ripConfig.ipError[1]) > 0)):
+            Config.RIP[0] = 1
+
+        if ((int(ospfConfig.sourcerouterError[0]) > 0 or int(ospfConfig.sourcerouterError[1]) > 0) or
+        (int(ospfConfig.backuprouterError[0]) > 0 or int(ospfConfig.backuprouterError[1]) > 0) or
+        (int(ospfConfig.maskError[0]) > 0 or int(ospfConfig.maskError[1]) > 0)):
+                Config.OSPF[0] = 1
+        
+        if ((int(udpConfig.ipError[0]) > 0 or int(udpConfig.ipError[1]) > 0) or
+        (int(udpConfig.dipError[0]) > 0 or int(udpConfig.dipError[1]) > 0)):
+                Config.UDP[0] = 1
+
+        if ((int(tcpConfig.ipError[0]) > 0 or int(tcpConfig.ipError[1]) > 0) or
+        (int(tcpConfig.dipError[0]) > 0 or int(tcpConfig.dipError[1]) > 0)):
+                Config.TCP[0] = 1
+        
+        #Place holder error follow the same syntax
+        if ((int(socksConfig.ipError[0]) > 0 or int(socksConfig.ipError[1]) > 0)):
+                Config.SOCKS[0] = 1
+
+        if ((int(dhcpConfig.dipError[0]) > 0 or int(dhcpConfig.dipError[1]) > 0) or
+        (int(dhcpConfig.reqError[0]) > 0 or int(dhcpConfig.reqError[1]) > 0) or
+        (int(dhcpConfig.domainError[0]) > 0 or int(dhcpConfig.domainError[1]) > 0) or
+        (int(dhcpConfig.RouterError[0]) > 0 or int(dhcpConfig.RouterError[1]) > 0) or
+        (int(dhcpConfig.maskError[0]) > 0 or int(dhcpConfig.maskError[1]) > 0)):
+                Config.DHCP[0] = 1
+        
+        if ((int(ftpConfig.iperror[0]) > 0 or int(ftpConfig.iperror[1]) > 0) or
+        (int(ftpConfig.diperror[0]) > 0 or int(ftpConfig.diperror[1]) > 0)):
+                Config.FTP[0] = 1
 
 
+        if ((int(dnsConfig.dipError[0]) > 0 or int(dnsConfig.dipError[1]) > 0)):
+            Config.DNS[0] = 1
 
 
-#Final Check
+        #Error Labels are called depending on the previous outcomes
+        if Config.Ethernet[0] != 0:
+            ethernetErrorLabel = Label(error_Popup, text="Ethernet ERROR: There was an error in your Ethernet Configuration.")
+            ethernetErrorLabel.pack()
 
-    if Config.ICMP[0] == 0 and Config.ARP[0] == 0: 
-        PcapStatusLabel = Label(error_Popup, text="The Pcap Creation was successful, find your generated pcap at /placeholder ")
-        PcapStatusLabel.pack()
-        pcapWrite()
+        if Config.Wifi[0] != 0:
+            WiFiErrorLabel = Label(error_Popup, text="WiFi ERROR: There was an error in your WiFi Configuration.")
+            WiFiErrorLabel.pack()
+
+        if Config.ARP[0] != 0:
+            arpErrorLabel = Label(error_Popup, text="ARP ERROR: There was an error in your ARP Configuration.")
+            arpErrorLabel.pack()
+        
+        if Config.IP[0] != 0:
+            IPErrorLabel = Label(error_Popup, text="IP ERROR: There was an error in your IP Configuration.")
+            IPErrorLabel.pack()
+
+        if Config.ICMP[0] != 0:
+            icmpErrorLabel = Label(error_Popup, text="ICMP ERROR: There was an error in your ICMP Configuration.")
+            icmpErrorLabel.pack()
+
+        if Config.RIP[0] != 0:
+            ripErrorLabel = Label(error_Popup, text="RIP ERROR: There was an error in your RIP Configuration.")
+            ripErrorLabel.pack()
+
+        if Config.OSPF[0] != 0:
+            ospfErrorLabel = Label(error_Popup, text="OSPF ERROR: There was an error in your OSPF Configuration.")
+            ospfErrorLabel.pack()
+
+        if Config.UDP[0] != 0:
+            udpErrorLabel = Label(error_Popup, text="UDP ERROR: There was an error in your UDP Configuration.")
+            udpErrorLabel.pack()
+
+        if Config.TCP[0] != 0:
+            tcpErrorLabel = Label(error_Popup, text="TCP ERROR: There was an error in your TCP Configuration.")
+            tcpErrorLabel.pack()
+
+        if Config.SOCKS[0] != 0:
+            socksErrorLabel = Label(error_Popup, text="SOCKS ERROR: There was an error in your SOCKS Configuration.")
+            socksErrorLabel.pack()
+
+        if Config.DHCP[0] != 0:
+            dhcpErrorLabel = Label(error_Popup, text="DHCP ERROR: There was an error in your DHCP Configuration.")
+            dhcpErrorLabel.pack()
+
+        if Config.DNS[0] != 0:
+            DNSErrorLabel = Label(error_Popup, text="DNS ERROR: There was an error in your DNS Configuration.")
+            DNSErrorLabel.pack()
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Menus ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #If There are Zero Errors in the configuration (Currently a big If statement) then the data is written and then backend is called
+        if (Config.Ethernet[0] == 0 and Config.Wifi[0] == 0 and Config.ARP[0] == 0 and Config.IP[0] == 0 and Config.ICMP[0] == 0 and
+            Config.RIP[0] == 0 and Config.OSPF[0] == 0 and Config.UDP[0] == 0 and Config.TCP[0] == 0 and Config.SOCKS[0] == 0 and Config.NetBIOS[0] == 0 and
+            Config.SMB[0] == 0 and Config.TLS[0] == 0 and Config.SSH[0] == 0 and Config.DHCP[0] == 0 and Config.TELNET[0] == 0 and Config.IRC[0] == 0 and
+            Config.HTTP[0] == 0 and Config.HTTPS[0] == 0 and Config.DNS[0] == 0):
+                PcapStatusLabel = Label(error_Popup, text="The Pcap Creation was successful, find your generated pcap at /placeholder ")
+                PcapStatusLabel.pack()
+                pcapWrite() #Writes to Data.txt
+                puppet_backend.main() #Calls the BackEnd
 
 # This loops all the layers buttons. Done to save time and add modular programming capability.
 
-    #Lists of Lists of Protocols used at differnet layers (easy to add too = modular)
+#Lists of Lists of Protocols used at differnet layers (easy to add too = modular)
 layersArray = [
-"null", # hacky method to prevent stuff from not displaying, unsure why this is happening will ask finlay about this
+"null", # Done as Tkinter will cut off the first option Array
 #Layer 2
 ["Ethernet",
 "WIFI (IEEE 802.11)",
 "ARP",],
 #Layer 3
-["NAT",
-"ICMP",
+["ICMP",
 "RIP",
 "OSPF",
 "IP"],
@@ -2697,8 +3438,7 @@ layersArray = [
 "NetBIOS",
 "SMB",],
  #Layer six
-["TLS/SSL",
-  "SSH",],
+["TLS/SSL",],
  #Layer Seven
 ["DHCP",
  "TELNET",
@@ -2715,11 +3455,8 @@ TrafficSizeDone = Button(TrafficSizeFrame, text="✓", command=SizeLoader)
 TrafficSizeDone.place(x=75, y=140)
 
 
+#Setting the titles and general outline of the GUI
 
-# THIS IS ABOMINATION THAT HURTS ME TO EVEN WRITE BUT IT'S THE ONLY WAY I CURRENTLY KNOW OF HOW TO ENSURE THAT EACH DROP DOWN MENU CAN CAUSE OPTIONS
-
-
-# SERIOUSLY THIS WAY IS SOO PAINFUL TO LOOK AT BUT ONLY WAY I CURRENTLY KNOW OF TO GET IT TO WORK. Hopefully some insane python programmer can help us in the future (or maybe im just dumb)
 #setting variables as string
 layerTitle2 = StringVar()
 layerTitle3 = StringVar()
@@ -2769,29 +3506,6 @@ Layerdrop7.grid(row = (7), column = 0, sticky = W)
 
 # setting the button postioning
 
-
-# agony this was coded nicely with modular programming but unfornutely you can't do anything with the .get function if it's in a localised for statemnent therefore I need to hard code it all
-# Adding variables with common protocols at each level
-
-
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    PCAP_PUPPET PYTHON       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-
-
-
-
-
-
-
+#Program Finished
 
 master.mainloop()
