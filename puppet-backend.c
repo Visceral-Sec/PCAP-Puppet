@@ -70,7 +70,7 @@ void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint1
 }
 
 //parse payload from python frontend
-uint16_t * condenseChar(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
+uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
     uint16_t l_emptyPointer = 0; //points to the last filled entry (ofc -1 isnt filled but it has to start somewhere)
     static uint16_t returnParam[/*paramSize - 3 - (paramSize - 7)/2*/10];
@@ -86,39 +86,47 @@ uint16_t * condenseChar(char currentParam[], uint16_t paramSize)//Turns a two di
         {
             digit2 -= 39;
         }
-        returnParam[l_emptyPointer++] = digit1*16 + digit2; //incriment endPointer before assignment
+        returnParam[l_emptyPointer++] = digit1*16 + digit2; //incriment endPointer after assignment
     }
     
     return returnParam;
 }
 
 //converts the incoming payload into the correct formats for writing
-void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[])
+void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[], char identification[], char seqNum[])
 {   
     //Goes through each pair of ascii numbers in target parameter and stores them as a single 8 bit char in g_currentFrame.sMac
     for(uint16_t i = 0; i < 6; i++)
     {
-    	g_currentFrame.sMac[i] = condenseChar(sMac, 17)[i];
+    	g_currentFrame.sMac[i] = condense_char(sMac, 17)[i];
     }
     for(uint16_t i = 0; i < 6; i++)
     {
-    	g_currentFrame.dMac[i] = condenseChar(dMac, 17)[i];
+    	g_currentFrame.dMac[i] = condense_char(dMac, 17)[i];
     }
     for(uint16_t i = 0; i < 4; i++)
     {
-    	g_currentFrame.target[i] = condenseChar(target, 11)[i];
+    	g_currentFrame.target[i] = condense_char(target, 11)[i];
     }
     for(uint16_t i = 0; i < 4; i++)
     {
-    	g_currentFrame.source[i] = condenseChar(source, 11)[i];
+    	g_currentFrame.source[i] = condense_char(source, 11)[i];
     }
     for(uint16_t i = 0; i < 2; i++)
     {
-    	g_currentFrame.sPort[i] = condenseChar(sPort, 5)[i];
+    	g_currentFrame.sPort[i] = condense_char(sPort, 5)[i];
     }
     for(uint16_t i = 0; i < 2; i++)
     {
-    	g_currentFrame.dPort[i] = condenseChar(dPort, 5)[i];
+    	g_currentFrame.dPort[i] = condense_char(dPort, 5)[i];
+    }
+    for(uint16_t i = 0; i < 2; i++)
+    {
+    	g_currentFrame.identification[i] = condense_char(identification, 5)[i];
+    }
+    for(uint16_t i = 0; i < 2; i++)
+    {
+    	g_currentFrame.seqNum[i] = condense_char(seqNum, 5)[i];
     }
     
     strcpy(g_currentFrame.payload, payload);
@@ -126,7 +134,7 @@ void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], 
 }
 
 //is run once at the start of the program so that it is only at the top of the file
-void pcapHeaderConstruct(FILE *fpWrite)
+void pcap_header_construct(FILE *fpWrite)
 {
 	int pcapHeaderLen = 24;
     	char pcapHeader[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x01, 0x00, 0x00, 0x00};
@@ -489,7 +497,7 @@ void assemble_all_packets(FILE *fpWrite)
     //call (read_data, data_parse, assemble_packet) repeatedly for each packet found
 	while (read_data(sMac, dMac, target, source, sPort, dPort, payload, packetType, identification, seqNum, dataStream, &linePointer) == 0) //if read_data returns 1, loop ends
 	{
-        data_parse(sMac, dMac, target, source, sPort, dPort, payload);
+        data_parse(sMac, dMac, target, source, sPort, dPort, payload, identification, seqNum);
 
         assemble_packet(packetType, fpWrite);
     }
@@ -504,7 +512,7 @@ int main()
     srand((unsigned) time(&t));
     FILE *fpWrite;
     fpWrite = fopen("generated-packets.pcapng","wb");
-    pcapHeaderConstruct(fpWrite);
+    pcap_header_construct(fpWrite);
 
     assemble_all_packets(fpWrite);
     
