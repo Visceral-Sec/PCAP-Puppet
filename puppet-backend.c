@@ -200,6 +200,35 @@ void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
     return;
 }
 
+void dns_req_construct(char dnsSegment[], int type)
+{
+    uint16_t l_emptyPointer = 0;
+    //uint16_t flags = rand() % 16;
+    insert_var_into(g_currentFrame.transactionID, dnsSegment, l_emptyPointer, 2); l_emptyPointer += 2;//remains static throughout interaction
+    //dnsSegment[l_emptyPointer++] = flags >> 8;
+    //dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
+    dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = type; //how many answers, would be 0x0001 for a response
+    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
+    dnsSegment[l_emptyPointer++] = 0x03; insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+    
+    if(type == 1)
+    {
+    	dnsSegment[2] = 0x85;
+    	dnsSegment[3] = 0x80;
+    	
+    	dnsSegment[l_emptyPointer++] = 0xc0; dnsSegment[l_emptyPointer++] = 0x0c; //Name?
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
+	insert_var_into(g_currentFrame.target, dnsSegment, l_emptyPointer, 4);
+    }
+}
+
 //slaps icmp segment into the frame
 void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
 {
@@ -216,15 +245,32 @@ void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
     return;
 }
 
-void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen)
+void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
 {
+    uint16_t dnsLen = 0;
     uint16_t l_emptyPointer = 0;
     insert_var_into(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
     insert_var_into(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) >> 24;
-    udpSegment[l_emptyPointer++] = (strlen(g_currentFrame.payload) + 8) & 0x000000FF;
+    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//length, this is a placeholder for later in the function
     udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
     insert_var_into(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
+    
+    if(dns != 0)
+    {
+	char *dnsSegment;
+	    
+	dnsLen = 4 + 28/dns;
+	uint16_t dnsSegmentLen;
+	dnsSegmentLen = 4 + 28/dns + strlen(g_currentFrame.payload);
+	dnsSegment = (char *)malloc(sizeof(char) * dnsSegmentLen); //reserves (8 + length of payload) bytes on the heap
+	dns_req_construct(dnsSegment, dns);
+	    
+	insert_var_into(dnsSegment, udpSegment, l_emptyPointer, dnsSegmentLen);
+	free(dnsSegment);
+    }
+    
+    udpSegment[4] = (strlen(g_currentFrame.payload) + dnsLen + 8) >> 24;
+    udpSegment[5] = (strlen(g_currentFrame.payload) + dnsLen + 8) & 0x000000FF;
     uint16_t checksum = calcChecksum(udpSegment, udpSegmentLen);
     udpSegment[6] = checksum & 0x00FF;
     udpSegment[7] = checksum >> 8;
@@ -283,19 +329,20 @@ void arp_req_construct(char arpSegment[])
     return;
 }
 
-void dns_req_construct(char dnsSegment[])
+void arp_res_construct(char arpSegment[])
 {
-    char query[16];
     uint16_t l_emptyPointer = 0;
-    uint16_t flags = 0;
-    insert_var_into(g_currentFrame.identification, dnsSegment, l_emptyPointer, 2);//remains static throughout interaction
-    dnsSegment[l_emptyPointer++] = flags >> 8;
-    dnsSegment[l_emptyPointer++] = flags & 0x0FF; //0100 for standard query, 8580 for standard query response//is randomized for compilation's sake
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
-    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00;
-    insert_var_into(query, dnsSegment, l_emptyPointer, strlen(query)); //adding the query section to the pcap?
+    
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x01;//Hardware type
+    arpSegment[l_emptyPointer++] = 0x08; arpSegment[l_emptyPointer++] = 0x00;//IPv4
+    arpSegment[l_emptyPointer++] = 0x06;//Hardware size
+    arpSegment[l_emptyPointer++] = 0x04;//protocol size
+    arpSegment[l_emptyPointer++] = 0x00; arpSegment[l_emptyPointer++] = 0x02;//Reply
+    insert_var_into(g_currentFrame.dMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6;
+    insert_var_into(g_currentFrame.target, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+    insert_var_into(g_currentFrame.sMac, arpSegment, l_emptyPointer, 6); l_emptyPointer += 6; //For a request the destination mac address isn't know so it's zeros instead
+    insert_var_into(g_currentFrame.source, arpSegment, l_emptyPointer, 4); l_emptyPointer += 4;
+    return;
 }
 
 //construct all of the arrays into one frame array - needs more work
@@ -356,11 +403,15 @@ uint16_t construct_packet(char bigArr[2048], char packetType[2])
     	arp_req_construct(segment);
     	
     break;
-	case 'd':
+	networkID = 0;
 	
-    	segLen = 6 + strlen(g_currentFrame.payload);
-    	segment = (char *)calloc(segLen, 1); //reserves (8 + length of payload) bytes on the heap
-    	dns_req_construct(segment);
+    	segmentLen = 40 + strlen(g_currentFrame.payload);
+    	segment = (char *)malloc(sizeof(char) * segmentLen); //reserves (8 + length of payload) bytes on the heap
+    	insert_udp_header(segment, segmentLen, 1);
+    	
+    	packetLen = 20 + segmentLen;
+        packet = (char *)malloc(sizeof(char) * (packetLen)); //reserves 20 + segmentLen bytes onthe heap
+        insert_ip_header(packet, segment, segmentLen, packetLen, 17); //builds on top of the icmpseg
     	
     break;
     default :
