@@ -36,9 +36,9 @@ void read_pcap_out(char pcapOut[], uint16_t pcapLen)
 
 uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsigned uint16_t
 {
-    char* payload = (char*)vdata; //Cast the payload pointer to one that can be indexed.
+    char* payload = (char*)vdata; //Cast the payload pointer to one that can be indexed
     uint32_t acc = 0xffff; // Initialise the accumulator
-    for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks.
+    for (uint16_t i = 0; (i + 1) < length; i += 2) // Handle complete 16-bit blocks
     {
         uint16_t word; // A word being 16-bits
         memcpy(&word, payload + i, 2);
@@ -48,7 +48,7 @@ uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsi
             acc -= 0xffff;
         }
     }
-    if (length&1) // Handle any partial block at the end of the payload.
+    if (length&1) // Handle any partial block at the end of the payload
     {
         uint16_t word = 0;
         memcpy(&word, payload + length - 1, 1);
@@ -58,7 +58,7 @@ uint16_t calc_checksum(void* vdata, uint16_t length) //uint16_t is a 16-bit unsi
             acc -= 0xffff;
         }
     }
-    return htons(~acc); // Return the checksum in network byte order.
+    return htons(~acc); // Return the checksum in network byte order
 }
 
 //Takes array and inserts it into the desired position in a chosen array
@@ -71,7 +71,7 @@ void insert_var_into(char arrIn[], char arrOut[], uint16_t l_emptyPointer, uint1
     return;
 }
 
-//condense_char takes an array, takes two characters to produce a hexadecimal number, skips the third character then loops.
+//condense_char takes an array, takes two characters to produce a hexadecimal number, skips the third character then loops
 //It stores each number in a array that it returns
 uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two digit string into a number
 {
@@ -95,8 +95,8 @@ uint16_t * condense_char(char currentParam[], uint16_t paramSize)//Turns a two d
     return returnParam;
 }
 
-//data_parse takes the data retrived by read_data from Data.txt, which is in a format legible to humans, and writes it to g_currentFrame.
-//In g_currentFrame an address is stored in a string such that the ascii of each character represents a point of the address. 
+//data_parse takes the data retrived by read_data from Data.txt, which is in a format legible to humans, and writes it to g_currentFrame
+//In g_currentFrame an address is stored in a string such that the ascii of each character represents a point of the address
 //For example the IP address 97.98.99.100 would be stored in g_currentFrame.source as {97, 98, 99, 100} or as the string "abcd"
 void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], char sPort[5], char dPort[5], char payload[], char identification[], char seqNum[])
 {   
@@ -137,7 +137,8 @@ void data_parse(char sMac[17], char dMac[17], char target[11], char source[11], 
     return;
 }
 
-//is run once at the start of the program so that it is only at the top of the file
+//pcap_header_construct is run once at the start of the program so that it is only at the top of the file
+//The data in pcapHeader is constant and consistent at the beginning of each pcap file
 void pcap_header_construct(FILE *fpWrite)
 {
 	int pcapHeaderLen = 24;
@@ -147,7 +148,7 @@ void pcap_header_construct(FILE *fpWrite)
     	return;
 }
 
-//returns num^pow as a long uint16_t
+//It was easier to write a power function than find a library
 long power(uint16_t num, uint16_t pow)
 {
 	long result = 1;
@@ -159,7 +160,7 @@ long power(uint16_t num, uint16_t pow)
 	return(result);
 }
 
-//adds on to pcap epoch in hex and little endian
+//Adds epoch on to pcap array in hex and little endian
 void epoch(char pcap[], uint16_t l_emptyPointer)
 {
     long seconds;
@@ -169,7 +170,7 @@ void epoch(char pcap[], uint16_t l_emptyPointer)
     char hex[5];
     uint16_t temp;
     
-    for(int i = 9; i >= 0; i--)// i needs to be an int for some reason
+    for(int i = 9; i >= 0; i--)//i needs to be an int for some reason
     {
     	uint16_t result = seconds/divisor;
     	if(i % 2 == 1)
@@ -189,20 +190,19 @@ void epoch(char pcap[], uint16_t l_emptyPointer)
     return;
 }
 
-//is functional and dynamic for a single packet but needs some work for multiple
+//Writes some metadata before the start of each packet 
 void header_construct(char pcap[], char etherFrame[], uint16_t etherFrameLen)
 {
-    //is only written at the start of a pcap
     uint16_t l_emptyPointer = 0;
 	
-    //is after every packet 
     epoch(pcap, l_emptyPointer); l_emptyPointer += 4;
-    pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//milliseconds since last second, is currently just static because it doesn't really matter
-    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//length of packet excluding header
-    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//the same thing again for some reason it wants it twice
+    pcap[l_emptyPointer++] = 0x81; pcap[l_emptyPointer++] = 0x08; pcap[l_emptyPointer++] = 0x03; pcap[l_emptyPointer++] = 0x00;//Milliseconds since last second, is currently just static because it doesn't really matter
+    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//Length of packet excluding this header
+    pcap[l_emptyPointer++] = etherFrameLen; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00; pcap[l_emptyPointer++] = 0x00;//The same thing again for some reason it wants it twice
     insert_var_into(etherFrame, pcap, 16, etherFrameLen);
     return;
 }
+
 
 void dns_req_construct(char dnsSegment[], int type)
 {
@@ -211,7 +211,6 @@ void dns_req_construct(char dnsSegment[], int type)
     dnsSegment[l_emptyPointer++] = 0x01; dnsSegment[l_emptyPointer++] = 0x00;//flags for request
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //how many questions
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; //how many answers, would be 0x0001 for a response
-    //number of name server resource records in authority records and number of name server resource records in authority records? is currently blank for compliation's sake
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
     dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload); insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//adding the query section to the pcap?
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
