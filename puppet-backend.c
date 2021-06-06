@@ -221,7 +221,7 @@ void dns_req_construct(char dnsSegment[], int type)
     if(type == 2)
     {
     	dnsSegment[2] = 0x85; dnsSegment[3] = 0x80;//Overwriting the flags for a standard response
-    	dnsSegment[7] = 0x01;//OverWriting the number of answers
+    	dnsSegment[7] = 0x01;//Overwriting the number of answers
     	
     	dnsSegment[l_emptyPointer++] = 0xc0; dnsSegment[l_emptyPointer++] = 0x0c; //Name?
 	dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //Host
@@ -233,7 +233,7 @@ void dns_req_construct(char dnsSegment[], int type)
 }
 
 //Writes a icmp segment that can be a request or response
-//If type is zero, it writes a standard request. If type is eight a standard response
+//If type is zero, it writes a standard request. If type is eight, it writes a standard response.
 void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
 {
     uint16_t l_emptyPointer = 0;
@@ -250,39 +250,41 @@ void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
     return;
 }
 
+//Produces a udp header for standard udp or dns traffic
+//If dns is zero, it writes standard udp traffic. If dns is one, it writes a standard dns request. If dns is two a standard dns response
 void insert_udp_header(char udpSegment[], uint16_t udpSegmentLen, uint16_t dns)
 {
     uint16_t dnsLen = 0;
     uint16_t l_emptyPointer = 0;
     insert_var_into(g_currentFrame.sPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    insert_var_into(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;
-    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//length, this is a placeholder for later in the function
-    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    insert_var_into(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));
-    
+    insert_var_into(g_currentFrame.dPort, udpSegment, l_emptyPointer, 2); l_emptyPointer += 2;//Source and destination ports
+    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//Length, this is a placeholder for later in the function
+    udpSegment[l_emptyPointer++] = 0x00; udpSegment[l_emptyPointer++] = 0x00;//Checksum, this is a placeholder for later in the function
+    insert_var_into(g_currentFrame.payload, udpSegment, l_emptyPointer, strlen(g_currentFrame.payload));//Standard udp traffic
+	
     if(dns != 0)
     {
 	char *dnsSegment;
-	    
-	dnsLen = 2 + 16 * dns;
 	uint16_t dnsSegmentLen;
-	dnsSegmentLen = dnsLen + strlen(g_currentFrame.payload);
-	dnsSegment = (char *)malloc(sizeof(char) * dnsSegmentLen); //reserves (8 + length of payload) bytes on the heap
-	dns_req_construct(dnsSegment, dns);
 	    
-	insert_var_into(dnsSegment, udpSegment, l_emptyPointer, dnsSegmentLen);
+	dnsLen = 2 + 16 * dns;//dns length changes between request and response
+	dnsSegmentLen = dnsLen + strlen(g_currentFrame.payload);
+	dnsSegment = (char *)malloc(sizeof(char) * dnsSegmentLen);
+	dns_req_construct(dnsSegment, dns);//Creates a dns segment 
+	    
+	insert_var_into(dnsSegment, udpSegment, l_emptyPointer, dnsSegmentLen);//Adds the dns segment to the udp segment overwriting the udp payload written line 263
 	free(dnsSegment);
     }
     
     udpSegment[4] = (strlen(g_currentFrame.payload) + dnsLen + 8) >> 24;
-    udpSegment[5] = (strlen(g_currentFrame.payload) + dnsLen + 8) & 0x000000FF;
-    uint16_t checksum = calc_checksum(udpSegment, udpSegmentLen);
-    udpSegment[6] = checksum & 0x00FF;
+    udpSegment[5] = (strlen(g_currentFrame.payload) + dnsLen + 8) & 0x000000FF;//Writes the length of the udp segment in little endian
+    uint16_t checksum = calc_checksum(udpSegment, udpSegmentLen);//Once all the data is written, the checksum can be calculated
+    udpSegment[6] = checksum & 0x00FF;//Writes the checksum in little endian
     udpSegment[7] = checksum >> 8;
     return;
 }
 
-
+//The following code until line 400 enables the production of a tcp handshake, however, is not supported by the rest of the program due to lack of time
 void initialiseSeqAck(char seqNum[4], char ackNum[4])
 {
     uint32_t randSeqNum1 = rand();
