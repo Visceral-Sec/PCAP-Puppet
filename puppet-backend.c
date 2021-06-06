@@ -215,8 +215,8 @@ void dns_req_construct(char dnsSegment[], int type)
     dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x00; 
     dnsSegment[l_emptyPointer++] = strlen(g_currentFrame.payload);//How long the query is
     insert_var_into(g_currentFrame.payload, dnsSegment, l_emptyPointer, strlen(g_currentFrame.payload)); l_emptyPointer += strlen(g_currentFrame.payload); dnsSegment[l_emptyPointer++] = 0x00;//The query
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //host
-    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //class
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //Host
+    dnsSegment[l_emptyPointer++] = 0x00; dnsSegment[l_emptyPointer++] = 0x01; //Class
     
     if(type == 2)
     {
@@ -232,18 +232,20 @@ void dns_req_construct(char dnsSegment[], int type)
     }
 }
 
-//slaps icmp segment into the frame
+//Writes a icmp segment that can be a request or response
+//If type is zero, it writes a standard request. If type is eight a standard response
 void icmp_construct(char icmpReqSeg[], uint16_t segLen, char type)
 {
     uint16_t l_emptyPointer = 0;
-    icmpReqSeg[l_emptyPointer++] = type;//icmp ping request
-    icmpReqSeg[l_emptyPointer++] = 0x00;//code is 0
-    icmpReqSeg[l_emptyPointer++] = 0x00; icmpReqSeg[l_emptyPointer++] = 0x00;//checksum, this is a placeholder for later in the function
-    insert_var_into(g_currentFrame.identification, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //identifier?
-    insert_var_into(g_currentFrame.seqNum, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //sequence number
+    icmpReqSeg[l_emptyPointer++] = type;//icmp ping request or response
+    icmpReqSeg[l_emptyPointer++] = 0x00;//Code is 0
+    icmpReqSeg[l_emptyPointer++] = 0x00; icmpReqSeg[l_emptyPointer++] = 0x00;//Checksum, this is a placeholder for later in the function
+    insert_var_into(g_currentFrame.identification, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //Identifier
+    insert_var_into(g_currentFrame.seqNum, icmpReqSeg, l_emptyPointer, 2); l_emptyPointer +=2; //Sequence number
     insert_var_into(g_currentFrame.payload, icmpReqSeg, l_emptyPointer, strlen(g_currentFrame.payload));
-    uint16_t checksum = calc_checksum(icmpReqSeg, segLen);
-    icmpReqSeg[2] = checksum & 0x00FF;
+	
+    uint16_t checksum = calc_checksum(icmpReqSeg, segLen);//Once all the data is written, the checksum can be calculated
+    icmpReqSeg[2] = checksum & 0x00FF;//Writes the checksum in little endian
     icmpReqSeg[3] = checksum >> 8;
     return;
 }
